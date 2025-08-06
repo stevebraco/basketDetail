@@ -1,0 +1,14 @@
+const equipe: Equipe = {
+  id: 1,
+  nom: "Lyon U18",
+  joueurs: [1, 2, 3, 4, 5, 6],
+  matchs: [101, 102, 103],
+};
+
+
+type Equipe = {
+  id: number;
+  nom: string;
+  joueurs: number[]; // ID des joueurs appartenant à cette équipe
+  matchs: number[];  // ID des matchs joués par cette équipe
+};

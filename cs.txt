@@ -1,0 +1,61 @@
+<div className="bg-gradient-to-b from-[#121424] to-[#0C0E1A] py-12 px-4 min-h-screen text-white flex justify-center">
+              <div className="max-w-6xl w-full rounded-2xl border border-white/10 shadow-lg bg-[#1B1E2B] p-6">
+                <div className="flex space-x-4 mb-6">
+                  <div className="bg-[#2D3142] text-sm text-white/80 px-4 py-1 rounded-t-lg">
+                    Dimension
+                  </div>
+                  <div className="bg-[#2D3142] text-sm text-white/80 px-4 py-1 rounded-t-lg opacity-50">
+                    GitHub
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="bg-[#2A2D3C] rounded-xl p-4 space-y-4">
+                    <div className="text-sm text-white/80">
+                      cnrad • 27 days ago • edited
+                    </div>
+                    <div className="text-white text-md font-semibold">
+                      Describe the bug
+                    </div>
+                    <p className="text-white/70 text-sm">
+                      Just wanted to try fleet out, but getting an error even
+                      though...
+                    </p>
+                    <div className="bg-[#1F2233] text-white/90 text-sm font-mono p-3 rounded-md border border-white/10">
+                      ✨ Generated Fleet Config <br />
+                      🚀 Fleet is ready!
+                      <br />
+                      error: failed to run `rustc` to learn about target...
+                    </div>
+                    <div>
+                      <div className="text-white font-medium text-sm mb-1">
+                        To Reproduce
+                      </div>
+                      <div className="bg-[#1F2233] text-white/90 text-sm font-mono p-2 rounded-md inline-block">
+                        fleet build
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#2A2D3C] rounded-xl p-4 space-y-4">
+                    <div className="text-white text-md font-semibold">
+                      To Reproduce
+                    </div>
+                    <div className="bg-[#1F2233] text-white/90 text-sm font-mono p-2 rounded-md inline-block">
+                      fleet build
+                    </div>
+
+                    <div>
+                      <div className="text-white font-medium text-sm mb-1">
+                        Info:
+                      </div>
+                      <p className="text-white/70 text-sm leading-relaxed">
+                        • OS: macOS 10.15
+                        <br />• rustc: rustc 1.64.0-nightly (4d6d601c8
+                        2022-07-26)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>

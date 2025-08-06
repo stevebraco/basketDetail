@@ -1,0 +1,54 @@
+type PlayerStat = {
+  id: string;
+  name: string;
+  points: number;
+  points2PT: number;
+  points3PT: number;
+  shotsMade: number;
+  shotsAttempted: number;
+  reboundsOff?: number;
+  reboundsDef?: number;
+  steals?: number;
+  turnovers?: number;
+};
+
+
+const matchExemple: Match = {
+  id: 1,
+  nom: "Finale U18 - Paris vs Lyon",
+  equipes: [101, 202],
+  videoId: "UiyIFILA8do",
+  date: "2025-08-05",
+  tirs: [
+    {
+      x: 200,
+      y: 120,
+      type: "3PT",
+      made: true,
+      player: "joueur_1",
+      timestamp: 125,
+      commentaire: "Beau tir en sortie d'écran"
+    },
+  ],
+  evenements: [
+    {
+      x: 180,
+      y: 90,
+      player: "joueur_2",
+      timestamp: 140,
+      eventType: "rebond_def",
+      commentaire: "Bon placement"
+    },
+  ],
+  statsJoueurs: [
+    {
+      id: "joueur_1",
+      name: "Dupont",
+      points: 18,
+      points2PT: 6,
+      points3PT: 12,
+      shotsMade: 7,
+      shotsAttempted: 12,
+    },
+  ],
+};
