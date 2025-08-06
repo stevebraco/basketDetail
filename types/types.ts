@@ -94,3 +94,38 @@ export type Shot = BaseEvent & {
 export type OtherEvent = BaseEvent & {
   eventType: string; // ex: "steal", "reboundOff", "reboundDef", "turnover", "assist", "block", "foul"
 };
+
+////new
+
+type CompetenceItem = {
+  nom: string;
+  note: number;
+};
+
+type CompetenceCategorie =
+  | "tir"
+  | "qi_basket"
+  | "physique"
+  | "defense"
+  | "techniques"
+  | "potentiel";
+
+type Competence = {
+  categorie: CompetenceCategorie;
+  items: CompetenceItem[];
+};
+
+export type PlayerType = {
+  id: string;
+  prenom: string;
+  nom: string;
+  age: number;
+  taille: number;
+  poids: number;
+  poste: string;
+  posteSecondaire?: string | null; // ← modifier ici
+  equipeId: number;
+  remarque?: string | null; // ← modifier ici aussi
+  matchIds: number[];
+  competences: Competence[];
+};
