@@ -1,31 +1,25 @@
-"use client";
+type Position = {
+  x: number;
+  y: number;
+};
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+type Frame = {
+  time: number;
+  players: Position[];
+  ball: Position;
+  comment?: string;
+};
 
-type System = {
+type SystemType = {
   id: number;
   name: string;
-  type: string;
+  type: 'Offensif' | 'Défensif' | 'Remise';
   description: string;
-  players: string;
-  createdAt: string;
-  data?: {
-    time: number;
-    players: { x: number; y: number }[];
-    ball: { x: number; y: number };
-    comment: string;
-  };
+  players: string; // ou string[] si tu préfères lister directement
+  data: Frame[] | Frame; // accepte une animation (array) ou une image fixe (objet unique)
+  createdAt?: string; // ou Date si parsé
 };
+
 
 const systems = [
   {
@@ -332,46 +326,62 @@ const systems = [
   },
 ];
 
-export default function SystemList() {
-  return (
-    <Card className="w-full max-w-4xl bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl">
-      <h2 className="text-xl font-bold mb-4">Liste des systèmes</h2>
-      <ScrollArea className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Joueurs</TableHead>
-              <TableHead>Créé le</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {systems.map((system) => (
-              <TableRow key={system.id}>
-                <TableCell>{system.name}</TableCell>
-                <TableCell>{system.type}</TableCell>
-                <TableCell>{system.description}</TableCell>
-                <TableCell>{system.players}</TableCell>
-                <TableCell>{system.createdAt}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button variant="outline" size="sm">
-                    Voir
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Éditer
-                  </Button>
-                  <Button variant="destructive" size="sm">
-                    Supprimer
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </ScrollArea>
-    </Card>
-  );
-}
+
+const systems = [
+  {
+    id: 1,
+    name: "Pick & Roll A",
+    nom: "Coach Martin",
+    type: "Offensif",
+    description: "Classique 1-5",
+    players: "1, 5",
+    objectif: "Créer un tir ouvert au meneur après écran",
+    vitesse: 3,
+    zone: "demi-terrain",
+    isPublic: true,
+    niveau: "Intermédiaire",
+    createdBy: "coach_martin",
+    createdAt: "14/04/2025",
+    updatedAt: "05/08/2025",
+    data: [
+      {
+        time: 1745004451259,
+        players: [
+          { x: 100, y: 100 },
+          { x: 180, y: 100 },
+          { x: 260, y: 100 },
+          { x: 340, y: 100 },
+          { x: 420, y: 100 },
+        ],
+        ball: { x: 400, y: 250 },
+        comment: "",
+      },
+      // ... autres frames
+    ],
+  },
+  // ... autres systèmes (tu peux copier ces nouveaux champs dans les autres objets)
+];
+
+
+type SystemType = {
+  id: number;
+  name: string;
+  nom: string;
+  type: string;
+  description: string;
+  players: string;
+  objectif: string;
+  vitesse: number; // 1 à 5
+  zone: string;
+  isPublic: boolean;
+  niveau: "Débutant" | "Intermédiaire" | "Avancé";
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  data: {
+    time: number;
+    players: { x: number; y: number }[];
+    ball: { x: number; y: number };
+    comment: string;
+  }[];
+};

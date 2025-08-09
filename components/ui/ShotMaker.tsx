@@ -50,7 +50,7 @@ export default function ShotMarker({
           style={{
             position: "absolute",
             top: -60,
-            left: 12,
+            left: 8,
             backgroundColor: "white",
             border: "1px solid #ccc",
             padding: 8,
@@ -67,7 +67,7 @@ export default function ShotMarker({
             </p>
             <p>
               Temps:{" "}
-              {new Date(shot.timestamp * 1000).toISOString().substr(11, 8)}
+              {/* {new Date(shot.timestamp * 1000).toISOString().substr(11, 8)} */}
             </p>
             {shot.commentaire && <p>💬 {shot.commentaire}</p>}
             <div className="mt-1 flex gap-1">

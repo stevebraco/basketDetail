@@ -31,6 +31,7 @@ const navItems = [
     subItems: [
       { name: "Equipes", path: "/equipes", pro: false },
       { name: "Joueurs", path: "/joueurs" },
+      { name: "Matchs", path: "/matchs" },
     ],
   },
   {

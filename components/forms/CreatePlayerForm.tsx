@@ -177,8 +177,9 @@ export function CreatePlayerForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#121424] flex items-center justify-center px-4 py-10">
-      <Card className="w-full max-w-6xl bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl">
+    <div className="min-h-screen flex items-center justify-center px-4 py-10">
+      {/* <div className="min-h-screen bg-[#121424] flex items-center justify-center px-4 py-10"> */}
+      <Card className="w-full max-w-6xl ">
         <CardHeader>
           <CardTitle className="text-white text-xl">
             Ajouter un joueur

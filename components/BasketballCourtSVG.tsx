@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { act, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import YouTube from "react-youtube";
@@ -13,38 +13,46 @@ export default function BasketballCourtSVG({
   initialShots = [],
   selectedPlayer,
   onUpdateStats,
-  playerStats,
+  videoId,
 }: {
   initialShots?: Shot[];
   selectedPlayer?: string;
   onUpdateStats: (update: PlayerStatsUpdate, shotOrEvent: Shot | Event) => void;
   playerStats?: PlayerStat;
 }) {
-  const [shots, setShots] = useState<Shot[]>(initialShots);
-  const [events, setEvents] = useState<Event[]>([]);
+  type ActionItem =
+    | (Shot & { typeItem: "shot" })
+    | (Event & { typeItem: "event" });
+
+  const [actions, setActions] = useState<ActionItem[]>(
+    initialShots.map((s) => ({ ...s, typeItem: "shot" }))
+  );
   const [pendingEvent, setPendingEvent] = useState<{
     x: number;
     y: number;
   } | null>(null);
   const [pendingTimestamp, setPendingTimestamp] = useState<string | null>(null);
-  const [commentaire, setCommentaire] = useState<string>("");
-  const [eventType, setEventType] = useState<string>("tir");
+  const [commentaire, setCommentaire] = useState("");
+  const [eventType, setEventType] = useState("tir");
   const [reboundType, setReboundType] = useState<"off" | "def">("def");
   const [tooltipIndex, setTooltipIndex] = useState<number | null>(null);
 
   const { player, currentTime, playerRef, handleReady, seekTo, reset } =
     useYoutubePlayer();
 
-  const VIDEO_ID = "UiyIFILA8do";
+  const VIDEO_ID = videoId;
+  console.log(VIDEO_ID);
 
+  // Dimensions du terrain
   const courtWidth = 28.65;
   const courtHeight = 15.24;
   const svgWidth = 500;
   const svgHeight = (courtHeight / courtWidth) * svgWidth;
 
   const basketLeft = { x: 59, y: svgHeight / 2 };
-  const basketRight = { x: 425, y: svgHeight / 2 };
-  const threePointRadius = (5.9 / courtWidth) * svgWidth;
+  const basketRight = { x: 439, y: svgHeight / 2 };
+  const threePointRadiusR = 105;
+  const threePointRadiusL = (5.9 / courtWidth) * svgWidth;
   const cornerThreeDistance = (7 / courtWidth) * svgWidth;
 
   const isThreePointShot = (x: number, y: number) => {
@@ -62,15 +70,16 @@ export default function BasketballCourtSVG({
       y < basket.y + cornerThreeDistance &&
       ((isLeft && x > arcLimit) || (!isLeft && x < arcLimit));
 
-    const inArc = distance > threePointRadius && !inCorner;
-    return inArc || inCorner;
+    return (
+      (distance > threePointRadiusR && !inCorner) ||
+      (distance > threePointRadiusL && !inCorner) ||
+      inCorner
+    );
   };
 
   const handleClick = async (e: React.MouseEvent<HTMLDivElement>) => {
     if (pendingEvent || !selectedPlayer || !player) return;
-
     const rect = e.currentTarget.getBoundingClientRect();
-    console.log(rect);
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
@@ -94,7 +103,7 @@ export default function BasketballCourtSVG({
         : "2PT";
       const points = made ? (type === "3PT" ? 3 : 2) : 0;
 
-      const newShot: Shot = {
+      const newShot: ActionItem = {
         x: pendingEvent.x,
         y: pendingEvent.y,
         type,
@@ -102,6 +111,7 @@ export default function BasketballCourtSVG({
         timestamp: seconds,
         made,
         commentaire,
+        typeItem: "shot",
       };
 
       const update: PlayerStatsUpdate = {
@@ -115,15 +125,17 @@ export default function BasketballCourtSVG({
       };
 
       onUpdateStats(update, newShot);
-      setShots((prev) => [...prev, newShot]);
+      setActions((prev) => [...prev, newShot]);
+      console.log(actions);
     } else {
-      const newEvent: Event = {
+      const newEvent: ActionItem = {
         x: pendingEvent.x,
         y: pendingEvent.y,
         timestamp: seconds,
         commentaire,
         eventType: eventType === "rebond" ? `rebond_${reboundType}` : eventType,
         player: selectedPlayer,
+        typeItem: "event",
       };
 
       const update: PlayerStatsUpdate = {
@@ -141,18 +153,13 @@ export default function BasketballCourtSVG({
       }
 
       onUpdateStats(update, newEvent);
-      setEvents((prev) => [...prev, newEvent]);
+      setActions((prev) => [...prev, newEvent]);
     }
 
     setPendingEvent(null);
     setPendingTimestamp(null);
     setCommentaire("");
   };
-
-  const allPoints = [
-    ...shots.map((shot) => ({ ...shot, typeItem: "shot" as const })),
-    ...events.map((event) => ({ ...event, typeItem: "event" as const })),
-  ].sort((a, b) => a.timestamp - b.timestamp);
 
   const getColorForEvent = (eventType: string) => {
     switch (eventType) {
@@ -169,6 +176,8 @@ export default function BasketballCourtSVG({
     }
   };
 
+  const allPoints = [...actions].sort((a, b) => a.timestamp - b.timestamp);
+
   return (
     <div className="space-y-4">
       <div
@@ -182,41 +191,79 @@ export default function BasketballCourtSVG({
         />
         <div onClick={handleClick} style={{ width: "100%", height: "100%" }} />
 
-        {shots
-          .filter((shot) => !selectedPlayer || shot.player === selectedPlayer)
+        {/* Lignes à 3 points */}
+        <svg
+          width={svgWidth}
+          height={svgHeight}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            pointerEvents: "none",
+          }}
+        >
+          <circle
+            cx={basketLeft.x}
+            cy={basketLeft.y}
+            r={threePointRadiusL}
+            stroke="red"
+            strokeWidth={1}
+            fill="none"
+          />
+          <circle
+            cx={basketRight.x}
+            cy={basketRight.y}
+            r={threePointRadiusR}
+            stroke="red"
+            strokeWidth={1}
+            fill="none"
+          />
+        </svg>
+
+        {/* Affichage des tirs */}
+        {actions
+          .filter(
+            (a) =>
+              a.typeItem === "shot" &&
+              (!selectedPlayer || a.player === selectedPlayer)
+          )
           .map((shot, i) => (
             <ShotMarker
               key={`shot-${i}`}
-              shot={shot}
+              shot={shot as Shot}
               isTooltipVisible={tooltipIndex === i}
               onShowTooltip={() => setTooltipIndex(i)}
               onHideTooltip={() => setTooltipIndex(null)}
-              onClick={() => seekTo(shot.timestamp)}
+              onClick={() => seekTo(Math.max(shot.timestamp - 5, 0))}
             />
           ))}
 
-        {events.map((event, i) => (
-          <svg
-            key={`event-${i}`}
-            style={{
-              position: "absolute",
-              top: event.y - 6,
-              left: event.x - 6,
-              pointerEvents: "none",
-            }}
-            width={12}
-            height={12}
-          >
-            <circle
-              cx={6}
-              cy={6}
-              r={6}
-              fill={getColorForEvent(event.eventType)}
-              opacity={0.8}
-            />
-          </svg>
-        ))}
+        {/* Affichage des événements */}
+        {actions
+          .filter((a) => a.typeItem === "event")
+          .map((event, i) => (
+            <svg
+              key={`event-${i}`}
+              style={{
+                position: "absolute",
+                top: event.y - 6,
+                left: event.x - 6,
+                pointerEvents: "none",
+              }}
+              width={12}
+              height={12}
+            >
+              <circle
+                cx={6}
+                cy={6}
+                r={6}
+                fill={getColorForEvent((event as Event).eventType)}
+                opacity={0.8}
+              />
+            </svg>
+          ))}
 
+        {/* Pop-up ajout événement */}
         {pendingEvent && (
           <div
             className="absolute z-50 bg-white border p-3 rounded shadow-md"
@@ -306,6 +353,7 @@ export default function BasketballCourtSVG({
         )}
       </div>
 
+      {/* Historique */}
       <div>
         <h2 className="text-lg font-semibold mb-2">Historique</h2>
         <ul className="max-h-60 overflow-auto border p-3 rounded bg-gray-50 text-sm list-disc pl-5">
@@ -313,17 +361,19 @@ export default function BasketballCourtSVG({
           {allPoints.map((item, i) => {
             const time = secondsToHHMMSS(item.timestamp);
             if (item.typeItem === "shot") {
+              const shot = item as Shot;
               return (
                 <li key={`shot-${i}`}>
-                  <strong>{item.player}</strong> — {item.type} —{" "}
-                  {item.made ? "✅" : "❌"} — {time} — {item.commentaire}
+                  <strong>{shot.player}</strong> — {shot.type} —{" "}
+                  {shot.made ? "✅" : "❌"} — {time} — {shot.commentaire}
                 </li>
               );
             } else {
+              const event = item as Event;
               return (
                 <li key={`event-${i}`} className="text-gray-700">
-                  <strong>{item.player}</strong> — {item.eventType} — {time} —{" "}
-                  {item.commentaire}
+                  <strong>{event.player}</strong> — {event.eventType} — {time} —{" "}
+                  {event.commentaire}
                 </li>
               );
             }
@@ -331,6 +381,7 @@ export default function BasketballCourtSVG({
         </ul>
       </div>
 
+      {/* Player YouTube */}
       <div ref={playerRef} className="mt-4">
         <YouTube
           videoId={VIDEO_ID}

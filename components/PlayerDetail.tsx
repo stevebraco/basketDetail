@@ -5,11 +5,12 @@ import Image from "next/image";
 import { Button } from "./ui/button";
 
 function PlayerDetail({ player }: { player: PlayerType }) {
+  console.log(player);
   return (
     <Card className="w-full max-w-4xl bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl">
       <CardHeader className="items-center">
         <Image
-          src=""
+          src="/james-harden.webp"
           alt="Player"
           width={160}
           height={160}

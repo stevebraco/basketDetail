@@ -1,12 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  // output   = "../lib/generated/prisma"
 }
 
 datasource db {
@@ -14,17 +7,104 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+type PlayerCompetences {
+  categorie String
+  items     PlayerCompetencesItems[]
+}
+
+type PlayerCompetencesItems {
+  nom  String
+  note Int
+}
+
+type TirEvenement {
+  x          Int
+  y          Int
+  type       String? // pour les tirs (2PT, 3PT...)
+  made       Boolean?
+  player     String
+  // timestamp  Int
+  commentaire String
+  eventType  String? // pour les événements
+  typeItem   String  // "shot" ou "event"
+  playerId   String    @db.ObjectId // lien direct vers Player.id
+
+}
+
+
+type StatsJoueur {
+  playerId       String @db.ObjectId
+  name           String
+  points         Int
+  points2PT      Int
+  points3PT      Int
+  shotsMade      Int
+  shotsAttempted Int
+}
+
+type PlayerStats {
+  points        Int?
+  fgm           Int?
+  fga           Int?
+  threePM       Int?
+  threePA       Int?
+  ftm           Int?
+  fta           Int?
+  reboundsOff   Int?
+  reboundsDef   Int?
+  reboundsTotal Int?
+  assists       Int?
+  turnovers     Int?
+  steals        Int?
+  blocks        Int?
+  fautes        Int?
+  minutes       Int?
+  plusMinus     Int?
+}
+
+
+model Equipe {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  category String
+  comments String
+  nom      String
+  playerId String @db.ObjectId
+}
+
 model Player {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  prenom           String
-  nom              String
-  age              Int
-  taille           Int
-  poids            Int
-  poste            String
-  posteSecondaire  String?
-  equipeId         Int
-  remarque         String?
-  matchIds         Int[]
-  competences      Json
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  age             BigInt
+  competences     PlayerCompetences[]
+  nom             String
+  poids           BigInt
+  poste           String
+  posteSecondaire String
+  prenom          String
+  remarque        String
+  taille          BigInt
+
+  playerMatches PlayerMatch[]  @relation("PlayerPlayerMatches")
+
+}
+
+model Match {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  nom            String
+  videoId        String
+
+  tirs     TirEvenement[] // <-- Nouveau champ
+
+  playerMatches PlayerMatch[] @relation("MatchPlayerMatches")  
+}
+
+model PlayerMatch {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  playerId  String      @db.ObjectId
+  matchId   String      @db.ObjectId
+  stats     PlayerStats?
+
+  player    Player  @relation("PlayerPlayerMatches", fields: [playerId], references: [id])
+  match     Match   @relation("MatchPlayerMatches", fields: [matchId], references: [id])
+  @@unique([playerId, matchId])  // pour éviter doublons
+
 }

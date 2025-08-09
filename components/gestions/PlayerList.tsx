@@ -10,6 +10,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import Link from "next/link";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 // Exemple de données pour les joueurs
 const players = [
@@ -48,79 +49,75 @@ const players = [
   },
 ];
 
-export function PlayerList() {
+export function PlayerList({ players }: any) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
-      <Table>
-        <TableCaption>Liste des joueurs de basket</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-              Prénom
-            </TableHead>
-            <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-              Nom
-            </TableHead>
-            <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-              Poste
-            </TableHead>
-            <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-              Âge
-            </TableHead>
-            <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-              Taille
-            </TableHead>
-            <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-              Poids
-            </TableHead>
-            <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-              Rôle
-            </TableHead>
-            <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-              Remarque
-            </TableHead>
-            <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-              Actions
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {players.map((player) => (
-            <TableRow key={player.id}>
-              <TableCell className="font-medium">{player.name}</TableCell>
-              <TableCell className="px-4 py-3 text-red-500 text-start text-theme-sm dark:text-gray-400">
-                {player.lastName}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                {player.poste}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                {player.age}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                {player.taille}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                {player.poids}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                {player.role}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                {player.remarque}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                <Link
-                  href={`/joueurs/${player.id}`}
-                  className="text-blue-600 hover:underline"
-                >
-                  Voir les stats
-                </Link>
-              </TableCell>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-white text-xl">Liste des joueurs</CardTitle>
+      </CardHeader>
+
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="px-5 py-3 font-medium text-gray-500 dark:text-gray-400 text-start text-theme-xs">
+                Joueur
+              </TableHead>
+              <TableHead className="px-5 py-3 font-medium text-gray-500 dark:text-gray-400 text-start text-theme-xs">
+                Poste
+              </TableHead>
+              <TableHead className="px-5 py-3 font-medium text-gray-500 dark:text-gray-400 text-start text-theme-xs">
+                Âge
+              </TableHead>
+              <TableHead className="px-5 py-3 font-medium text-gray-500 dark:text-gray-400 text-start text-theme-xs">
+                Taille
+              </TableHead>
+              <TableHead className="px-5 py-3 font-medium text-gray-500 dark:text-gray-400 text-start text-theme-xs">
+                Poids
+              </TableHead>
+              <TableHead className="px-5 py-3 font-medium text-gray-500 dark:text-gray-400 text-start text-theme-xs">
+                Remarque
+              </TableHead>
+              <TableHead className="px-5 py-3 font-medium text-gray-500 dark:text-gray-400 text-start text-theme-xs">
+                Actions
+              </TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+
+          <TableBody>
+            {players.map((player) => (
+              <TableRow key={player.id}>
+                <TableCell className="px-4 py-3 text-red-500 text-start text-theme-sm dark:text-gray-400">
+                  {player.prenom} {player.nom}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-gray-500 dark:text-gray-400 text-start text-theme-sm">
+                  {player.poste}/{player.posteSecondaire}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-gray-500 dark:text-gray-400 text-start text-theme-sm">
+                  {player.age}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-gray-500 dark:text-gray-400 text-start text-theme-sm">
+                  {player.taille}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-gray-500 dark:text-gray-400 text-start text-theme-sm">
+                  {player.poids}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-gray-500 dark:text-gray-400 text-start text-theme-sm">
+                  {player.remarque}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-gray-500 dark:text-gray-400 text-start text-theme-sm">
+                  <Link
+                    href={`/joueurs/${player.id}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Voir les stats
+                  </Link>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }

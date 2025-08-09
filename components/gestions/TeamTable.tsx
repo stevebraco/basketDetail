@@ -16,32 +16,30 @@ import Link from "next/link";
 type Team = {
   id: string;
   name: string;
-  category: string;
-  coach: string;
   playerCount: number;
   stats: string;
+  isWin: boolean;
 };
 
 const teams: Team[] = [
   {
     id: "1",
-    name: "U15 Garçons A",
-    category: "U15",
-    coach: "Coach Lemaire",
+    name: "OKC",
     playerCount: 12,
-    stats: "68 PTS / 9-3",
+    stats: "68 PTS",
+    isWin: true,
   },
   {
     id: "2",
-    name: "Seniors Filles",
-    category: "Senior",
-    coach: "Coach Nina",
+    name: "Charlotte Hornets",
     playerCount: 10,
-    stats: "75 PTS / 11-1",
+    stats: "75 PTS",
+    isWin: false,
   },
 ];
 
-export const TeamTable = () => {
+export const TeamTable = ({ matchs }: any) => {
+  console.log(matchs);
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-1 md:gap-6">
       {/* <!-- Metric Item Start --> */}
@@ -67,7 +65,7 @@ export const TeamTable = () => {
                 <TableCell>{team.playerCount}</TableCell>
                 <TableCell>{team.stats}</TableCell>
                 <TableCell className="flex justify-end gap-2">
-                  <Link href={`/equipes/${team.id}`}>
+                  <Link href={`/matchs/${1}`}>
                     <Button size="icon" variant="outline">
                       <Eye className="h-4 w-4" />
                     </Button>
