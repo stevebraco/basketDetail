@@ -2,13 +2,7 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useForm,
-  FormProvider,
-  useFormContext,
-  Controller,
-} from "react-hook-form";
-import { z } from "zod";
+import { useForm, FormProvider, Controller } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,146 +33,23 @@ import {
 } from "@/components/ui/card";
 
 import { optionsPoste, optionsRole } from "@/data/players";
+import { createPlayerSchema } from "@/schema/validation";
+import { createPlayerValues } from "@/schema/defaultValues";
+import { z } from "zod";
+import { skillSections } from "@/data/skillSections";
 
-// Schema de validation
-const formSchema = z.object({
-  name: z.string().min(2),
-  lastName: z.string().min(2),
-  poste: z.string().min(3),
-  age: z.string().min(1),
-  taille: z.string().min(1),
-  poids: z.string().min(1),
-  role: z.string().min(1),
-  equipe: z.string().optional(),
-  remarque: z.string().optional(),
-
-  // Compétences
-  tir_2pts: z.number().min(0).max(10),
-  tir_3pts: z.number().min(0).max(10),
-  lancers_francs: z.number().min(0).max(10),
-  creation_tir: z.number().min(0).max(10),
-
-  lecture_jeu: z.number().min(0).max(10),
-  vision_jeu: z.number().min(0).max(10),
-  prise_decision: z.number().min(0).max(10),
-  leadership: z.number().min(0).max(10),
-
-  vitesse: z.number().min(0).max(10),
-  agilite: z.number().min(0).max(10),
-  puissance: z.number().min(0).max(10),
-  endurance: z.number().min(0).max(10),
-  saut_vertical: z.number().min(0).max(10),
-
-  defense_1v1: z.number().min(0).max(10),
-  defense_collective: z.number().min(0).max(10),
-  anticipation: z.number().min(0).max(10),
-  contre: z.number().min(0).max(10),
-
-  dribble: z.number().min(0).max(10),
-  finition: z.number().min(0).max(10),
-  jeu_sans_ballon: z.number().min(0).max(10),
-  footwork: z.number().min(0).max(10),
-  passe: z.number().min(0).max(10),
-
-  travail: z.number().min(0).max(10),
-  potentiel: z.number().min(0).max(10),
-  concentration: z.number().min(0).max(10),
-  resilience: z.number().min(0).max(10),
-});
-
-type FormData = z.infer<typeof formSchema>;
-
-function SliderField({ name, label }: { name: keyof FormData; label: string }) {
-  const { control, watch } = useFormContext<FormData>();
-  const value = watch(name) || 0;
-
-  return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <FormItem className="mb-4">
-          <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <div className="flex items-center gap-4">
-              <Controller
-                control={control}
-                name={name}
-                render={({ field: { value, onChange } }) => (
-                  <Slider
-                    min={0}
-                    max={10}
-                    step={1}
-                    value={[value || 0]}
-                    onValueChange={(val) => onChange(val[0])}
-                    className="flex-grow"
-                  />
-                )}
-              />
-              <span className="w-6 text-right">{value}</span>
-            </div>
-          </FormControl>
-        </FormItem>
-      )}
-    />
-  );
-}
+type FormData = z.infer<typeof createPlayerSchema>;
 
 export function CreatePlayerForm() {
   const methods = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      lastName: "",
-      poste: "",
-      age: "",
-      taille: "",
-      poids: "",
-      role: "",
-      equipe: "Aucune",
-      remarque: "",
-
-      tir_2pts: 5,
-      tir_3pts: 5,
-      lancers_francs: 5,
-      creation_tir: 5,
-
-      lecture_jeu: 5,
-      vision_jeu: 5,
-      prise_decision: 5,
-      leadership: 5,
-
-      vitesse: 5,
-      agilite: 5,
-      puissance: 5,
-      endurance: 5,
-      saut_vertical: 5,
-
-      defense_1v1: 5,
-      defense_collective: 5,
-      anticipation: 5,
-      contre: 5,
-
-      dribble: 5,
-      finition: 5,
-      jeu_sans_ballon: 5,
-      footwork: 5,
-      passe: 5,
-
-      travail: 5,
-      potentiel: 5,
-      concentration: 5,
-      resilience: 5,
-    },
+    resolver: zodResolver(createPlayerSchema),
+    defaultValues: { ...createPlayerValues },
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log("Joueur :", data);
-  };
+  const onSubmit = (data: FormData) => {};
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-10">
-      {/* <div className="min-h-screen bg-[#121424] flex items-center justify-center px-4 py-10"> */}
       <Card className="w-full max-w-6xl ">
         <CardHeader>
           <CardTitle className="text-white text-xl">
@@ -291,94 +162,58 @@ export function CreatePlayerForm() {
                 />
 
                 {/* === Sliders === */}
-                <div className="pt-4 border-t border-white/10 space-y-6">
-                  {/* 🔫 Tir */}
-                  <h3 className="text-lg font-semibold text-white">🔫 Tir</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <SliderField
-                      name="tir_2pts"
-                      label="Tir à mi-distance (2 pts)"
-                    />
-                    <SliderField name="tir_3pts" label="Tir à 3 points" />
-                    <SliderField name="lancers_francs" label="Lancers francs" />
-                    <SliderField name="creation_tir" label="Création de tir" />
+                {skillSections.map((section, sectionIndex) => (
+                  <div key={sectionIndex} className="mb-8">
+                    <h3 className="text-lg font-semibold text-white mb-4">
+                      {section.title}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {section.skills.map(({ name, label }, skillIndex) => {
+                        const fieldName = name as keyof FormData;
+                        return (
+                          <FormField
+                            key={skillIndex}
+                            control={methods.control}
+                            name={fieldName}
+                            render={({ field }) => {
+                              const value = methods.watch(fieldName) || 0;
+                              return (
+                                <FormItem className="mb-4">
+                                  <FormLabel>{label}</FormLabel>
+                                  <FormControl>
+                                    <div className="flex items-center gap-4">
+                                      <Controller
+                                        control={methods.control}
+                                        name={fieldName}
+                                        render={({
+                                          field: { value, onChange },
+                                        }) => (
+                                          <Slider
+                                            min={0}
+                                            max={10}
+                                            step={1}
+                                            value={[Number(value) || 0]}
+                                            onValueChange={(val) =>
+                                              onChange(val[0])
+                                            }
+                                            className="flex-grow"
+                                          />
+                                        )}
+                                      />
+                                      <span className="w-6 text-right">
+                                        {value}
+                                      </span>
+                                    </div>
+                                  </FormControl>
+                                </FormItem>
+                              );
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
                   </div>
-
-                  {/* 🧠 Q.I. Basket */}
-                  <h3 className="text-lg font-semibold text-white">
-                    🧠 Q.I. Basket
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <SliderField name="lecture_jeu" label="Lecture du jeu" />
-                    <SliderField name="vision_jeu" label="Vision de jeu" />
-                    <SliderField
-                      name="prise_decision"
-                      label="Prise de décision"
-                    />
-                    <SliderField name="leadership" label="Leadership" />
-                  </div>
-
-                  {/* 💪 Physique */}
-                  <h3 className="text-lg font-semibold text-white">
-                    💪 Physique
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <SliderField name="vitesse" label="Vitesse" />
-                    <SliderField name="agilite" label="Agilité" />
-                    <SliderField name="puissance" label="Puissance" />
-                    <SliderField name="endurance" label="Endurance" />
-                    <SliderField name="saut_vertical" label="Saut vertical" />
-                  </div>
-
-                  {/* 🛡️ Défense */}
-                  <h3 className="text-lg font-semibold text-white">
-                    🛡️ Défense
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <SliderField name="defense_1v1" label="Défense 1v1" />
-                    <SliderField
-                      name="defense_collective"
-                      label="Défense collective"
-                    />
-                    <SliderField
-                      name="anticipation"
-                      label="Anticipation / Interceptions"
-                    />
-                    <SliderField name="contre" label="Contre" />
-                  </div>
-
-                  {/* ✋ Techniques individuelles */}
-                  <h3 className="text-lg font-semibold text-white">
-                    ✋ Techniques individuelles
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <SliderField name="dribble" label="Dribble / Handle" />
-                    <SliderField
-                      name="finition"
-                      label="Finition proche du panier"
-                    />
-                    <SliderField
-                      name="jeu_sans_ballon"
-                      label="Jeu sans ballon"
-                    />
-                    <SliderField
-                      name="footwork"
-                      label="Pied de pivot / footwork"
-                    />
-                    <SliderField name="passe" label="Passe" />
-                  </div>
-
-                  {/* 🚀 Mentalité / Potentiel */}
-                  <h3 className="text-lg font-semibold text-white">
-                    🚀 Mentalité / Potentiel
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <SliderField name="travail" label="Travail / Éthique" />
-                    <SliderField name="potentiel" label="Potentiel" />
-                    <SliderField name="concentration" label="Concentration" />
-                    <SliderField name="resilience" label="Résilience" />
-                  </div>
-                </div>
+                ))}
 
                 <FormField
                   control={methods.control}

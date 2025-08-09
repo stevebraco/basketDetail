@@ -4,7 +4,13 @@ import { act, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import YouTube from "react-youtube";
-import { Event, PlayerStat, PlayerStatsUpdate, Shot } from "@/types/types";
+import {
+  ActionItem,
+  CustomEventType,
+  MatchEventType,
+  PlayerStatsUpdate,
+  Shot,
+} from "@/types/types";
 import { HHMMSSToSeconds, secondsToHHMMSS } from "@/utils/timeUtils";
 import ShotMarker from "./ui/ShotMaker";
 import { useYoutubePlayer } from "@/hooks/useYoutubePlayer";
@@ -17,15 +23,14 @@ export default function BasketballCourtSVG({
 }: {
   initialShots?: Shot[];
   selectedPlayer?: string;
-  onUpdateStats: (update: PlayerStatsUpdate, shotOrEvent: Shot | Event) => void;
-  playerStats?: PlayerStat;
+  onUpdateStats: (
+    update: PlayerStatsUpdate,
+    shotOrEvent: Shot | CustomEventType
+  ) => void;
+  videoId?: string;
 }) {
-  type ActionItem =
-    | (Shot & { typeItem: "shot" })
-    | (Event & { typeItem: "event" });
-
   const [actions, setActions] = useState<ActionItem[]>(
-    initialShots.map((s) => ({ ...s, typeItem: "shot" }))
+    initialShots.map((s) => ({ ...s, typeItem: "shot" as const }))
   );
   const [pendingEvent, setPendingEvent] = useState<{
     x: number;
@@ -41,7 +46,6 @@ export default function BasketballCourtSVG({
     useYoutubePlayer();
 
   const VIDEO_ID = videoId;
-  console.log(VIDEO_ID);
 
   // Dimensions du terrain
   const courtWidth = 28.65;
@@ -103,7 +107,7 @@ export default function BasketballCourtSVG({
         : "2PT";
       const points = made ? (type === "3PT" ? 3 : 2) : 0;
 
-      const newShot: ActionItem = {
+      const newShot: MatchEventType = {
         x: pendingEvent.x,
         y: pendingEvent.y,
         type,
@@ -126,9 +130,8 @@ export default function BasketballCourtSVG({
 
       onUpdateStats(update, newShot);
       setActions((prev) => [...prev, newShot]);
-      console.log(actions);
     } else {
-      const newEvent: ActionItem = {
+      const newEvent: CustomEventType = {
         x: pendingEvent.x,
         y: pendingEvent.y,
         timestamp: seconds,
@@ -257,7 +260,7 @@ export default function BasketballCourtSVG({
                 cx={6}
                 cy={6}
                 r={6}
-                fill={getColorForEvent((event as Event).eventType)}
+                fill={getColorForEvent((event as CustomEventType).eventType)}
                 opacity={0.8}
               />
             </svg>

@@ -12,42 +12,24 @@ import {
 } from "recharts";
 import { ChartConfig } from "@/components/ui/chart";
 
-const STAT_TYPES = [
-  "points",
-  "passes",
-  "rebonds",
-  "interceptions",
-  "tir2pts",
-  "tir3pts",
-  "evaluation",
-];
+type competencesProps = {
+  categories: string;
+  items: {
+    nom: string;
+    note: number;
+  }[];
+};
 
-const chartData = [
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 273 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
-];
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--chart-1)",
-  },
-} satisfies ChartConfig;
-
-function RadarChart({ competences }) {
+function RadarChart({ competences }: { competences: competencesProps[] }) {
   const moyenneParCategorie = competences.map((cat) => {
     const total = cat.items.reduce((sum, item) => sum + item.note, 0);
     const moyenne = total / cat.items.length;
-    return { categorie: cat.categorie, moyenne: Number(moyenne.toFixed(2)) };
+    return { categorie: cat.categories, moyenne: Number(moyenne.toFixed(2)) };
   });
 
   const radarData = moyenneParCategorie.map((cat) => ({
     subject: cat.categorie,
     value: cat.moyenne,
-    // fullMark: 10, // valeur max sur le radar
   }));
 
   return (

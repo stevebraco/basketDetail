@@ -38,8 +38,8 @@ export default function BasketballCourtCanvas() {
     if (!ctx) return;
 
     // Dimensions du terrain
-    const width = canvas.width;
-    const height = canvas.height;
+    const width = canvas!.width;
+    const height = canvas!.height;
 
     // Dessiner le terrain (background)
     ctx.fillStyle = "#F4F4F4";

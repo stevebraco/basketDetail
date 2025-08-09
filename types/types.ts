@@ -86,7 +86,7 @@ export type BaseEvent = {
 
 // Tir = événement spécialisé
 export type Shot = BaseEvent & {
-  type: "2PT" | "3PT";
+  type: "2PT" | "3PT" | string;
   made: boolean;
 };
 
@@ -102,30 +102,67 @@ type CompetenceItem = {
   note: number;
 };
 
-type CompetenceCategorie =
-  | "tir"
-  | "qi_basket"
-  | "physique"
-  | "defense"
-  | "techniques"
-  | "potentiel";
-
-type Competence = {
-  categorie: CompetenceCategorie;
+type CompetenceCategorie = {
+  categorie: string;
   items: CompetenceItem[];
 };
 
-export type PlayerType = {
+export type JoueurType = {
   id: string;
   prenom: string;
   nom: string;
-  age: number;
-  taille: number;
-  poids: number;
+  age: bigint;
+  taille: bigint;
+  poids: bigint;
   poste: string;
-  posteSecondaire?: string | null; // ← modifier ici
-  equipeId: number;
-  remarque?: string | null; // ← modifier ici aussi
-  matchIds: number[];
-  competences: Competence[];
+  posteSecondaire: string;
+  remarque: string;
+  competences: CompetenceCategorie[];
+};
+
+export type AveragesType = {
+  points?: number;
+  reboundsOff?: number;
+  reboundsDef?: number;
+  reboundsTotal?: number;
+  assists?: number;
+  steals?: number;
+  blocks?: number;
+  turnovers?: number;
+  fautes?: number;
+  minutes?: number;
+  plusMinus?: number;
+};
+
+export type MatchEventType = {
+  x: number;
+  y: number;
+  type: string; // "3PT", "2PT", "FT"...
+  player: string;
+  timestamp: number;
+  made: boolean;
+  commentaire: string;
+  typeItem: "shot";
+};
+
+export type CustomEventType = {
+  x: number;
+  y: number;
+  timestamp: number;
+  commentaire: string;
+  eventType: string; // "rebond_def", "rebond_off", "interception", etc.
+  player: string;
+  typeItem: "event";
+};
+
+export type ActionItem = MatchEventType | CustomEventType;
+
+export type SliderFieldType = {
+  name: string;
+  label: string;
+};
+
+export type SkillSectionType = {
+  title: string;
+  skills: SliderFieldType[];
 };

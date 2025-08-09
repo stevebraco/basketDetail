@@ -11,45 +11,9 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { JoueurType } from "@/types/types";
 
-// Exemple de données pour les joueurs
-const players = [
-  {
-    id: 1,
-    name: "Steve",
-    lastName: "Braco",
-    poste: "Arrière",
-    age: 34,
-    taille: "1m83",
-    poids: "73kg",
-    role: "Shooteur",
-    remarque: "Très bon joueur de 1c1",
-  },
-  {
-    id: 2,
-    name: "John",
-    lastName: "Doe",
-    poste: "Meneur",
-    age: 28,
-    taille: "1m80",
-    poids: "80kg",
-    role: "Passeur",
-    remarque: "Excellent vision de jeu",
-  },
-  {
-    id: 3,
-    name: "Alice",
-    lastName: "Smith",
-    poste: "Ailier",
-    age: 25,
-    taille: "1m75",
-    poids: "65kg",
-    role: "Défenseur",
-    remarque: "Bonne défense et récupération",
-  },
-];
-
-export function PlayerList({ players }: any) {
+export function PlayerList({ players }: { players: JoueurType[] }) {
   return (
     <Card>
       <CardHeader>

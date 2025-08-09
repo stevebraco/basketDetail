@@ -1,11 +1,10 @@
-import { PlayerType } from "@/types/types";
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import Image from "next/image";
 import { Button } from "./ui/button";
+import { JoueurType } from "@/types/types";
 
-function PlayerDetail({ player }: { player: PlayerType }) {
-  console.log(player);
+function PlayerDetail({ player }: { player: JoueurType }) {
   return (
     <Card className="w-full max-w-4xl bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl">
       <CardHeader className="items-center">
@@ -47,7 +46,7 @@ function PlayerDetail({ player }: { player: PlayerType }) {
           </div>
           <div className="flex justify-between">
             <span className="text-white/60">Equipe</span>
-            <span>{player.equipeId}</span>
+            {/* <span>{player.equipeId}</span> */}
           </div>
           <div className="flex justify-between">
             <span className="text-white/60">Poste</span>

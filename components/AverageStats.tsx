@@ -1,22 +1,9 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-
-type Averages = {
-  points?: number;
-  reboundsOff?: number;
-  reboundsDef?: number;
-  reboundsTotal?: number;
-  assists?: number;
-  steals?: number;
-  blocks?: number;
-  turnovers?: number;
-  fautes?: number;
-  minutes?: number;
-  plusMinus?: number;
-};
+import { AveragesType } from "@/types/types";
 
 type Props = {
-  averages: Averages;
+  averages: AveragesType;
   matchesPlayed: number;
 };
 
