@@ -57,7 +57,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     }
 
     return (
-      <div className="relative">
+      <div className="relative h-full">
         <textarea
           ref={ref}
           placeholder={placeholder}

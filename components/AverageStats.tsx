@@ -9,7 +9,7 @@ type Props = {
 
 export default function AverageStats({ averages, matchesPlayed }: Props) {
   return (
-    <Card className="bg-[#1A1C2C] border-none shadow-md">
+    <Card>
       <CardHeader>
         <CardTitle>Statistiques moyennes</CardTitle>
       </CardHeader>

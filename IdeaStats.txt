@@ -1,0 +1,34 @@
+1. Efficiences avancées
+PER (Player Efficiency Rating) : résumé global de la performance d’un joueur, combinant plusieurs stats.
+
+TS% (True Shooting Percentage) : mesure la vraie efficacité au tir en prenant en compte 2 pts, 3 pts et lancers francs.
+
+Usage Rate : % de possessions utilisées par le joueur quand il est sur le terrain.
+
+2. Stats de rythme et de jeu
+Minutes joués : pour évaluer l’endurance et la gestion du temps de jeu.
+
+Plus/Minus (+/-) : impact du joueur sur le score quand il est sur le terrain.
+
+Fautes personnelles : pour gérer le risque de sortie prématurée.
+
+3. Stats défensives détaillées
+Defensive Rating : points encaissés par 100 possessions quand le joueur défend.
+
+Steals / Blocks par match : indicateurs d’activité défensive.
+
+Deflections (détournements) : montre l’agressivité sur le ballon (si tes données le permettent).
+
+4. Stats de jeu collectif
+Assist-to-Turnover Ratio : équilibre entre passes décisives et pertes de balle, très utile pour évaluer un meneur.
+
+Passes décisives par possession : pour voir la créativité offensive.
+
+Screen assists : passes précédant un écran qui mène à un panier (plus avancé).
+
+5. Stats spécifiques aux matchs
+Performances par quart-temps : pour voir si le joueur est régulier ou a des pics de performance.
+
+Clutch stats : stats dans les dernières minutes serrées, très utiles pour identifier les joueurs décisifs.
+
+Performance sur pick-and-roll : si possible, analyser ce type d’action.

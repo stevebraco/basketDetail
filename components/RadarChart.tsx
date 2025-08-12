@@ -13,7 +13,7 @@ import {
 import { ChartConfig } from "@/components/ui/chart";
 
 type competencesProps = {
-  categories: string;
+  categorie: string;
   items: {
     nom: string;
     note: number;
@@ -22,9 +22,10 @@ type competencesProps = {
 
 function RadarChart({ competences }: { competences: competencesProps[] }) {
   const moyenneParCategorie = competences.map((cat) => {
+    console.log(cat);
     const total = cat.items.reduce((sum, item) => sum + item.note, 0);
     const moyenne = total / cat.items.length;
-    return { categorie: cat.categories, moyenne: Number(moyenne.toFixed(2)) };
+    return { categorie: cat.categorie, moyenne: Number(moyenne.toFixed(2)) };
   });
 
   const radarData = moyenneParCategorie.map((cat) => ({

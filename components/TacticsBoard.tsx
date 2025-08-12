@@ -5,6 +5,8 @@ import { Stage, Layer, Circle, Text, Line, Arrow } from "react-konva";
 
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Textarea } from "./input/TextArea";
+import { Card } from "./ui/card";
 
 const PLAYER_COUNT = 10;
 const PLAYER_RADIUS = 15;
@@ -368,8 +370,8 @@ export default function TacticBoard() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4">
-      <div className="flex gap-2 flex-wrap">
+    <>
+      {/* <div className="flex gap-2 flex-wrap">
         {systems.map((sys) => (
           <Button
             key={sys.id}
@@ -396,22 +398,16 @@ export default function TacticBoard() {
             {sys.label}
           </Button>
         ))}
-      </div>
+      </div> */}
 
-      <div className="flex gap-2 flex-wrap">
+      {/* <div className="flex gap-2 flex-wrap">
         <Button onClick={startRecording} disabled={isRecording || isReplaying}>
           ▶️ Démarrer enregistrement
         </Button>
         <Button onClick={stopRecording} disabled={!isRecording}>
           ⏹️ Arrêter
         </Button>
-        <Input
-          type="text"
-          placeholder="Commentaire"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          className="border px-2 py-1"
-        />
+
         <Button onClick={addStep} disabled={isRecording || isReplaying}>
           ➕ Ajouter une étape
         </Button>
@@ -430,9 +426,9 @@ export default function TacticBoard() {
         <Button onClick={forkCurrentSystem} disabled={isRecording}>
           🌿 Créer une branche (fork)
         </Button>
-      </div>
+      </div> */}
 
-      <div className="flex gap-2 mt-2 flex-wrap justify-center">
+      {/* <div className="flex gap-2 mt-2 flex-wrap justify-center">
         <Button
           onClick={() => goToStep(replayIndex - 1)}
           disabled={replayIndex <= 0}
@@ -447,9 +443,9 @@ export default function TacticBoard() {
         >
           ▶️ Étape suivante
         </Button>
-      </div>
+      </div> */}
 
-      <div className="mt-4 text-center text-lg font-semibold">
+      {/* <div className="mt-4 text-center text-lg font-semibold">
         {currentComment}
       </div>
 
@@ -478,149 +474,190 @@ export default function TacticBoard() {
         >
           🗑️ Effacer
         </Button>
-      </div>
+      </div> */}
 
-      <div className="relative w-[800px] h-[500px] border border-gray-300 mt-4">
-        <img
-          src="/tactics_court.svg"
-          alt="Court"
-          className="absolute w-full h-full z-0"
-          style={{ pointerEvents: "none" }}
-        />
-        <Stage
-          width={800}
-          height={500}
-          style={{
-            position: "relative",
-            zIndex: 1,
-            cursor: drawing ? "crosshair" : "default",
-          }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-        >
-          <Layer>
-            {/* Joueurs */}
-            {players.map((pos, i) => (
+      <Card className="relative w-full min-w-full bg-[#252545] col-span-12 xl:col-end-9 overflow-hidden gap-0">
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            onClick={startRecording}
+            disabled={isRecording || isReplaying}
+          >
+            ▶️ Démarrer enregistrement
+          </Button>
+          <Button onClick={stopRecording} disabled={!isRecording}>
+            ⏹️ Arrêter
+          </Button>
+
+          <Button onClick={addStep} disabled={isRecording || isReplaying}>
+            ➕ Ajouter une étape
+          </Button>
+          <Button
+            onClick={handleReplay}
+            disabled={!currentSystem || !currentSystem.recording.length}
+          >
+            🔁 Lire l'enregistrement
+          </Button>
+          <Button onClick={togglePause} disabled={!isReplaying}>
+            {isPaused ? "▶️ Reprendre" : "⏸️ Pause"}
+          </Button>
+          <Button onClick={playPresetSystem}>
+            🎮 Jouer le système prédéfini
+          </Button>
+          <Button onClick={forkCurrentSystem} disabled={isRecording}>
+            🌿 Créer une branche (fork)
+          </Button>
+        </div>
+        <div>
+          <img
+            src="/tactics_court.svg"
+            alt="Court"
+            className="absolute w-full z-0"
+            style={{ pointerEvents: "none" }}
+          />
+          <Stage
+            width={1010}
+            height={500}
+            style={{
+              position: "relative",
+              zIndex: 1,
+              cursor: drawing ? "crosshair" : "default",
+              width: "100%",
+            }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+          >
+            <Layer>
+              {/* Joueurs */}
+              {players.map((pos, i) => (
+                <Circle
+                  key={i}
+                  x={pos.x}
+                  y={pos.y}
+                  radius={PLAYER_RADIUS}
+                  fill={getPlayerColor(i)}
+                  draggable={!isReplaying}
+                  onDragMove={(e) => handleDragMove(i, e)}
+                  shadowColor={getPlayerColor(i)}
+                  shadowBlur={10}
+                  shadowOffsetX={0}
+                  shadowOffsetY={0}
+                  shadowOpacity={0.7}
+                />
+              ))}
+
+              {/* Balle */}
               <Circle
-                key={i}
-                x={pos.x}
-                y={pos.y}
-                radius={PLAYER_RADIUS}
-                fill={getPlayerColor(i)}
+                x={ball.x}
+                y={ball.y}
+                radius={BALL_RADIUS}
+                fill="orange"
                 draggable={!isReplaying}
-                onDragMove={(e) => handleDragMove(i, e)}
-                shadowColor={getPlayerColor(i)}
-                shadowBlur={10}
-                shadowOffsetX={0}
-                shadowOffsetY={0}
-                shadowOpacity={0.7}
+                onDragMove={handleBallDrag}
               />
-            ))}
 
-            {/* Balle */}
-            <Circle
-              x={ball.x}
-              y={ball.y}
-              radius={BALL_RADIUS}
-              fill="orange"
-              draggable={!isReplaying}
-              onDragMove={handleBallDrag}
-            />
+              {/* Numéros */}
+              {players.map((pos, i) => (
+                <Text
+                  key={"text-" + i}
+                  x={pos.x - 5}
+                  y={pos.y - 7}
+                  text={`${i + 1}`}
+                  fontSize={15}
+                  fill="white"
+                  listening={false}
+                />
+              ))}
 
-            {/* Numéros */}
-            {players.map((pos, i) => (
-              <Text
-                key={"text-" + i}
-                x={pos.x - 5}
-                y={pos.y - 7}
-                text={`${i + 1}`}
-                fontSize={15}
-                fill="white"
-                listening={false}
-              />
-            ))}
+              {/* Dessins existants */}
+              {drawings.map((shape) => {
+                if (shape.type === "arrow") {
+                  return (
+                    <Arrow
+                      key={shape.id}
+                      points={shape.points}
+                      pointerLength={10}
+                      pointerWidth={10}
+                      fill="red"
+                      stroke="red"
+                      strokeWidth={3}
+                    />
+                  );
+                }
+                if (shape.type === "screen") {
+                  return (
+                    <Line
+                      key={shape.id}
+                      points={shape.points}
+                      stroke="blue"
+                      strokeWidth={3}
+                      dash={[10, 5]}
+                      tension={0.5}
+                      lineCap="round"
+                      lineJoin="round"
+                    />
+                  );
+                }
+                if (shape.type === "line") {
+                  return (
+                    <Line
+                      key={shape.id}
+                      points={shape.points}
+                      stroke="green"
+                      strokeWidth={2}
+                      tension={0.5}
+                      lineCap="round"
+                      lineJoin="round"
+                    />
+                  );
+                }
+                return null;
+              })}
 
-            {/* Dessins existants */}
-            {drawings.map((shape) => {
-              if (shape.type === "arrow") {
-                return (
-                  <Arrow
-                    key={shape.id}
-                    points={shape.points}
-                    pointerLength={10}
-                    pointerWidth={10}
-                    fill="red"
-                    stroke="red"
-                    strokeWidth={3}
-                  />
-                );
-              }
-              if (shape.type === "screen") {
-                return (
-                  <Line
-                    key={shape.id}
-                    points={shape.points}
-                    stroke="blue"
-                    strokeWidth={3}
-                    dash={[10, 5]}
-                    tension={0.5}
-                    lineCap="round"
-                    lineJoin="round"
-                  />
-                );
-              }
-              if (shape.type === "line") {
-                return (
-                  <Line
-                    key={shape.id}
-                    points={shape.points}
-                    stroke="green"
-                    strokeWidth={2}
-                    tension={0.5}
-                    lineCap="round"
-                    lineJoin="round"
-                  />
-                );
-              }
-              return null;
-            })}
-
-            {/* Dessin en cours */}
-            {drawing && drawMode === "arrow" && (
-              <Arrow
-                points={newShapePoints}
-                pointerLength={10}
-                pointerWidth={10}
-                fill="red"
-                stroke="red"
-                strokeWidth={3}
-              />
-            )}
-            {drawing && drawMode === "screen" && (
-              <Line
-                points={newShapePoints}
-                stroke="blue"
-                strokeWidth={3}
-                dash={[10, 5]}
-                tension={0.5}
-                lineCap="round"
-                lineJoin="round"
-              />
-            )}
-            {drawing && drawMode === "line" && (
-              <Line
-                points={newShapePoints}
-                stroke="green"
-                strokeWidth={2}
-                tension={0.5}
-                lineCap="round"
-                lineJoin="round"
-              />
-            )}
-          </Layer>
-        </Stage>
+              {/* Dessin en cours */}
+              {drawing && drawMode === "arrow" && (
+                <Arrow
+                  points={newShapePoints}
+                  pointerLength={10}
+                  pointerWidth={10}
+                  fill="red"
+                  stroke="red"
+                  strokeWidth={3}
+                />
+              )}
+              {drawing && drawMode === "screen" && (
+                <Line
+                  points={newShapePoints}
+                  stroke="blue"
+                  strokeWidth={3}
+                  dash={[10, 5]}
+                  tension={0.5}
+                  lineCap="round"
+                  lineJoin="round"
+                />
+              )}
+              {drawing && drawMode === "line" && (
+                <Line
+                  points={newShapePoints}
+                  stroke="green"
+                  strokeWidth={2}
+                  tension={0.5}
+                  lineCap="round"
+                  lineJoin="round"
+                />
+              )}
+            </Layer>
+          </Stage>
+        </div>
+      </Card>
+      <div className="col-span-4 h-full">
+        <Textarea
+          placeholder="Commentaire"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="border px-2 py-1 h-full"
+        />
       </div>
-    </div>
+    </>
   );
 }

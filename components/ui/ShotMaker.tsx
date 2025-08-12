@@ -42,6 +42,14 @@ export default function ShotMarker({
 
         cursor: "pointer",
       }}
+      animate={{
+        scale: [0, 1.5, 1], // L'animation consiste à faire grossir et rétrécir le tir
+        opacity: [0, 1], // Faire apparaître le tir
+      }}
+      transition={{
+        duration: 0.5, // Durée de l'animation
+        ease: "easeInOut",
+      }}
       onMouseEnter={onShowTooltip}
       onMouseLeave={onHideTooltip}
     >

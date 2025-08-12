@@ -49,199 +49,195 @@ export function CreatePlayerForm() {
   const onSubmit = (data: FormData) => {};
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10">
-      <Card className="w-full max-w-6xl ">
-        <CardHeader>
-          <CardTitle className="text-white text-xl">
-            Ajouter un joueur
-          </CardTitle>
-          <CardDescription className="text-sm text-white/60">
-            Remplissez les informations du joueur, y compris ses statistiques.
-          </CardDescription>
-        </CardHeader>
+    <Card className="w-full max-w-6xl ">
+      <CardHeader>
+        <CardTitle className="text-white text-xl">Ajouter un joueur</CardTitle>
+        <CardDescription className="text-sm text-white/60">
+          Remplissez les informations du joueur, y compris ses statistiques.
+        </CardDescription>
+      </CardHeader>
 
-        <CardContent>
-          <FormProvider {...methods}>
-            <Form {...methods}>
-              <form
-                onSubmit={methods.handleSubmit(onSubmit)}
-                className="space-y-6"
-              >
-                {/* === Infos de base === */}
-                <FormField
-                  control={methods.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Prénom</FormLabel>
+      <CardContent>
+        <FormProvider {...methods}>
+          <Form {...methods}>
+            <form
+              onSubmit={methods.handleSubmit(onSubmit)}
+              className="space-y-6"
+            >
+              {/* === Infos de base === */}
+              <FormField
+                control={methods.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Prénom</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Steve" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={methods.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nom</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Braco" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={methods.control}
+                name="poste"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Poste</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
-                        <Input placeholder="Steve" {...field} />
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choisir un poste" />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={methods.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nom</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Braco" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={methods.control}
-                  name="poste"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Poste</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choisir un poste" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {optionsPoste.map((option) => (
-                            <SelectItem key={option.id} value={option.poste}>
-                              {option.id} - {option.poste}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={methods.control}
-                  name="age"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Âge</FormLabel>
-                      <FormControl>
-                        <Input placeholder="34" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={methods.control}
-                  name="taille"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Taille</FormLabel>
-                      <FormControl>
-                        <Input placeholder="1m83" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={methods.control}
-                  name="poids"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Poids</FormLabel>
-                      <FormControl>
-                        <Input placeholder="73kg" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                      <SelectContent>
+                        {optionsPoste.map((option) => (
+                          <SelectItem key={option.id} value={option.poste}>
+                            {option.id} - {option.poste}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={methods.control}
+                name="age"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Âge</FormLabel>
+                    <FormControl>
+                      <Input placeholder="34" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={methods.control}
+                name="taille"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Taille</FormLabel>
+                    <FormControl>
+                      <Input placeholder="1m83" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={methods.control}
+                name="poids"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Poids</FormLabel>
+                    <FormControl>
+                      <Input placeholder="73kg" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                {/* === Sliders === */}
-                {skillSections.map((section, sectionIndex) => (
-                  <div key={sectionIndex} className="mb-8">
-                    <h3 className="text-lg font-semibold text-white mb-4">
-                      {section.title}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {section.skills.map(({ name, label }, skillIndex) => {
-                        const fieldName = name as keyof FormData;
-                        return (
-                          <FormField
-                            key={skillIndex}
-                            control={methods.control}
-                            name={fieldName}
-                            render={({ field }) => {
-                              const value = methods.watch(fieldName) || 0;
-                              return (
-                                <FormItem className="mb-4">
-                                  <FormLabel>{label}</FormLabel>
-                                  <FormControl>
-                                    <div className="flex items-center gap-4">
-                                      <Controller
-                                        control={methods.control}
-                                        name={fieldName}
-                                        render={({
-                                          field: { value, onChange },
-                                        }) => (
-                                          <Slider
-                                            min={0}
-                                            max={10}
-                                            step={1}
-                                            value={[Number(value) || 0]}
-                                            onValueChange={(val) =>
-                                              onChange(val[0])
-                                            }
-                                            className="flex-grow"
-                                          />
-                                        )}
-                                      />
-                                      <span className="w-6 text-right">
-                                        {value}
-                                      </span>
-                                    </div>
-                                  </FormControl>
-                                </FormItem>
-                              );
-                            }}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-
-                <FormField
-                  control={methods.control}
-                  name="remarque"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Remarque</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Ajoutez des remarques si nécessaire."
-                          {...field}
+              {/* === Sliders === */}
+              {skillSections.map((section, sectionIndex) => (
+                <div key={sectionIndex} className="mb-8">
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    {section.title}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {section.skills.map(({ name, label }, skillIndex) => {
+                      const fieldName = name as keyof FormData;
+                      return (
+                        <FormField
+                          key={skillIndex}
+                          control={methods.control}
+                          name={fieldName}
+                          render={({ field }) => {
+                            const value = methods.watch(fieldName) || 0;
+                            return (
+                              <FormItem className="mb-4">
+                                <FormLabel>{label}</FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center gap-4">
+                                    <Controller
+                                      control={methods.control}
+                                      name={fieldName}
+                                      render={({
+                                        field: { value, onChange },
+                                      }) => (
+                                        <Slider
+                                          min={0}
+                                          max={10}
+                                          step={1}
+                                          value={[Number(value) || 0]}
+                                          onValueChange={(val) =>
+                                            onChange(val[0])
+                                          }
+                                          className="flex-grow"
+                                        />
+                                      )}
+                                    />
+                                    <span className="w-6 text-right">
+                                      {value}
+                                    </span>
+                                  </div>
+                                </FormControl>
+                              </FormItem>
+                            );
+                          }}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </form>
-            </Form>
-          </FormProvider>
-        </CardContent>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
 
-        <CardFooter>
-          <Button type="submit" className="w-full">
-            Ajouter le joueur
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+              <FormField
+                control={methods.control}
+                name="remarque"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Remarque</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Ajoutez des remarques si nécessaire."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
+        </FormProvider>
+      </CardContent>
+
+      <CardFooter>
+        <Button type="submit" className="w-full">
+          Ajouter le joueur
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

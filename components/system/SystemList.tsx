@@ -332,10 +332,10 @@ const systems = [
   },
 ];
 
-export default function SystemList() {
+export default function SystemList({ title }: { title: string }) {
   return (
-    <Card className="w-full max-w-4xl bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl">
-      <h2 className="text-xl font-bold mb-4">Liste des systèmes</h2>
+    <Card className="">
+      <h2 className="text-xl font-bold mb-4">{title}</h2>
       <ScrollArea className="rounded-md border">
         <Table>
           <TableHeader>

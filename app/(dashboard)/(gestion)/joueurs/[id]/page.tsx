@@ -1,7 +1,9 @@
+import AverageStats from "@/components/AverageStats";
 import PlayerDetail from "@/components/PlayerDetail";
 import RadarChart from "@/components/RadarChart";
 import StatsMatch from "@/components/StatsMatch";
 import { prisma } from "@/lib/prisma";
+import { getAverageStatsAndCount } from "@/utils/AveragesStats";
 import React from "react";
 
 export default async function PlayerDetailPage({
@@ -25,6 +27,10 @@ export default async function PlayerDetailPage({
     },
   });
 
+  const { averages, matchesPlayed } = getAverageStatsAndCount(
+    playerDetail?.playerMatches
+  );
+
   if (!playerDetail) {
     return (
       <div className="min-h-screen bg-[#0F111C] text-white p-6">
@@ -47,7 +53,7 @@ export default async function PlayerDetailPage({
           <RadarChart competences={playerDetail.competences} />
 
           {/* STATISTICS */}
-          {/* <AverageStats averages={averages} matchesPlayed={matchesPlayed} /> */}
+          <AverageStats averages={averages} matchesPlayed={matchesPlayed} />
         </div>
       </div>
     </div>

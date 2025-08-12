@@ -1,4 +1,4 @@
-import { TeamForm } from "@/components/forms/TeamForm";
+import { CreateMatchForm } from "@/components/forms/CreateMatchForm";
 import { TeamTable } from "@/components/gestions/TeamTable";
 import { prisma } from "@/lib/prisma";
 
@@ -10,7 +10,9 @@ export default async function Equipes() {
       <div className="col-span-12 space-y-6 xl:col-span-7">
         <TeamTable matchs={matchs} />
       </div>
-      <div className="col-span-12 xl:col-span-5"></div>
+      <div className="col-span-12 xl:col-span-5">
+        <CreateMatchForm />
+      </div>
     </div>
   );
 }

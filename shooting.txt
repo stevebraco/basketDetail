@@ -1,0 +1,17 @@
+ points         // Points marqués
+  fgm            // Field Goals Made (Tirs réussis toutes zones confondues)
+  fga            // Field Goals Attempted (Tirs tentés toutes zones confondues)
+  threePM        // Three Points Made (Tirs à 3 points réussis)
+  threePA        // Three Points Attempted (Tirs à 3 points tentés)
+  ftm            // Free Throws Made (Lancers francs réussis)
+  fta            // Free Throws Attempted (Lancers francs tentés)
+  reboundsOff    // Rebounds Offensive (Rebonds offensifs)
+  reboundsDef    // Rebounds Defensive (Rebonds défensifs)
+  reboundsTotal  // Total Rebounds (Rebonds totaux)
+  assists        // Passes décisives
+  turnovers      // Pertes de balle
+  steals         // Interceptions
+  blocks         // Contres
+  fautes         // Fautes personnelles
+  minutes        // Minutes jouées
+  plusMinus      // Plus/Minus (différence de score quand le joueur est sur le terrain)
