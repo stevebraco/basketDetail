@@ -27,11 +27,18 @@ type NavItem = {
 const navItems = [
   {
     icon: <Settings />,
-    name: "Gestion",
+    name: "Matchs",
     subItems: [
-      { name: "Equipes", path: "/equipes", pro: false },
-      { name: "Joueurs", path: "/joueurs" },
-      { name: "Matchs", path: "/matchs" },
+      { name: "Ajouter un match", path: "/addMatch", pro: true },
+      { name: "Analyse des matchs", path: "/matchList" },
+    ],
+  },
+  {
+    icon: <Settings />,
+    name: "Joueurs",
+    subItems: [
+      { name: "Ajouter un joueur", path: "/addPlayer" },
+      { name: "Liste des joueurs", path: "/playerList" },
     ],
   },
   {

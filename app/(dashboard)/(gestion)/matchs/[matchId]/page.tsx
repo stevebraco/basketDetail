@@ -7,7 +7,7 @@ import React from "react";
 export default async function MatchPage() {
   const matchDetails = await prisma.match.findUnique({
     where: {
-      id: "68968009cc23af2750edc2f4",
+      id: "689bb220b513c6f3e5cf60fd",
     },
     include: {
       playerMatches: {

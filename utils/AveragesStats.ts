@@ -45,7 +45,7 @@ export function getAverageStatsAndCount(
     return acc;
   }, {} as Record<StatKeys, number>);
 
-  const matchesPlayed = data.length;
+  const matchesPlayed = data?.length;
 
   for (const match of data) {
     for (const key of keys) {

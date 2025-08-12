@@ -91,6 +91,12 @@ model Match {
   id             String         @id @default(auto()) @map("_id") @db.ObjectId
   nom            String
   videoId        String
+  createdAt     DateTime      @default(now())
+  versus        String
+  score         String
+  hasWon        Boolean
+  location      String
+  duration     String
 
   tirs     TirEvenement[] // <-- Nouveau champ
 

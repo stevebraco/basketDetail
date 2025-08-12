@@ -96,7 +96,8 @@ export function CreateMatchForm() {
   }
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    // <Card className="w-full max-w-4xl mx-auto">
+    <Card>
       <CardHeader>
         <CardTitle className="text-white text-xl">Ajouter un match</CardTitle>
         <CardDescription className="text-sm text-white/60">

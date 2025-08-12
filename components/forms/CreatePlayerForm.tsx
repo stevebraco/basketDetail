@@ -49,7 +49,7 @@ export function CreatePlayerForm() {
   const onSubmit = (data: FormData) => {};
 
   return (
-    <Card className="w-full max-w-6xl ">
+    <Card className="">
       <CardHeader>
         <CardTitle className="text-white text-xl">Ajouter un joueur</CardTitle>
         <CardDescription className="text-sm text-white/60">

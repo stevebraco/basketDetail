@@ -363,6 +363,12 @@ async function main() {
     {
       nom: "Match 1",
       videoId: "video_match_1",
+      createdAt: new Date(), // date courante
+      versus: `Los angeles Lakers`,
+      location: "Stade A",
+      score: "120-80",
+      hasWon: true,
+      duration: "01:30:00", // durée au format HH:MM:SS
       tirs: [
         {
           x: 358,
@@ -398,6 +404,12 @@ async function main() {
     {
       nom: "Match 2",
       videoId: "video_match_2",
+      createdAt: new Date(), // date courante
+      versus: `Los angeles clippers`,
+      location: "Stade A",
+      score: "123-122",
+      hasWon: false,
+      duration: "01:30:00", // durée au format HH:MM:SS
       tirs: [
         {
           x: 441,

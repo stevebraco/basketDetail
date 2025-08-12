@@ -128,7 +128,7 @@ export function PlayerList({ players }: { players: JoueurType[] }) {
   });
 
   return (
-    <Card className="w-full max-w-6xl ">
+    <Card>
       <CardHeader>
         <CardTitle className="text-white text-xl">Liste des joueurs</CardTitle>
       </CardHeader>

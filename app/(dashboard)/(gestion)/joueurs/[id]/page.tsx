@@ -3,7 +3,7 @@ import PlayerDetail from "@/components/PlayerDetail";
 import RadarChart from "@/components/RadarChart";
 import StatsMatch from "@/components/StatsMatch";
 import { prisma } from "@/lib/prisma";
-import { getAverageStatsAndCount } from "@/utils/AveragesStats";
+import { getAverageStatsAndCount } from "@/utils/averagesStats";
 import React from "react";
 
 export default async function PlayerDetailPage({
