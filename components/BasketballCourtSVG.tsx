@@ -1,19 +1,17 @@
 "use client";
 
-import { act, useState } from "react";
-import { motion } from "framer-motion";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import YouTube from "react-youtube";
-import {
-  ActionItem,
-  CustomEventType,
-  MatchEventType,
-  PlayerStatsUpdate,
-  Shot,
-} from "@/types/types";
-import { HHMMSSToSeconds, secondsToHHMMSS } from "@/utils/timeUtils";
+import { Stage, Layer, Group, Rect, Text, Circle } from "react-konva";
+import { CustomEventType, PlayerStatsUpdate, Shot } from "@/types/types";
 import ShotMarker from "./ui/ShotMaker";
 import { useYoutubePlayer } from "@/hooks/useYoutubePlayer";
+import { useBasketballCourt } from "@/hooks/useBasketballCourt";
+import { Card } from "./ui/card";
+import BasketBallCourtKonva from "./BasketBallCourtKonva";
+import { useResponsiveCourt } from "@/hooks/useResponsiveCourt";
+import { useSearchParams } from "next/navigation";
 
 export default function BasketballCourtSVG({
   initialShots = [],
@@ -22,182 +20,328 @@ export default function BasketballCourtSVG({
   videoId,
 }: {
   initialShots?: Shot[];
-  selectedPlayer?: string;
+  selectedPlayer?: string | null;
   onUpdateStats: (
     update: PlayerStatsUpdate,
     shotOrEvent: Shot | CustomEventType
   ) => void;
   videoId?: string;
 }) {
-  const [actions, setActions] = useState<ActionItem[]>(
-    initialShots.map((s) => ({ ...s, typeItem: "shot" as const }))
-  );
-  const [pendingEvent, setPendingEvent] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
-  const [pendingTimestamp, setPendingTimestamp] = useState<string | null>(null);
-  const [commentaire, setCommentaire] = useState("");
-  const [eventType, setEventType] = useState("tir");
-  const [reboundType, setReboundType] = useState<"off" | "def">("def");
   const [tooltipIndex, setTooltipIndex] = useState<number | null>(null);
 
-  const { player, currentTime, playerRef, handleReady, seekTo, reset } =
-    useYoutubePlayer();
+  const searchParams = useSearchParams();
+  const isReadOnly = searchParams.get("view");
 
-  const VIDEO_ID = videoId;
+  const sceneWidth = 1010;
+  const maxWidth = 1010;
+  const { containerRef, stageSize } = useResponsiveCourt({
+    sceneWidth,
+    sceneHeight: 500,
+    maxWidth: 1011,
+  });
 
-  // Dimensions du terrain
-  const courtWidth = 28.65;
-  const courtHeight = 15.24;
-  const svgWidth = 500;
-  const svgHeight = (courtHeight / courtWidth) * svgWidth;
+  const courtWidth = 500;
 
-  const basketLeft = { x: 59, y: svgHeight / 2 };
-  const basketRight = { x: 439, y: svgHeight / 2 };
-  const threePointRadiusR = 105;
-  const threePointRadiusL = (5.9 / courtWidth) * svgWidth;
-  const cornerThreeDistance = (7 / courtWidth) * svgWidth;
+  const svgWidth = 930 * stageSize.scale;
+
+  const basketLeft = { x: 165, y: 500 / 2 };
+  const basketRight = { x: 811, y: 500 / 2 };
+  const threePointRadius = (100 / courtWidth) * 875 * stageSize.scale;
+
+  const cornerZoneHeight = 50;
+  const cornerZoneWidth = 90;
+
+  // Zone gauche (haut et bas)
+  const cornerLeftTop = { x: 50, y: 75 };
+  const cornerLeftBottom = {
+    x: 50,
+    y: 375,
+  };
+
+  // Zone droite (haut et bas)
+  const cornerRightTop = { x: 930 - cornerZoneWidth, y: 75 };
+  const cornerRightBottom = {
+    x: 850,
+    y: 375,
+  };
 
   const isThreePointShot = (x: number, y: number) => {
     const isLeft = x < svgWidth / 2;
     const basket = isLeft ? basketLeft : basketRight;
+
+    // Vérifie si le tir est dans l'une des zones de corner
+    const inCornerZone =
+      (isLeft &&
+        ((x >= cornerLeftTop.x &&
+          x <= cornerLeftTop.x + cornerZoneWidth &&
+          y >= cornerLeftTop.y &&
+          y <= cornerLeftTop.y + cornerZoneHeight) ||
+          (x >= cornerLeftBottom.x &&
+            x <= cornerLeftBottom.x + cornerZoneWidth &&
+            y >= cornerLeftBottom.y &&
+            y <= cornerLeftBottom.y + cornerZoneHeight))) ||
+      (!isLeft &&
+        ((x >= cornerRightTop.x &&
+          x <= cornerRightTop.x + cornerZoneWidth &&
+          y >= cornerRightTop.y &&
+          y <= cornerRightTop.y + cornerZoneHeight) ||
+          (x >= cornerRightBottom.x &&
+            x <= cornerRightBottom.x + cornerZoneWidth &&
+            y >= cornerRightBottom.y &&
+            y <= cornerRightBottom.y + cornerZoneHeight)));
+
+    if (inCornerZone) return false; // 2 points
+
+    // Sinon, distance au panier
     const dx = x - basket.x;
     const dy = y - basket.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    const arcLimit = isLeft
-      ? basket.x + cornerThreeDistance
-      : basket.x - cornerThreeDistance;
+    return distance > threePointRadius; // true = 3 points
+  };
+  const {
+    player,
+    currentTime,
+    playerRef,
+    handleReady,
+    seekTo,
+    reset,
+    getCurrentTime,
+  } = useYoutubePlayer();
 
-    const inCorner =
-      y < basket.y + cornerThreeDistance &&
-      ((isLeft && x > arcLimit) || (!isLeft && x < arcLimit));
+  const {
+    actions,
+    allPoints,
+    pendingEvent,
+    pendingTimestamp,
+    commentaire,
+    eventType,
+    reboundType,
+    setCommentaire,
+    setEventType,
+    setReboundType,
+    setPendingTimestamp,
+    handleCourtClick,
+    confirmEvent,
+    resetPending,
+  } = useBasketballCourt({
+    initialShots,
+    selectedPlayer,
+    onUpdateStats,
+    isThreePointShot,
+    getCurrentTime,
+  });
 
-    return (
-      (distance > threePointRadiusR && !inCorner) ||
-      (distance > threePointRadiusL && !inCorner) ||
-      inCorner
-    );
+  const VIDEO_ID = videoId;
+
+  const originalSvgWidth = 930;
+
+  // Récupère la largeur du conteneur
+  const containerWidth = containerRef.current?.offsetWidth ?? originalSvgWidth;
+
+  type Zone = {
+    id: string;
+    label: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    contains: (x: number, y: number) => boolean;
   };
 
-  const handleClick = async (e: React.MouseEvent<HTMLDivElement>) => {
-    if (pendingEvent || !selectedPlayer || !player) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+  const zones: Zone[] = [
+    {
+      id: "paint",
+      label: "Raquette",
+      x: 80,
+      y: 180,
+      width: 195,
+      height: 145,
+      useRadius: false,
+      contains: (px, py) =>
+        px >= 50 && px <= 62 + 195 && py >= 180 && py <= 180 + 145,
+    },
+    {
+      id: "mid_left",
+      label: "Mid-range Gauche",
+      x: 80,
+      y: 325,
+      width: 195,
+      height: 100,
+      useRadius: true,
+      cornerRadius: [0, 0, 50, 0], // coin inférieur droit arrondi
+      contains: (px, py) => {
+        const rectLeft = 50;
+        const rectTop = 325;
+        const rectRight = rectLeft + 195;
+        const rectBottom = rectTop + 100;
+        const radius = 50; // arrondi coin bas-droit
 
-    setPendingEvent({ x, y });
-    const timestampSeconds = Math.floor(await player.getCurrentTime());
-    setPendingTimestamp(secondsToHHMMSS(timestampSeconds));
-    setCommentaire("");
-    setEventType("tir");
-  };
+        // Si le tir est en dehors du rectangle global → return false
+        if (
+          px < rectLeft ||
+          px > rectRight ||
+          py < rectTop ||
+          py > rectBottom
+        ) {
+          return false;
+        }
 
-  const confirmShotOrEvent = (made?: boolean) => {
-    if (!pendingEvent || pendingTimestamp === null || !selectedPlayer) return;
-    const seconds = HHMMSSToSeconds(pendingTimestamp);
+        // Vérifie la zone arrondie en bas à droite
+        if (px > rectRight - radius && py > rectBottom - radius) {
+          const dx = px - (rectRight - radius);
+          const dy = py - (rectBottom - radius);
+          return dx * dx + dy * dy <= radius * radius;
+        }
 
-    if (eventType === "tir" && typeof made === "boolean") {
-      const type: Shot["type"] = isThreePointShot(
-        pendingEvent.x,
-        pendingEvent.y
-      )
-        ? "3PT"
-        : "2PT";
-      const points = made ? (type === "3PT" ? 3 : 2) : 0;
+        // Sinon, c’est bien dans le rectangle
+        return true;
+      },
+    },
 
-      const newShot: MatchEventType = {
-        x: pendingEvent.x,
-        y: pendingEvent.y,
-        type,
-        player: selectedPlayer,
-        timestamp: seconds,
-        made,
-        commentaire,
-        typeItem: "shot",
+    {
+      id: "mid_right",
+      label: "Mid-range Droite",
+      x: 530,
+      y: 150,
+      width: 150,
+      height: 200,
+      useRadius: false,
+      contains: (x, y) => x > 530 && y >= 150 && y <= 350,
+    },
+  ];
+
+  function calculateZoneStats(actions: Action[], zones: Zone[]) {
+    // On garde seulement les tirs
+    const shots = actions.filter((a) => a.typeItem === "shot");
+
+    return zones.map((zone) => {
+      const attempts = shots.filter((s) => zone.contains(s.x, s.y)).length;
+      const makes = shots.filter(
+        (s) => zone.contains(s.x, s.y) && s.made
+      ).length;
+      return {
+        ...zone,
+        attempts,
+        makes,
+        percentage: attempts > 0 ? Math.round((makes / attempts) * 100) : 0,
       };
+    });
+  }
 
-      const update: PlayerStatsUpdate = {
-        id: selectedPlayer,
-        name: selectedPlayer,
-        points,
-        points2PT: made && type === "2PT" ? 2 : 0,
-        points3PT: made && type === "3PT" ? 3 : 0,
-        shotsMade: made ? 1 : 0,
-        shotsAttempted: 1,
-      };
+  function getColorFromPercentage(pct: number) {
+    if (pct >= 60) return "green";
+    if (pct >= 40) return "orange";
+    if (pct > 0) return "red";
+    return "red";
+  }
 
-      onUpdateStats(update, newShot);
-      setActions((prev) => [...prev, newShot]);
-    } else {
-      const newEvent: CustomEventType = {
-        x: pendingEvent.x,
-        y: pendingEvent.y,
-        timestamp: seconds,
-        commentaire,
-        eventType: eventType === "rebond" ? `rebond_${reboundType}` : eventType,
-        player: selectedPlayer,
-        typeItem: "event",
-      };
-
-      const update: PlayerStatsUpdate = {
-        id: selectedPlayer,
-        name: selectedPlayer,
-      };
-
-      if (eventType === "rebond") {
-        if (reboundType === "off") update.reboundsOff = 1;
-        if (reboundType === "def") update.reboundsDef = 1;
-      } else if (eventType === "interception") {
-        update.steals = 1;
-      } else if (eventType === "perte_de_balle") {
-        update.turnovers = 1;
-      }
-
-      onUpdateStats(update, newEvent);
-      setActions((prev) => [...prev, newEvent]);
-    }
-
-    setPendingEvent(null);
-    setPendingTimestamp(null);
-    setCommentaire("");
-  };
-
-  const getColorForEvent = (eventType: string) => {
-    switch (eventType) {
-      case "rebond_off":
-        return "orange";
-      case "rebond_def":
-        return "lightblue";
-      case "interception":
-        return "green";
-      case "perte_de_balle":
-        return "red";
-      default:
-        return "purple";
-    }
-  };
-
-  const allPoints = [...actions].sort((a, b) => a.timestamp - b.timestamp);
+  const zoneStats = calculateZoneStats(actions, zones);
+  console.log(zoneStats);
 
   return (
-    <div className="space-y-4">
-      <div
-        className="border border-black relative"
-        style={{ width: svgWidth, height: svgHeight }}
+    <div className="grid grid-cols-12 gap-4 md:gap-5">
+      {/* Player YouTube */}
+      <Card className="col-span-6">
+        <div ref={playerRef} className="mt-4 relative pb-[56.25%] h-0">
+          <YouTube
+            videoId={VIDEO_ID}
+            onReady={handleReady}
+            opts={{
+              height: "100%",
+              width: "100%",
+              playerVars: { autoplay: 0, rel: 0 },
+            }}
+            className="absolute top-0 left-0 w-full h-full"
+          />
+          {currentTime !== null && (
+            <Button variant="secondary" className="mt-2" onClick={reset}>
+              Fermer la vidéo
+            </Button>
+          )}
+        </div>
+      </Card>
+      <Card
+        className="col-span-6 flex items-center p-0"
+        ref={containerRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          position: "relative",
+          maxWidth: `${maxWidth}px`,
+        }}
       >
-        <motion.img
-          src="/basketball_court123.svg"
-          alt="Basketball Court"
-          className="absolute top-0 left-0 w-full h-full pointer-events-none"
-        />
-        <div onClick={handleClick} style={{ width: "100%", height: "100%" }} />
-
+        <Stage
+          width={stageSize.width}
+          height={stageSize.height}
+          scaleX={stageSize.scale}
+          scaleY={stageSize.scale}
+          x={-20}
+          y={-5}
+          opacity={1}
+          style={{
+            position: "relative",
+            top: 0,
+            left: 0,
+            zIndex: 0,
+            width: "100%",
+            height: "100%",
+          }}
+          onClick={(e) => {
+            if (isReadOnly) return;
+            if (!selectedPlayer || !player) return;
+            const stage = e.target.getStage();
+            const pointerPosition = stage.getPointerPosition();
+            if (pointerPosition) {
+              handleCourtClick(
+                pointerPosition.x,
+                pointerPosition.y,
+                currentTime,
+                stageSize.scale
+              );
+            }
+          }}
+        >
+          <Layer>
+            <BasketBallCourtKonva />
+            {zoneStats.map((zone) => (
+              <Group key={zone.id}>
+                {zone.useRadius ? (
+                  <Rect
+                    x={zone.x}
+                    y={zone.y}
+                    width={zone.width}
+                    height={zone.height}
+                    fill={getColorFromPercentage(zone.percentage)}
+                    opacity={0.3}
+                    cornerRadius={[0, 0, 50, 0]} // seulement le coin inférieur droit arrondi
+                  />
+                ) : (
+                  <Rect
+                    x={zone.x}
+                    y={zone.y}
+                    width={zone.width}
+                    height={zone.height}
+                    fill={getColorFromPercentage(zone.percentage)}
+                    opacity={0.3}
+                  />
+                )}
+                <Text
+                  text={`${zone.percentage}%`}
+                  x={zone.x + zone.width / 2 - 15}
+                  y={zone.y + zone.height / 2 - 10}
+                  fontSize={16}
+                  fill="black"
+                />
+              </Group>
+            ))}
+          </Layer>
+        </Stage>
         {/* Lignes à 3 points */}
         <svg
-          width={svgWidth}
-          height={svgHeight}
+          width={stageSize.width}
+          height={stageSize.height}
+          stroke="red"
           style={{
             position: "absolute",
             top: 0,
@@ -206,20 +350,69 @@ export default function BasketballCourtSVG({
           }}
         >
           <circle
-            cx={basketLeft.x}
-            cy={basketLeft.y}
-            r={threePointRadiusL}
-            stroke="red"
-            strokeWidth={1}
+            cx={basketLeft.x * stageSize.scale}
+            cy={basketLeft.y * stageSize.scale}
+            r={threePointRadius} // déjà scaled
+            stroke="yellow"
+            strokeWidth={1 * stageSize.scale}
             fill="none"
           />
           <circle
-            cx={basketRight.x}
-            cy={basketRight.y}
-            r={threePointRadiusR}
-            stroke="red"
-            strokeWidth={1}
+            cx={basketRight.x * stageSize.scale}
+            cy={basketRight.y * stageSize.scale}
+            r={threePointRadius} // déjà scaled
+            stroke="yellow"
+            strokeWidth={1 * stageSize.scale}
             fill="none"
+          />
+          {/* Zone corner gauche */}
+
+          <rect
+            x={50 * stageSize.scale}
+            y={35 * stageSize.scale}
+            width={875 * stageSize.scale} // svgWidthResponsive
+            height={(214 / 430) * sceneWidth * stageSize.scale} // svgHeightResponsive
+            stroke="orange"
+            strokeWidth={2 * stageSize.scale}
+            fill="none"
+          />
+
+          {/* Zones corner */}
+          {/* Left Top */}
+          <rect
+            x={cornerLeftTop.x * stageSize.scale}
+            y={cornerLeftTop.y * stageSize.scale}
+            width={cornerZoneWidth * stageSize.scale}
+            height={cornerZoneHeight}
+            fill="red"
+            opacity={0.5}
+          />
+          {/* Left Bottom */}
+          <rect
+            x={cornerLeftBottom.x * stageSize.scale}
+            y={cornerLeftBottom.y * stageSize.scale}
+            width={cornerZoneWidth * stageSize.scale}
+            height={cornerZoneHeight}
+            fill="red"
+            opacity={0.5}
+          />
+          {/* Right Top */}
+          <rect
+            x={cornerRightTop.x * stageSize.scale}
+            y={cornerRightTop.y * stageSize.scale}
+            width={cornerZoneWidth * stageSize.scale}
+            height={cornerZoneHeight * stageSize.scale}
+            fill="red"
+            opacity={0.5}
+          />
+          {/* Right Bottom */}
+          <rect
+            x={cornerRightBottom.x * stageSize.scale}
+            y={cornerRightBottom.y * stageSize.scale}
+            width={cornerZoneWidth * stageSize.scale}
+            height={cornerZoneHeight * stageSize.scale}
+            fill="red"
+            opacity={0.5}
           />
         </svg>
 
@@ -227,22 +420,27 @@ export default function BasketballCourtSVG({
         {actions
           .filter(
             (a) =>
-              a.typeItem === "shot" &&
-              (!selectedPlayer || a.player === selectedPlayer)
+              (!selectedPlayer || a.player === selectedPlayer) &&
+              (a.typeItem === "shot" || a.typeItem === "event")
           )
-          .map((shot, i) => (
-            <ShotMarker
-              key={`shot-${i}`}
-              shot={shot as Shot}
-              isTooltipVisible={tooltipIndex === i}
-              onShowTooltip={() => setTooltipIndex(i)}
-              onHideTooltip={() => setTooltipIndex(null)}
-              onClick={() => seekTo(Math.max(shot.timestamp - 5, 0))}
-            />
-          ))}
+          .map((shot, i) => {
+            console.log(shot);
+            return (
+              <ShotMarker
+                key={`shot-${i}`}
+                shot={shot as Shot}
+                isTooltipVisible={tooltipIndex === i}
+                onShowTooltip={() => setTooltipIndex(i)}
+                onHideTooltip={() => setTooltipIndex(null)}
+                onClick={() => seekTo(Math.max(shot.timestamp - 5, 0))}
+                scale={stageSize.scale}
+                getCurrentTime={getCurrentTime}
+              />
+            );
+          })}
 
         {/* Affichage des événements */}
-        {actions
+        {/* {actions
           .filter((a) => a.typeItem === "event")
           .map((event, i) => (
             <svg
@@ -264,7 +462,7 @@ export default function BasketballCourtSVG({
                 opacity={0.8}
               />
             </svg>
-          ))}
+          ))} */}
 
         {/* Pop-up ajout événement */}
         {pendingEvent && (
@@ -329,78 +527,37 @@ export default function BasketballCourtSVG({
             <div className="flex gap-2 justify-end">
               {eventType === "tir" ? (
                 <>
-                  <Button onClick={() => confirmShotOrEvent(true)}>
-                    ✅ Réussi
-                  </Button>
+                  <Button onClick={() => confirmEvent(true)}>✅ Réussi</Button>
                   <Button
                     variant="destructive"
-                    onClick={() => confirmShotOrEvent(false)}
+                    onClick={() => confirmEvent(false)}
                   >
                     ❌ Raté
                   </Button>
                 </>
               ) : (
-                <Button onClick={() => confirmShotOrEvent()}>Ajouter</Button>
+                <Button onClick={() => confirmEvent()}>Ajouter</Button>
               )}
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setPendingEvent(null);
-                  setCommentaire("");
-                }}
-              >
+              <Button variant="secondary" onClick={resetPending}>
                 Annuler
               </Button>
             </div>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Historique */}
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Historique</h2>
-        <ul className="max-h-60 overflow-auto border p-3 rounded bg-gray-50 text-sm list-disc pl-5">
-          {allPoints.length === 0 && <p>Aucun événement</p>}
-          {allPoints.map((item, i) => {
-            const time = secondsToHHMMSS(item.timestamp);
-            if (item.typeItem === "shot") {
-              const shot = item as Shot;
-              return (
-                <li key={`shot-${i}`}>
-                  <strong>{shot.player}</strong> — {shot.type} —{" "}
-                  {shot.made ? "✅" : "❌"} — {time} — {shot.commentaire}
-                </li>
-              );
-            } else {
-              const event = item as Event;
-              return (
-                <li key={`event-${i}`} className="text-gray-700">
-                  <strong>{event.player}</strong> — {event.eventType} — {time} —{" "}
-                  {event.commentaire}
-                </li>
-              );
-            }
-          })}
-        </ul>
-      </div>
-
-      {/* Player YouTube */}
-      <div ref={playerRef} className="mt-4">
-        <YouTube
-          videoId={VIDEO_ID}
-          onReady={handleReady}
-          opts={{
-            height: "390",
-            width: "640",
-            playerVars: { autoplay: 0, rel: 0 },
-          }}
-        />
-        {currentTime !== null && (
-          <Button variant="secondary" className="mt-2" onClick={reset}>
-            Fermer la vidéo
-          </Button>
-        )}
-      </div>
+      {/* <EventHistory
+        actions={actions}
+        onDelete={(index) => {
+          setActions((prev) => prev.filter((_, i) => i !== index));
+        }}
+        onSeekVideo={(time) => {
+          if (videoRef.current) {
+            videoRef.current.seekTo(time, "seconds");
+          }
+        }}
+      /> */}
     </div>
   );
 }
