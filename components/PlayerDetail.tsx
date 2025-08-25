@@ -6,7 +6,9 @@ import { JoueurType } from "@/types/types";
 
 function PlayerDetail({ player }: { player: JoueurType }) {
   return (
-    <Card className="w-full max-w-4xl bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl">
+    <Card
+    // className="w-full max-w-4xl bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl"
+    >
       <CardHeader className="items-center">
         <Image
           src="/james-harden.webp"

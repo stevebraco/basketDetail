@@ -1,4 +1,5 @@
 "use client";
+import { useSidebar } from "@/context/SidebarContext";
 import { ToggleLeftIcon } from "lucide-react";
 // import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 // import NotificationDropdown from "@/components/header/NotificationDropdown";
@@ -11,13 +12,11 @@ import React, { useState, useEffect, useRef } from "react";
 const Header: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
-  //   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
-
-  const isMobileOpen = false;
+  const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
-      //   toggleSidebar();
+      toggleSidebar();
     } else {
       //   toggleMobileSidebar();
     }

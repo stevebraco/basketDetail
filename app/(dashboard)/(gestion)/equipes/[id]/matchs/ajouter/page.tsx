@@ -10,114 +10,163 @@ function minutesToDecimal(mins: string) {
   return m + s / 60;
 }
 
+const playersStatsMock = [
+  {
+    stats: {
+      points: 34,
+      fgm: 7,
+      fga: 25,
+      threePM: 2,
+      threePA: 6,
+      ftm: 8,
+      fta: 8,
+      reboundsOff: 4,
+      reboundsDef: 0,
+      reboundsTotal: 4,
+      assists: 9,
+      turnovers: 2,
+      steals: 1,
+      blocks: 2,
+      fautes: 0,
+      minutes: 32,
+      plusMinus: -9,
+    },
+    id: "689bb220b513c6f3e5cf60ff",
+    playerId: "689bb21fb513c6f3e5cf60f8",
+    matchId: "689bb220b513c6f3e5cf60fd",
+    player: {
+      competences: "[{…}, {…}, {…}, {…}, {…}, {…}]",
+      id: "689bb21fb513c6f3e5cf60f8",
+      age: "33n",
+      nom: "Harden",
+      poids: "100n",
+      poste: "Arrière",
+      posteSecondaire: "Meneur",
+      prenom: "James",
+      remarque: "Excellent scoreur et passeur",
+      taille: "196n",
+    },
+  },
+  {
+    stats: {
+      points: 28,
+      fgm: 10,
+      fga: 20,
+      threePM: 2,
+      threePA: 5,
+      ftm: 6,
+      fta: 7,
+      reboundsOff: 3,
+      reboundsDef: 5,
+      reboundsTotal: 8,
+      assists: 7,
+      turnovers: 3,
+      steals: 2,
+      blocks: 1,
+      fautes: 1,
+      minutes: 35,
+      plusMinus: 5,
+    },
+    id: "689bb220b513c6f3e5cf6100",
+    playerId: "689bb21fb513c6f3e5cf60f9",
+    matchId: "689bb220b513c6f3e5cf60fd",
+    player: {
+      competences: "[{…}, {…}]",
+      id: "689bb21fb513c6f3e5cf60f9",
+      age: "36n",
+      nom: "James",
+      poids: "113n",
+      poste: "Ailier",
+      posteSecondaire: "Arrière",
+      prenom: "LeBron",
+      remarque: "Polyvalent et expérimenté",
+      taille: "203n",
+    },
+  },
+  {
+    stats: {
+      points: 30,
+      fgm: 11,
+      fga: 22,
+      threePM: 5,
+      threePA: 10,
+      ftm: 3,
+      fta: 4,
+      reboundsOff: 1,
+      reboundsDef: 2,
+      reboundsTotal: 3,
+      assists: 8,
+      turnovers: 1,
+      steals: 1,
+      blocks: 0,
+      fautes: 2,
+      minutes: 30,
+      plusMinus: 7,
+    },
+    id: "689bb220b513c6f3e5cf6101",
+    playerId: "689bb21fb513c6f3e5cf60fa",
+    matchId: "689bb220b513c6f3e5cf60fd",
+    player: {
+      competences: "[{…}, {…}]",
+      id: "689bb21fb513c6f3e5cf60fa",
+      age: "35n",
+      nom: "Curry",
+      poids: "86n",
+      poste: "Meneur",
+      posteSecondaire: "Arrière",
+      prenom: "Stephen",
+      remarque: "Excellent tireur à 3 points",
+      taille: "191n",
+    },
+  },
+];
+
 export default function AddMatch() {
-  const [playersStats, setPlayersStats] = useState<PlayerStats[]>([
-    {
-      id: "1",
-      name: "Luka Doncic",
-      minutes: minutesToDecimal("10:00"),
-      points: 0,
-      points2PT: 0,
-      points3PT: 0,
-      reboundsOff: 0,
-      reboundsDef: 0,
-      assists: 0,
-      steals: 0,
-      blocks: 0,
-      turnovers: 0,
-      fouls: 0,
-      evaluation: 0,
-    },
-    {
-      id: "2",
-      name: "LeBron James",
-      minutes: minutesToDecimal("12:30"),
-      points: 0,
-      points2PT: 0,
-      points3PT: 0,
-      reboundsOff: 0,
-      reboundsDef: 0,
-      assists: 0,
-      steals: 0,
-      blocks: 0,
-      turnovers: 0,
-      fouls: 0,
-      evaluation: 0,
-    },
-    {
-      id: "3",
-      name: "Stephen Curry",
-      minutes: minutesToDecimal("08:45"),
-      points: 0,
-      points2PT: 0,
-      points3PT: 0,
-      reboundsOff: 0,
-      reboundsDef: 0,
-      assists: 0,
-      steals: 0,
-      blocks: 0,
-      turnovers: 0,
-      fouls: 0,
-      evaluation: 0,
-    },
-  ]);
+  const [playersStats, setPlayersStats] = useState<any[]>(playersStatsMock);
 
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
   const [shots, setShots] = useState<Shot[]>([]);
-
-  const calculateEvaluation = (player: PlayerStats, shots: Shot[]) => {
-    const shotsForPlayer = shots.filter((shot) => shot.player === player.name);
-    const shotsMade = shotsForPlayer.filter((shot) => shot.made).length;
-    const shotsAttempted = shotsForPlayer.length;
-    const shootingAccuracy = shotsAttempted ? shotsMade / shotsAttempted : 0;
-
-    const totalRebounds = player.reboundsOff + player.reboundsDef;
-    const baseEval =
-      player.points +
-      totalRebounds * 1.2 +
-      player.assists * 1.5 +
-      player.steals * 2 +
-      player.blocks * 2 -
-      player.turnovers * 2 -
-      player.fouls * 0.5 +
-      shootingAccuracy * 10;
-
-    const weightedEval =
-      player.minutes > 0 ? (baseEval * player.minutes) / 20 : 0;
-
-    return Math.max(0, weightedEval);
-  };
 
   const handleUpdateStats = (update: PlayerStatsUpdate, newShot: Shot) => {
     setShots((prevShots) => [...prevShots, newShot]);
 
     setPlayersStats((prevStats) =>
       prevStats.map((p) => {
-        if (p.name === update.name) {
-          const points = update.points ?? 0;
+        if (p.player.nom === update.name) {
+          const points = newShot.made ? (newShot.type === "3PT" ? 3 : 2) : 0;
 
-          const add2pt = newShot.type === "2PT" && newShot.made ? points : 0;
-          const add3pt = newShot.type === "3PT" && newShot.made ? points : 0;
-
-          const updatedPlayer: PlayerStats = {
+          return {
             ...p,
-            points: p.points + points,
-            points2PT: p.points2PT + add2pt,
-            points3PT: p.points3PT + add3pt,
-            reboundsOff: p.reboundsOff + (update.reboundsOff ?? 0),
-            reboundsDef: p.reboundsDef + (update.reboundsDef ?? 0),
-            assists: p.assists + (update.assists ?? 0),
-            steals: p.steals + (update.steals ?? 0),
-            blocks: p.blocks + (update.blocks ?? 0),
-            turnovers: p.turnovers + (update.turnovers ?? 0),
-            fouls: p.fouls + (update.fouls ?? 0),
+            stats: {
+              ...p.stats,
+              points: p.stats.points + points,
+              fgm: newShot.made ? p.stats.fgm + 1 : p.stats.fgm,
+              fga: p.stats.fga + 1,
+              threePM:
+                newShot.type === "3PT" && newShot.made
+                  ? p.stats.threePM + 1
+                  : p.stats.threePM,
+              threePA:
+                newShot.type === "3PT" ? p.stats.threePA + 1 : p.stats.threePA,
+              ftm:
+                newShot.type === "FT" && newShot.made
+                  ? p.stats.ftm + 1
+                  : p.stats.ftm,
+              fta: newShot.type === "FT" ? p.stats.fta + 1 : p.stats.fta,
+              reboundsOff: p.stats.reboundsOff + (update.reboundsOff ?? 0),
+              reboundsDef: p.stats.reboundsDef + (update.reboundsDef ?? 0),
+              reboundsTotal:
+                p.stats.reboundsTotal +
+                (update.reboundsOff ?? 0) +
+                (update.reboundsDef ?? 0),
+              assists: p.stats.assists + (update.assists ?? 0),
+              steals: p.stats.steals + (update.steals ?? 0),
+              blocks: p.stats.blocks + (update.blocks ?? 0),
+              turnovers: p.stats.turnovers + (update.turnovers ?? 0),
+              fautes: p.stats.fautes + (update.fautes ?? 0),
+              plusMinus: p.stats.plusMinus + (update.plusMinus ?? 0),
+            },
           };
-
-          const newEval = calculateEvaluation(updatedPlayer, [
-            ...shots,
-            newShot,
-          ]);
-          return { ...updatedPlayer, evaluation: newEval };
         }
         return p;
       })
@@ -144,52 +193,67 @@ export default function AddMatch() {
           <thead className="bg-gray-100">
             <tr>
               <th className="px-3 py-2 text-left">Joueur</th>
-              <th>MIN</th>
-              <th>PTS</th>
-              <th>2PTS</th>
-              <th>3PTS</th>
-              <th>REB O/D</th>
-              <th>AST</th>
-              <th>STL</th>
-              <th>BLK</th>
-              <th>TO</th>
-              <th>F</th>
-              <th>Eval</th>
+              <th>Points</th>
+              <th>Passes</th>
+              <th>Rebonds</th>
+              <th>Interceptions</th>
+              <th>Tirs réussis</th>
+              <th>Tirs tentés</th>
+              <th>3 pts réussis</th>
+              <th>3 pts tentés</th>
+              <th>Lancers francs réussis</th>
+              <th>Lancers francs tentés</th>
+              <th>Fautes</th>
+              <th>Minutes</th>
+              <th>+/-</th>
             </tr>
           </thead>
+
           <tbody>
-            {playersStats.map((player) => (
-              <tr
-                key={player.id}
-                className={`border-t cursor-pointer ${
-                  selectedPlayer === player.name ? "bg-blue-100" : ""
-                }`}
-                onClick={() => handlePlayerClick(player.name)}
-              >
-                <td className="px-3 py-2">{player.name}</td>
-                <td className="text-center">
-                  {Math.floor(player.minutes)}:
-                  {String(Math.round((player.minutes % 1) * 60)).padStart(
-                    2,
-                    "0"
-                  )}
-                </td>
-                <td className="text-center">{player.points}</td>
-                <td className="text-center">{player.points2PT}</td>
-                <td className="text-center">{player.points3PT}</td>
-                <td className="text-center">
-                  {player.reboundsOff}/{player.reboundsDef}
-                </td>
-                <td className="text-center">{player.assists}</td>
-                <td className="text-center">{player.steals}</td>
-                <td className="text-center">{player.blocks}</td>
-                <td className="text-center">{player.turnovers}</td>
-                <td className="text-center">{player.fouls}</td>
-                <td className="text-center font-semibold">
-                  {player.evaluation?.toFixed(1) ?? 0}
-                </td>
-              </tr>
-            ))}
+            {playersStats.map((player) => {
+              const reboundsTotal =
+                player.stats.reboundsOff + player.stats.reboundsDef;
+              return (
+                <tr
+                  key={player.id}
+                  className={`border-t cursor-pointer ${
+                    selectedPlayer === player.player.nom ? "bg-red-800" : ""
+                  }`}
+                  onClick={() => handlePlayerClick(player.player.nom)}
+                >
+                  <td className="px-3 py-2 text-white">{player.player.nom}</td>
+                  <td className="text-center text-white">
+                    {player.stats.points}
+                  </td>
+                  <td className="text-center text-white">
+                    {player.stats.assists}
+                  </td>
+                  <td className="text-center text-white">{reboundsTotal}</td>
+                  <td className="text-center text-white">
+                    {player.stats.steals}
+                  </td>
+                  <td className="text-center text-white">{player.stats.fgm}</td>
+                  <td className="text-center text-white">{player.stats.fga}</td>
+                  <td className="text-center text-white">
+                    {player.stats.threePM}
+                  </td>
+                  <td className="text-center text-white">
+                    {player.stats.threePA}
+                  </td>
+                  <td className="text-center text-white">{player.stats.ftm}</td>
+                  <td className="text-center text-white">{player.stats.fta}</td>
+                  <td className="text-center text-white">
+                    {player.stats.fautes}
+                  </td>
+                  <td className="text-center text-white">
+                    {player.stats.minutes}
+                  </td>
+                  <td className="text-center text-white">
+                    {player.stats.plusMinus}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

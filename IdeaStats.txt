@@ -32,3 +32,375 @@ Performances par quart-temps : pour voir si le joueur est régulier ou a des pic
 Clutch stats : stats dans les dernières minutes serrées, très utiles pour identifier les joueurs décisifs.
 
 Performance sur pick-and-roll : si possible, analyser ce type d’action.
+
+
+1. Méthode simple : “Statistique d’efficacité” (EFF)
+
+Une formule rapide utilisée parfois :
+
+EFF
+=
+Points
++
+Rebonds
++
+Passes d
+e
+ˊ
+cisives
++
+Interceptions
++
+Contres
+−
+(
+Tirs manqu
+e
+ˊ
+s
++
+Lancers francs manqu
+e
+ˊ
+s
++
+Pertes de balle
+)
+EFF=Points+Rebonds+Passes d
+e
+ˊ
+cisives+Interceptions+Contres−(Tirs manqu
+e
+ˊ
+s+Lancers francs manqu
+e
+ˊ
+s+Pertes de balle)
+
+Exemple :
+
+Points : 25
+
+Rebonds : 10
+
+Passes : 5
+
+Interceptions : 2
+
+Contres : 1
+
+Tirs manqués : 12
+
+Lancers francs manqués : 3
+
+Pertes de balle : 4
+
+𝐸
+𝐹
+𝐹
+=
+25
++
+10
++
+5
++
+2
++
+1
+−
+(
+12
++
+3
++
+4
+)
+=
+24
+EFF=25+10+5+2+1−(12+3+4)=24
+
+L’EFF donne une vue d’ensemble, mais ne prend pas en compte le temps de jeu ou la qualité des possessions.
+
+2. Points par possession (PPP)
+
+Comme on a fait pour les équipes, tu peux calculer les points produits par un joueur par possession qu’il a utilisée :
+
+PPP joueur
+=
+Points + passes decisives converties en points
+Possessions utiliseˊes
+PPP joueur=
+Possessions utiliseˊes
+Points + passes decisives converties en points
+	​
+
+
+Chaque tir raté ou perte de balle = possession utilisée.
+
+Les passes décisives peuvent être comptées comme points générés.
+
+On obtient ainsi une efficacité offensive réelle, ajustée par possession.
+
+3. Player Efficiency Rating (PER)
+
+Une métrique avancée qui prend en compte toutes les stats offensives et défensives et normalise par minutes jouées.
+
+PER moyen = 15. Un joueur très efficace aura un PER > 20.
+
+Plus précis que EFF, mais nécessite beaucoup de calculs et coefficients.
+
+4. Plus/moins (+/-)
+
+Mesure l’impact du joueur sur le score quand il est sur le terrain.
+
+Exemple : si ton équipe marque +8 points par rapport à l’adversaire pendant que tu joues, ton +8 montre ton impact global.
+
+5. Statistiques avancées
+
+Offensive Rating (ORtg) : points produits par 100 possessions.
+
+Defensive Rating (DRtg) : points encaissés par 100 possessions défensives.
+
+Win Shares : estimation des victoires apportées par le joueur.
+
+
+
+
+
+Stats du joueur (Match fictif)
+
+Minutes jouées : 35
+
+Points : 28
+
+Tirs réussis : 11/20
+
+Tirs à 3 points : 3/7
+
+Lancers francs : 3/4
+
+Rebonds : 8 (5 défensifs, 3 offensifs)
+
+Passes décisives : 7
+
+Interceptions : 2
+
+Contres : 1
+
+Pertes de balle : 4
+
+1. Statistique d’efficacité (EFF)
+𝐸
+𝐹
+𝐹
+=
+Points
++
+Rebonds
++
+Passes
++
+Interceptions
++
+Contres
+−
+(
+Tirs manqu
+e
+ˊ
+s
++
+Lancers manqu
+e
+ˊ
+s
++
+Pertes
+)
+EFF=Points+Rebonds+Passes+Interceptions+Contres−(Tirs manqu
+e
+ˊ
+s+Lancers manqu
+e
+ˊ
+s+Pertes)
+
+Tirs manqués = 20 - 11 = 9
+
+Lancers manqués = 4 - 3 = 1
+
+𝐸
+𝐹
+𝐹
+=
+28
++
+8
++
+7
++
+2
++
+1
+−
+(
+9
++
+1
++
+4
+)
+=
+32
+EFF=28+8+7+2+1−(9+1+4)=32
+
+EFF = 32, ce qui est très bon.
+
+2. Possessions utilisées par le joueur
+
+Formule approximative :
+
+Possessions
+≈
+Tirs tent
+e
+ˊ
+s
++
+0.44
+×
+Lancers francs tent
+e
+ˊ
+s
++
+Pertes de balle
+−
+Rebonds offensifs
+Possessions≈Tirs tent
+e
+ˊ
+s+0.44×Lancers francs tent
+e
+ˊ
+s+Pertes de balle−Rebonds offensifs
+Possessions
+≈
+20
++
+0.44
+×
+4
++
+4
+−
+3
+Possessions≈20+0.44×4+4−3
+Possessions
+≈
+20
++
+1.76
++
+4
+−
+3
+=
+22.76
+≈
+23
+Possessions≈20+1.76+4−3=22.76≈23
+3. Points par possession (PPP)
+
+Points = 28
+
+Possessions ≈ 23
+
+𝑃
+𝑃
+𝑃
+=
+28
+23
+≈
+1.22
+PPP=
+23
+28
+	​
+
+≈1.22
+
+Très efficace : 1.22 point par possession est excellent.
+
+4. Offensive Rating (ORtg) approximatif
+
+ORtg = points produits par 100 possessions
+
+𝑂
+𝑅
+𝑡
+𝑔
+=
+1.22
+×
+100
+≈
+122
+ORtg=1.22×100≈122
+
+Au-dessus de 120, c’est un joueur très performant offensivement.
+
+5. Plus/moins (+/-)
+
+Supposons que ton équipe a +10 points quand tu es sur le terrain.
+
+Ton +10 montre que tu as un impact positif sur le score global.
+
+6. Résumé visuel de l’efficacité
+Métrique	Valeur	Interprétation
+EFF	32	Très bonne performance globale
+PPP	1.22	Très efficace offensivement
+ORtg	122	Très bon rendement par 100 possessions
++/-	+10	Impact positif sur l’équipe
+Rebonds	8	Bon soutien défensif et offensif
+Passes	7	Créateur d’opportunités
+
+
+Exemple de jauge pour un joueur
+1️⃣ Points par possession (PPP)
+
+< 0.8 → Rouge (faible)
+
+0.8 – 1.0 → Orange (moyen)
+
+1.0 – 1.2 → Jaune (bon)
+
+> 1.2 → Vert (excellent)
+
+Pour notre joueur : PPP = 1.22 → Vert ✅
+
+2️⃣ Statistique d’efficacité (EFF)
+
+< 15 → Rouge
+
+15 – 25 → Orange
+
+25 – 35 → Jaune
+
+> 35 → Vert
+
+Notre joueur : EFF = 32 → Jaune ✅
+
+3️⃣ Offensive Rating (ORtg)
+
+< 100 → Rouge
+
+100 – 110 → Orange
+
+110 – 120 → Jaune
+
+> 120 → Vert
+
+Notre joueur : ORtg = 122 → Vert ✅

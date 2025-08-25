@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import MainProvider from "@/providers/MainProvider";
+import { SidebarProvider } from "@/context/SidebarContext";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -24,7 +25,7 @@ export default function RootLayout({
     <MainProvider>
       <html lang="en">
         <body className={`bg-[#05051F] ${outfit.className} dark:bg-gray-900`}>
-          {children}
+          <SidebarProvider> {children}</SidebarProvider>
         </body>
       </html>
     </MainProvider>

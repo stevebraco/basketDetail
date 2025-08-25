@@ -1,0 +1,115 @@
+"use client";
+import React, { useState } from "react";
+import InfosMatch from "./InfosMatch";
+import StatsMatch from "./StatsMatch";
+import BasketballCourtSVG from "./BasketballCourtSVG";
+import StatsAdvancedByPlayer from "./StatsAdvancedByPlayer";
+
+export default function AnalysisVideo({ matchDetails }: { matchDetails: any }) {
+  console.log(matchDetails);
+  const [playersStats, setPlayersStats] = useState(matchDetails.playerMatches);
+  const [shots, setShots] = useState([]);
+  const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+
+  console.log("playersStats", playersStats);
+
+  const handleUpdateStats = (
+    update: { player: string; statsUpdate: any },
+    newShot: Shot
+  ) => {
+    setShots((prevShots) => [...prevShots, newShot]);
+
+    setPlayersStats((prevStats) =>
+      prevStats.map((p) => {
+        console.log(update);
+        if (p.player.nom === update.name) {
+          console.log("GOOOOO");
+          const points = newShot.made ? (newShot.type === "3PT" ? 3 : 2) : 0;
+
+          return {
+            ...p,
+            stats: {
+              ...p.stats,
+              points:
+                newShot.typeItem === "shot" && newShot.made
+                  ? p.stats.points + (newShot.type === "3PT" ? 3 : 2)
+                  : p.stats.points,
+              fgm:
+                newShot.typeItem === "shot" && newShot.made
+                  ? p.stats.fgm + 1
+                  : p.stats.fgm,
+              fga:
+                newShot.typeItem === "shot" && newShot.type !== "FT"
+                  ? p.stats.fga + 1
+                  : p.stats.fga,
+              threePM:
+                newShot.typeItem === "shot" &&
+                newShot.type === "3PT" &&
+                newShot.made
+                  ? p.stats.threePM + 1
+                  : p.stats.threePM,
+              threePA:
+                newShot.typeItem === "shot" && newShot.type === "3PT"
+                  ? p.stats.threePA + 1
+                  : p.stats.threePA,
+              ftm:
+                newShot.typeItem === "shot" &&
+                newShot.type === "FT" &&
+                newShot.made
+                  ? p.stats.ftm + 1
+                  : p.stats.ftm,
+              fta:
+                newShot.typeItem === "shot" && newShot.type === "FT"
+                  ? p.stats.fta + 1
+                  : p.stats.fta,
+              reboundsOff: p.stats.reboundsOff + (update.reboundsOff ?? 0),
+              reboundsDef: p.stats.reboundsDef + (update.reboundsDef ?? 0),
+              reboundsTotal:
+                p.stats.reboundsTotal +
+                (update.reboundsOff ?? 0) +
+                (update.reboundsDef ?? 0),
+              assists: p.stats.assists + (update.assists ?? 0),
+              steals: p.stats.steals + (update.steals ?? 0),
+              blocks: p.stats.blocks + (update.blocks ?? 0),
+              turnovers: p.stats.turnovers + (update.turnovers ?? 0),
+              fautes: p.stats.fautes + (update.fautes ?? 0),
+              plusMinus: p.stats.plusMinus + (update.plusMinus ?? 0),
+            },
+          };
+        }
+        return p;
+      })
+    );
+  };
+
+  const handlePlayerClick = (name: string) => {
+    setSelectedPlayer((prev) => (prev === name ? null : name));
+  };
+
+  return (
+    <div className="grid grid-cols-12 gap-4 md:gap-5">
+      <div className="col-span-12">
+        <InfosMatch />
+      </div>
+
+      <div className="col-span-12">
+        <BasketballCourtSVG
+          initialShots={matchDetails?.tirs}
+          selectedPlayer={selectedPlayer}
+          videoId={matchDetails?.videoId}
+          onUpdateStats={handleUpdateStats}
+        />
+      </div>
+      <div className="col-span-12">
+        <StatsMatch
+          matchPlayed={playersStats}
+          handlePlayerClick={handlePlayerClick}
+          selectedPlayer={selectedPlayer}
+        />
+      </div>
+      <div className="col-span-12">
+        <StatsAdvancedByPlayer players={playersStats} />
+      </div>
+    </div>
+  );
+}

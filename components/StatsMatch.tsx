@@ -9,9 +9,13 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import { calculateTotalRebounds } from "@/utils/StatsByPlayer";
 
-export default function StatsMatch({ matchPlayed }: any) {
-  console.log(matchPlayed);
+export default function StatsMatch({
+  matchPlayed,
+  handlePlayerClick,
+  selectedPlayer,
+}: any) {
   return (
     <Card className="w-full max-w-4xl bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl col-span-2">
       <CardHeader>
@@ -45,14 +49,19 @@ export default function StatsMatch({ matchPlayed }: any) {
           <TableBody>
             {matchPlayed.map((item, idx) => (
               <TableRow key={idx} className="text-sm text-white/90">
-                <TableCell>
+                <TableCell
+                  className={`${
+                    selectedPlayer === item?.player?.nom ? "bg-blue-100" : ""
+                  }`}
+                  onClick={() => handlePlayerClick(item.player.nom)}
+                >
                   {item.player?.nom
                     ? `${item.player.prenom} ${item.player.nom}`
                     : `${item.match?.nom}`}
                 </TableCell>
                 <TableCell>{item.stats.points}</TableCell>
                 <TableCell>{item.stats.assists}</TableCell>
-                <TableCell>{item.stats.reboundsTotal}</TableCell>
+                <TableCell>{calculateTotalRebounds(item.stats)}</TableCell>
                 <TableCell>{item.stats.steals}</TableCell>
                 <TableCell>{item.stats.fgm}</TableCell>
                 <TableCell>{item.stats.fga}</TableCell>

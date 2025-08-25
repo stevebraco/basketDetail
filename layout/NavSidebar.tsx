@@ -16,6 +16,7 @@ import {
   TableIcon,
   UserCircleIcon,
 } from "lucide-react";
+import { useSidebar } from "@/context/SidebarContext";
 
 type NavItem = {
   name: string;
@@ -104,10 +105,8 @@ const othersItems = [
 ];
 
 const NavSidebar: React.FC = () => {
-  //   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
-  const isExpanded = true;
-  const isMobileOpen = false;
-  const [isHovered, setIsHovered] = useState(true);
+  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+
   const pathname = usePathname();
 
   const renderMenuItems = (

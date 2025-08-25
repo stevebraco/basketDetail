@@ -14,18 +14,21 @@ export default async function PlayerDetailPage({
   const { id } = await params; // ✅ on attend params
 
   const playerDetail = await prisma.player.findUnique({
-    where: {
-      id,
-    },
+    where: { id },
     include: {
       playerMatches: {
         take: 5,
-        include: {
-          match: true,
+        select: {
+          id: true,
+          stats: true,
+          matchId: true,
+          // on ne fait pas include: match pour éviter l'erreur
         },
       },
     },
   });
+
+  console.log(playerDetail);
 
   const { averages, matchesPlayed } = getAverageStatsAndCount(
     playerDetail?.playerMatches

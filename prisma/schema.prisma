@@ -23,7 +23,7 @@ type TirEvenement {
   type       String? // pour les tirs (2PT, 3PT...)
   made       Boolean?
   player     String
-  // timestamp  Int
+  timestamp  Int?
   commentaire String
   eventType  String? // pour les événements
   typeItem   String  // "shot" ou "event"
@@ -43,23 +43,23 @@ type StatsJoueur {
 }
 
 type PlayerStats {
-  points        Int?
-  fgm           Int?
-  fga           Int?
-  threePM       Int?
-  threePA       Int?
-  ftm           Int?
-  fta           Int?
-  reboundsOff   Int?
-  reboundsDef   Int?
-  reboundsTotal Int?
-  assists       Int?
-  turnovers     Int?
-  steals        Int?
-  blocks        Int?
-  fautes        Int?
-  minutes       Int?
-  plusMinus     Int?
+  points        Int? @default(0)
+  fgm           Int? @default(0)
+  fga           Int? @default(0)
+  threePM       Int? @default(0)
+  threePA       Int? @default(0)
+  ftm           Int? @default(0)
+  fta           Int? @default(0)
+  reboundsOff   Int? @default(0)
+  reboundsDef   Int? @default(0)
+  reboundsTotal Int? @default(0)
+  assists       Int? @default(0)
+  turnovers     Int? @default(0)
+  steals        Int? @default(0)
+  blocks        Int? @default(0)
+  fautes        Int? @default(0)
+  minutes       Int? @default(0)
+  plusMinus     Int? @default(0)
 }
 
 
@@ -107,10 +107,12 @@ model PlayerMatch {
   id        String      @id @default(auto()) @map("_id") @db.ObjectId
   playerId  String      @db.ObjectId
   matchId   String      @db.ObjectId
+
   stats     PlayerStats?
 
   player    Player  @relation("PlayerPlayerMatches", fields: [playerId], references: [id])
   match     Match   @relation("MatchPlayerMatches", fields: [matchId], references: [id])
+
   @@unique([playerId, matchId])  // pour éviter doublons
 
 }

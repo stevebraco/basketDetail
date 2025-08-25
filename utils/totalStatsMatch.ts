@@ -1,8 +1,10 @@
 export function totalStatsFromMatches(matchs) {
   return matchs.map((match) => {
-    const allStats = match.playerMatches.map((pm) => pm.stats);
+    const allStats = match.playerMatches
+      .map((pm) => pm.stats)
+      .filter((s) => s != null); // enlève les null
 
-    const keys = allStats.length > 0 ? Object.keys(allStats[0]) : [];
+    const keys = allStats.length > 0 ? Object?.keys(allStats[0]) : [];
     const totals = {};
 
     keys.forEach((key) => {

@@ -11,6 +11,7 @@ export default async function MatchListPage() {
   });
   const averagesMatch = totalStatsFromMatches(matchs);
   console.log(matchs);
+  // const matchs = [];
 
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-5">

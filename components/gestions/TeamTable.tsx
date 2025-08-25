@@ -52,20 +52,23 @@ export const TeamTable = ({ matchs }: any) => {
                     )}
                   </TableCell>
                   <TableCell className="flex justify-end gap-2">
-                    <Link href={`/matchs/${match.id}`}>
+                    <Link href={`/matchList/${match.id}?view=true`}>
                       <Button size="icon" variant="outline">
                         <Eye className="h-4 w-4" />
                       </Button>
                     </Link>
-                    <Button size="icon" variant="outline">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="outline">
-                      <BarChart2 className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+
+                    <Link href={`/matchList/${match.id}`}>
+                      <Button size="icon" variant="outline">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </Link>
+
+                    <Link href={`/matchList/${match.id}/analysisMatch`}>
+                      <Button size="icon" variant="outline">
+                        <BarChart2 className="h-4 w-4" />
+                      </Button>
+                    </Link>
                   </TableCell>
                 </TableRow>
               );

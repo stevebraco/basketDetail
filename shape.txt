@@ -1,0 +1,51 @@
+ {/* <Shape
+              x={450} // position X ajustée selon ton canvas
+              y={100} // position Y ajustée selon ton canvas
+              rotation={90} // rotation pour “poser” la forme vers le bas
+              offsetX={150} // centre horizontal de rotation
+              offsetY={105} // centre vertical de rotation
+              scaleX={1} // réduction horizontale
+              scaleY={1} // réduction verticale
+              sceneFunc={(context, shape) => {
+                const x = 92;
+                const y = 92;
+                const w = 50;
+                const h = 250;
+
+                const basketLeft = { x: 165, y: 250 };
+                const r = threePointRadius;
+
+                context.beginPath();
+
+                // Début bas gauche (angle droit)
+                context.moveTo(x, y + h);
+
+                // Côté gauche (vertical)
+                context.lineTo(x, y);
+
+                // Côté haut (horizontal)
+                context.lineTo(x + w, y);
+
+                // Arc concave vers le bas après rotation
+                context.arc(
+                  300, // centre X du cercle
+                  360, // centre Y du cercle
+                  173, // rayon augmenté
+                  -Math.PI / 1.6,
+                  3.25,
+                  true // sens antihoraire
+                );
+
+                // Descend verticalement (côté droit)
+                context.lineTo(x + w, y + h);
+
+                // Bas (ligne de fermeture)
+                context.lineTo(x, y + h);
+
+                context.closePath();
+                context.fillStrokeShape(shape);
+              }}
+              fill="red"
+              stroke="black"
+              strokeWidth={1}
+            /> */}
