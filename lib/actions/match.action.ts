@@ -1,27 +1,20 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
-const playerIds = [
-  "689bb21fb513c6f3e5cf60f8",
-  "689bb220b513c6f3e5cf60fb",
-  "689bb220b513c6f3e5cf60f9",
-  "689bb220b513c6f3e5cf60fc",
-  "689bb220b513c6f3e5cf60fa",
-];
+export async function createMatch(params: any) {
+  const { nom, videoId, versus, playerIds } = params;
+  console.log(nom, videoId, versus, playerIds);
 
-export async function createMatch() {
   try {
     // 1️⃣ Créer le match sans playerMatches
     const match = await prisma.match.create({
       data: {
-        nom: "test nom",
-        videoId: "7NR6R8fne9s",
-        versus: "Paris Basketball",
-        score: "98-100",
-        hasWon: true,
-        location: "Paris",
-        duration: "2025-08-19T17:47",
+        nom,
+        videoId,
+        versus,
       },
     });
 

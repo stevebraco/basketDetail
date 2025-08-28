@@ -93,10 +93,10 @@ model Match {
   videoId        String
   createdAt     DateTime      @default(now())
   versus        String
-  score         String
-  hasWon        Boolean
-  location      String
-  duration     String
+  // score         String
+  // hasWon        Boolean
+  // location      String
+  // duration     String
 
   tirs     TirEvenement[] // <-- Nouveau champ
 

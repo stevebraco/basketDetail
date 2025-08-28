@@ -24,8 +24,11 @@ function generateArcPoints(
   return points;
 }
 
-const BasketBallCourtKonva = () => {
-  const [isHovered, setIsHovered] = useState(false);
+const BasketBallCourtKonva = ({
+  lineColor = "white",
+  backgroundCourt = "black",
+}) => {
+  // const [isHovered, setIsHovered] = useState(false);
 
   // Exemple de points pour les arcs et lignes (à adapter selon ton code)
   const cornerLineXRight = 400;
@@ -46,9 +49,9 @@ const BasketBallCourtKonva = () => {
   return (
     <>
       <Group
-        // opacity={isHovered ? 1 : 0.3}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+      // opacity={isHovered ? 1 : 0.3}
+      // onMouseEnter={() => setIsHovered(true)}
+      // onMouseLeave={() => setIsHovered(false)}
       >
         {/* Fond terrain */}
         <Rect
@@ -57,15 +60,15 @@ const BasketBallCourtKonva = () => {
           width={875}
           height={430}
           opacity={1}
-          stroke={"white"}
-          fill={"black"}
+          stroke={lineColor}
+          fill={backgroundCourt}
         />
         {/* Ligne centrale */}
         <Line
           points={[500, 50, 500, 480]}
           x={12}
           y={-10}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* ligne tps mort tf*/}
@@ -73,7 +76,7 @@ const BasketBallCourtKonva = () => {
           points={[500, 50, 500, 15]}
           x={-163}
           y={24}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* ligne tps mort bf*/}
@@ -81,7 +84,7 @@ const BasketBallCourtKonva = () => {
           points={[500, 50, 500, 15]}
           x={-163}
           y={420}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait corner */}
@@ -89,7 +92,7 @@ const BasketBallCourtKonva = () => {
           points={[0, 50, 10, 50]} // même Y (50)
           x={75}
           y={111}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait corner */}
@@ -97,7 +100,7 @@ const BasketBallCourtKonva = () => {
           points={[0, 50, 10, 50]} // même Y (50)
           x={75}
           y={298}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas */}
@@ -105,7 +108,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={51}
           y={324}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas */}
@@ -113,7 +116,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={64}
           y={324}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas */}
@@ -121,7 +124,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={96.5}
           y={324}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas */}
@@ -129,7 +132,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={130}
           y={324}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas raquette */}
@@ -137,7 +140,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={154}
           y={306}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas raquette */}
@@ -145,7 +148,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={120}
           y={306}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas raquette */}
@@ -153,7 +156,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={88}
           y={306}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* rect bas raquette */}
@@ -162,8 +165,8 @@ const BasketBallCourtKonva = () => {
           y={307} // position verticale
           width={12} // largeur
           height={6} // hauteur
-          fill="white" // couleur de remplissage
-          stroke="white" // couleur de bordure
+          fill={lineColor} // couleur de remplissage
+          stroke={lineColor} // couleur de bordure
           strokeWidth={2} // épaisseur de bordure
         />
 
@@ -173,8 +176,8 @@ const BasketBallCourtKonva = () => {
           y={190} // position verticale
           width={12} // largeur
           height={6} // hauteur
-          fill="white" // couleur de remplissage
-          stroke="white" // couleur de bordure
+          fill={lineColor} // couleur de remplissage
+          stroke={lineColor} // couleur de bordure
           strokeWidth={2} // épaisseur de bordure
         />
         {/* trait raquette haut raquette */}
@@ -182,7 +185,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={154}
           y={190}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette haut raquette */}
@@ -190,7 +193,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={120}
           y={190}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette haut raquette */}
@@ -198,7 +201,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={88}
           y={190}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette haut */}
@@ -206,7 +209,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={51}
           y={170}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette haut */}
@@ -214,7 +217,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={64}
           y={170}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette haut */}
@@ -222,7 +225,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={96.5}
           y={170}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette haut */}
@@ -230,7 +233,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={130}
           y={170}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* Cercle raq */}
@@ -242,7 +245,7 @@ const BasketBallCourtKonva = () => {
             outerRadius={55} // rayon du cercle
             angle={180} // angle en degrés (180° pour un demi-cercle)
             rotation={270} // angle de départ en degrés (0 = à droite)
-            stroke="white"
+            stroke={lineColor}
             strokeWidth={2}
           />
           <Arc
@@ -252,7 +255,7 @@ const BasketBallCourtKonva = () => {
             outerRadius={55} // rayon du cercle
             angle={180} // angle en degrés (180° pour un demi-cercle)
             rotation={90} // angle de départ en degrés (0 = à droite)
-            stroke="white"
+            stroke={lineColor}
             strokeWidth={2}
             dash={[12, 5]}
           />
@@ -262,7 +265,7 @@ const BasketBallCourtKonva = () => {
             y={180}
             width={200}
             height={145}
-            stroke="white"
+            stroke={lineColor}
             strokeWidth={2}
           />
           <Rect
@@ -270,13 +273,13 @@ const BasketBallCourtKonva = () => {
             y={198}
             width={200}
             height={109}
-            stroke="white"
+            stroke={lineColor}
             strokeWidth={2}
           />
           <Group>
             <Line
               points={[cornerLineXRight, 50, 255, 50]}
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={3}
               x={-180}
               y={377}
@@ -285,7 +288,7 @@ const BasketBallCourtKonva = () => {
             {/* Lignes droites côtés droite */}
             <Line
               points={[cornerLineXRight, 50, 255, 50]}
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={3}
               x={-180}
               y={31}
@@ -296,7 +299,7 @@ const BasketBallCourtKonva = () => {
             {/*  */}
             <Line
               points={arcPoints}
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={3}
               tension={0} // tension à 0 pour avoir une courbe lisse de type arc
               closed={false} // ligne ouverte, pas fermée
@@ -305,7 +308,7 @@ const BasketBallCourtKonva = () => {
           <Group>
             <Line
               points={[cornerLineXRight, 50, 370, 50]}
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={3}
               x={-250}
               y={165}
@@ -314,7 +317,7 @@ const BasketBallCourtKonva = () => {
             {/* Lignes droites côtés droite */}
             <Line
               points={[cornerLineXRight, 50, 370, 50]}
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={3}
               x={-250}
               y={240}
@@ -325,7 +328,7 @@ const BasketBallCourtKonva = () => {
             {/*  */}
             <Line
               points={arcPoints3}
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={3}
               tension={0} // tension à 0 pour avoir une courbe lisse de type arc
               closed={false} // ligne ouverte, pas fermée
@@ -338,7 +341,7 @@ const BasketBallCourtKonva = () => {
           points={[500, 50, 500, 15]}
           x={186}
           y={24}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* ligne tps mort bf*/}
@@ -346,7 +349,7 @@ const BasketBallCourtKonva = () => {
           points={[500, 50, 500, 15]}
           x={186}
           y={420}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait corner */}
@@ -354,7 +357,7 @@ const BasketBallCourtKonva = () => {
           points={[0, 50, 10, 50]} // même Y (50)
           x={935}
           y={111}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait corner */}
@@ -362,7 +365,7 @@ const BasketBallCourtKonva = () => {
           points={[0, 50, 10, 50]} // même Y (50)
           x={935}
           y={298}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas */}
@@ -370,7 +373,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={771}
           y={324}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas */}
@@ -378,7 +381,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={758}
           y={324}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas */}
@@ -386,7 +389,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={725}
           y={324}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas */}
@@ -394,7 +397,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={691}
           y={324}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas raquette */}
@@ -402,7 +405,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={733.5}
           y={306}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas raquette */}
@@ -410,7 +413,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={701}
           y={306}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette bas raquette */}
@@ -418,7 +421,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={667}
           y={306}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* rect bas raquette */}
@@ -427,8 +430,8 @@ const BasketBallCourtKonva = () => {
           y={307} // position verticale
           width={12} // largeur
           height={6} // hauteur
-          fill="white" // couleur de remplissage
-          stroke="white" // couleur de bordure
+          fill={lineColor} // couleur de remplissage
+          stroke={lineColor} // couleur de bordure
           strokeWidth={2} // épaisseur de bordure
         />
 
@@ -438,8 +441,8 @@ const BasketBallCourtKonva = () => {
           y={190} // position verticale
           width={12} // largeur
           height={6} // hauteur
-          fill="white" // couleur de remplissage
-          stroke="white" // couleur de bordure
+          fill={lineColor} // couleur de remplissage
+          stroke={lineColor} // couleur de bordure
           strokeWidth={2} // épaisseur de bordure
         />
         {/* trait raquette haut raquette */}
@@ -447,7 +450,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={667}
           y={190}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette haut raquette */}
@@ -455,7 +458,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={733.5}
           y={190}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette haut raquette */}
@@ -463,7 +466,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={701}
           y={190}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette haut */}
@@ -471,7 +474,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={771}
           y={170}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette haut */}
@@ -479,7 +482,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={758}
           y={170}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette haut */}
@@ -487,7 +490,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={725}
           y={170}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* trait raquette haut */}
@@ -495,7 +498,7 @@ const BasketBallCourtKonva = () => {
           points={[100, 0, 100, 10]} // même X (100)
           x={691}
           y={170}
-          stroke="white"
+          stroke={lineColor}
           strokeWidth={2}
         />
         {/* Cercle raq */}
@@ -508,7 +511,7 @@ const BasketBallCourtKonva = () => {
               outerRadius={55} // rayon du cercle
               angle={180} // angle en degrés (180° pour un demi-cercle)
               rotation={270} // angle de départ en degrés (0 = à droite)
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={2}
               dash={[12, 5]}
               opacity={0.2}
@@ -520,7 +523,7 @@ const BasketBallCourtKonva = () => {
               outerRadius={55} // rayon du cercle
               angle={180} // angle en degrés (180° pour un demi-cercle)
               rotation={90} // angle de départ en degrés (0 = à droite)
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={2}
             />
           </Group>
@@ -529,7 +532,7 @@ const BasketBallCourtKonva = () => {
             y={180}
             width={200}
             height={145}
-            stroke="white"
+            stroke={lineColor}
             strokeWidth={2}
           />
           <Rect
@@ -537,13 +540,13 @@ const BasketBallCourtKonva = () => {
             y={198}
             width={200}
             height={109}
-            stroke="white"
+            stroke={lineColor}
             strokeWidth={2}
           />
           <Group>
             <Line
               points={[cornerLineXRight, 50, 250, 50]}
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={3}
               x={548}
               y={377}
@@ -552,7 +555,7 @@ const BasketBallCourtKonva = () => {
             {/* Lignes droites côtés droite */}
             <Line
               points={[cornerLineXRight, 50, 250, 50]}
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={3}
               x={549}
               y={31}
@@ -563,7 +566,7 @@ const BasketBallCourtKonva = () => {
             {/*  */}
             <Line
               points={arcPoints2}
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={3}
               tension={0} // tension à 0 pour avoir une courbe lisse de type arc
               closed={false} // ligne ouverte, pas fermée
@@ -572,7 +575,7 @@ const BasketBallCourtKonva = () => {
           <Group>
             <Line
               points={[cornerLineXRight, 50, 370, 50]}
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={3}
               x={502}
               y={165}
@@ -581,7 +584,7 @@ const BasketBallCourtKonva = () => {
             {/* Lignes droites côtés droite */}
             <Line
               points={[cornerLineXRight, 50, 370, 50]}
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={3}
               x={502}
               y={240}
@@ -592,7 +595,7 @@ const BasketBallCourtKonva = () => {
             {/*  */}
             <Line
               points={arcPoints4}
-              stroke="white"
+              stroke={lineColor}
               strokeWidth={3}
               tension={0} // tension à 0 pour avoir une courbe lisse de type arc
               closed={false} // ligne ouverte, pas fermée

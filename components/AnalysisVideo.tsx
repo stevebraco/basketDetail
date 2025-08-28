@@ -4,6 +4,7 @@ import InfosMatch from "./InfosMatch";
 import StatsMatch from "./StatsMatch";
 import BasketballCourtSVG from "./BasketballCourtSVG";
 import StatsAdvancedByPlayer from "./StatsAdvancedByPlayer";
+import GeneratePDF from "./GeneratePDF";
 
 export default function AnalysisVideo({ matchDetails }: { matchDetails: any }) {
   console.log(matchDetails);
@@ -86,6 +87,17 @@ export default function AnalysisVideo({ matchDetails }: { matchDetails: any }) {
     setSelectedPlayer((prev) => (prev === name ? null : name));
   };
 
+  const stats = {
+    fgPercent: 45,
+    threePPercent: 33,
+    tsPercent: 55,
+    rebounds: 8,
+    assists: 5,
+    turnovers: 2,
+  };
+
+  const combineShots = [...matchDetails?.tirs, ...shots];
+
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-5">
       <div className="col-span-12">
@@ -109,6 +121,14 @@ export default function AnalysisVideo({ matchDetails }: { matchDetails: any }) {
       </div>
       <div className="col-span-12">
         <StatsAdvancedByPlayer players={playersStats} />
+      </div>
+      <div className="col-span-3">
+        <h1>Rapport Basket PDF</h1>
+        <GeneratePDF
+          shots={combineShots}
+          stats={stats}
+          terrainUrl="/balls.png" // mets ton image dans public/court.png
+        />
       </div>
     </div>
   );

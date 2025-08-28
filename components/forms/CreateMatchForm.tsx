@@ -33,38 +33,34 @@ export function CreateMatchForm({ players }: { players: any }) {
     resolver: zodResolver(matchSchema),
     defaultValues: {
       nom: "",
-      dateHeure: "",
-      equipeLocale: "",
-      equipeAdverse: "",
-      lieu: "",
-      duree: "",
-      videoUrl: "",
-      joueurs: [],
+      versus: "",
+      videoId: "",
+      playerIds: [],
     },
   });
 
   async function onSubmit(data: MatchFormValues) {
-    console.log("Match data:", data);
-    // Ici tu envoies les données au backend ou mets à jour le state parent
-    await createMatch();
+    await createMatch(data);
   }
 
   const { watch, setValue } = methods;
-  const selectedJoueurs = watch("joueurs");
+  const selectedJoueurs = watch("playerIds");
 
   // Gestion sélection checkbox, on empêche de dépasser 10 joueurs sélectionnés
   function handleToggleJoueur(id: string) {
     if (selectedJoueurs.includes(id)) {
       // Décocher : retirer id
       setValue(
-        "joueurs",
+        "playerIds",
         selectedJoueurs.filter((j) => j !== id),
         { shouldValidate: true }
       );
     } else {
       // Cocher : ajouter id si moins de 10 joueurs sélectionnés
       if (selectedJoueurs.length < 10) {
-        setValue("joueurs", [...selectedJoueurs, id], { shouldValidate: true });
+        setValue("playerIds", [...selectedJoueurs, id], {
+          shouldValidate: true,
+        });
       }
     }
   }
@@ -106,40 +102,10 @@ export function CreateMatchForm({ players }: { players: any }) {
                   )}
                 />
 
-                {/* Date et heure */}
-                <FormField
-                  control={methods.control}
-                  name="dateHeure"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date et heure</FormLabel>
-                      <FormControl>
-                        <Input type="datetime-local" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Équipe locale */}
-                <FormField
-                  control={methods.control}
-                  name="equipeLocale"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Équipe locale</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Équipe locale" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 {/* Équipe adverse */}
                 <FormField
                   control={methods.control}
-                  name="equipeAdverse"
+                  name="versus"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Équipe adverse</FormLabel>
@@ -151,43 +117,10 @@ export function CreateMatchForm({ players }: { players: any }) {
                   )}
                 />
 
-                {/* Lieu */}
-                <FormField
-                  control={methods.control}
-                  name="lieu"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lieu (stade / gymnase)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ex: Stade Municipal" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Durée */}
-                <FormField
-                  control={methods.control}
-                  name="duree"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Durée du match</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="48 minutes, 4x12min..."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 {/* Vidéo / lien */}
                 <FormField
                   control={methods.control}
-                  name="videoUrl"
+                  name="videoId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Vidéo ou lien du match</FormLabel>
@@ -206,7 +139,7 @@ export function CreateMatchForm({ players }: { players: any }) {
                 {/* Sélection joueurs */}
                 <FormField
                   control={methods.control}
-                  name="joueurs"
+                  name="playerIds"
                   render={() => (
                     <FormItem>
                       <FormLabel>Sélectionnez les joueurs (max 10)</FormLabel>

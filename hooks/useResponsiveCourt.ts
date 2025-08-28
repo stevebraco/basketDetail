@@ -4,16 +4,18 @@ export function useResponsiveCourt({
   sceneWidth,
   sceneHeight,
   maxWidth,
+  scale = 1,
 }: {
   sceneWidth: number;
   sceneHeight: number;
   maxWidth?: number;
+  scale?: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({
     width: sceneWidth,
     height: sceneHeight,
-    scale: 1,
+    scale,
   });
 
   const updateSize = () => {

@@ -7,8 +7,6 @@ export const createPlayerSchema = z.object({
   age: z.string().min(1),
   taille: z.string().min(1),
   poids: z.string().min(1),
-  role: z.string().min(1),
-  equipe: z.string().optional(),
   remarque: z.string().optional(),
 
   // Compétences
@@ -47,13 +45,9 @@ export const createPlayerSchema = z.object({
 
 export const matchSchema = z.object({
   nom: z.string().min(1, "Nom du match requis"),
-  dateHeure: z.string().min(1, "Date et heure requises"),
-  equipeLocale: z.string().min(1, "Équipe locale requise"),
-  equipeAdverse: z.string().min(1, "Équipe adverse requise"),
-  lieu: z.string().min(1, "Lieu requis"),
-  duree: z.string().min(1, "Durée du match requise"),
-  videoUrl: z.string().optional().or(z.literal("")),
-  joueurs: z
+  versus: z.string().min(1, "Équipe adverse requise"),
+  videoId: z.string().optional().or(z.literal("")),
+  playerIds: z
     .array(z.string())
     .min(1, "Sélectionnez au moins un joueur")
     .max(10, "Vous ne pouvez sélectionner que 10 joueurs au maximum"),

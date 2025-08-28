@@ -37,6 +37,7 @@ import { createPlayerSchema } from "@/schema/validation";
 import { createPlayerValues } from "@/schema/defaultValues";
 import { z } from "zod";
 import { skillSections } from "@/data/skillSections";
+import { createPlayer } from "@/lib/actions/player.action";
 
 type FormData = z.infer<typeof createPlayerSchema>;
 
@@ -46,7 +47,9 @@ export function CreatePlayerForm() {
     defaultValues: { ...createPlayerValues },
   });
 
-  const onSubmit = (data: FormData) => {};
+  async function onSubmit(data: any) {
+    await createPlayer(data);
+  }
 
   return (
     <Card className="">
@@ -228,16 +231,15 @@ export function CreatePlayerForm() {
                   </FormItem>
                 )}
               />
+              <CardFooter>
+                <Button type="submit" className="w-full">
+                  Ajouter le joueur
+                </Button>
+              </CardFooter>
             </form>
           </Form>
         </FormProvider>
       </CardContent>
-
-      <CardFooter>
-        <Button type="submit" className="w-full">
-          Ajouter le joueur
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

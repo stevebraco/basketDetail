@@ -490,6 +490,7 @@ export default function BasketballCourtSVG({
 
   const eventOptions = [
     { value: "tir", label: "Tir", initial: "T" },
+    { value: "passe décisive", label: "Passe Décisive", initial: "PD" },
     { value: "faute", label: "Faute", initial: "F" },
     { value: "rebond_off", label: "Rebond Offensif", initial: "RO" },
     { value: "rebond_def", label: "Rebond Défensif", initial: "RD" },
@@ -548,12 +549,6 @@ export default function BasketballCourtSVG({
       </Card>
       <Card className="col-span-6 w-full">
         <div className="flex justify-between w-full p-2 px-10">
-          <div className="flex gap-1">
-            <Button>1Q</Button>
-            <Button>2Q</Button>
-            <Button>3Q</Button>
-            <Button>4Q</Button>
-          </div>
           <Popover>
             <PopoverTrigger asChild>
               <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
@@ -773,7 +768,7 @@ export default function BasketballCourtSVG({
               onClick={(e) => e.stopPropagation()}
             >
               <TooltipProvider>
-                <div className="grid grid-cols-6 gap-1.5">
+                <div className="grid grid-cols-7 gap-1.5">
                   {eventOptions.map((option) => (
                     <div key={option.value} className="flex justify-center">
                       <Tooltip>

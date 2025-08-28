@@ -5,8 +5,6 @@ export const createPlayerValues = {
   age: "",
   taille: "",
   poids: "",
-  role: "",
-  equipe: "Aucune",
   remarque: "",
 
   tir_2pts: 5,
