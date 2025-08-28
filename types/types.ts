@@ -85,10 +85,23 @@ export type BaseEvent = {
 };
 
 // Tir = événement spécialisé
-export type Shot = BaseEvent & {
-  type: "2PT" | "3PT" | string;
-  made: boolean;
-};
+export type ShotType = "2PT" | "3PT";
+export type EventType = "rebond" | "perte_de_balle" | "interception";
+
+export type ShotItemType = "shot" | "event";
+
+export interface Shot {
+  id: string; // Identifiant unique du tir ou de l'événement
+  typeItem: ShotItemType; // "shot" ou "event"
+  type?: ShotType; // uniquement si typeItem === "shot"
+  made?: boolean; // uniquement si typeItem === "shot"
+  eventType?: EventType; // uniquement si typeItem === "event"
+  player?: string; // Nom du joueur
+  x: number; // Position x sur le terrain (0-100 ou pixels)
+  y: number; // Position y sur le terrain (0-100 ou pixels)
+  timestamp: number; // Timestamp en secondes ou millisecondes
+  commentaire?: string; // Commentaire optionnel
+}
 
 // Autres événements (rebonds, interceptions, etc.)
 export type OtherEvent = BaseEvent & {

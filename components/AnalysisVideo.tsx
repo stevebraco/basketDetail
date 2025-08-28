@@ -5,6 +5,7 @@ import StatsMatch from "./StatsMatch";
 import BasketballCourtSVG from "./BasketballCourtSVG";
 import StatsAdvancedByPlayer from "./StatsAdvancedByPlayer";
 import GeneratePDF from "./GeneratePDF";
+import { Button } from "./ui/button";
 
 export default function AnalysisVideo({ matchDetails }: { matchDetails: any }) {
   console.log(matchDetails);
@@ -22,9 +23,7 @@ export default function AnalysisVideo({ matchDetails }: { matchDetails: any }) {
 
     setPlayersStats((prevStats) =>
       prevStats.map((p) => {
-        console.log(update);
         if (p.player.nom === update.name) {
-          console.log("GOOOOO");
           const points = newShot.made ? (newShot.type === "3PT" ? 3 : 2) : 0;
 
           return {
@@ -98,11 +97,17 @@ export default function AnalysisVideo({ matchDetails }: { matchDetails: any }) {
 
   const combineShots = [...matchDetails?.tirs, ...shots];
 
+  const onClickSave = () => {
+    console.log(playersStats, shots);
+  };
+
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-5">
       <div className="col-span-12">
         <InfosMatch />
       </div>
+
+      <Button onClick={onClickSave}>Save</Button>
 
       <div className="col-span-12">
         <BasketballCourtSVG

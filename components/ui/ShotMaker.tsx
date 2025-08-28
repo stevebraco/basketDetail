@@ -1,6 +1,6 @@
 import { Shot } from "@/types/types";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { Circle, X } from "lucide-react";
 
 type Props = {
   shot: Shot;
@@ -10,32 +10,28 @@ type Props = {
   onClick: (timestamp: number) => void;
   onEdit?: () => void;
   scale: number;
-  getCurrentTime: any;
 };
 
-function getMarkerColor(shot?: Shot, event?: any): string {
-  console.log(shot);
+function getMarkerColor(shot?: Shot): string {
+  if (!shot) return "#888";
+
   if (shot.typeItem === "shot") {
-    return shot.type === "3PT"
-      ? shot.made
-        ? "#15FFAB"
-        : "red"
-      : shot.made
-      ? "#FF9315"
-      : "red";
-  } else if (shot.typeItem === "event") {
-    switch (shot.eventType) {
-      case "rebond":
-        return "#FFA500";
-      case "perte_de_balle":
-        return "#FF0000";
-      case "interception":
-        return "#00BFFF";
-      default:
-        return "#888";
-    }
+    if (shot.type === "3PT") return shot.made ? "#15FFAB" : "red"; // vert ou rouge
+    if (shot.type === "2PT") return shot.made ? "#FF9315" : "red"; // orange ou rouge
+    return shot.made ? "#FFF" : "red";
   }
-  return "#000"; // fallback
+
+  // événements (rebond, interception...) si besoin
+  switch (shot.eventType) {
+    case "rebond":
+      return "#FFA500";
+    case "perte_de_balle":
+      return "#FF0000";
+    case "interception":
+      return "#00BFFF";
+    default:
+      return "#888";
+  }
 }
 
 export default function ShotMarker({
@@ -47,50 +43,40 @@ export default function ShotMarker({
   onEdit,
   scale,
 }: Props) {
-  console.log(shot);
+  const color = getMarkerColor(shot);
+  const tooltipOffset = 60;
+
+  // Choisir icône Circle si réussi, X si raté
+  const Icon = shot.typeItem === "shot" ? (shot.made ? Circle : X) : Circle;
+
   return (
     <motion.div
-      className="absolute"
+      className="absolute cursor-pointer"
       style={{
-        top: shot.y * scale - 6,
-        left: shot.x * scale - 6,
-        width: 7,
-        height: 7,
-        borderRadius: "50%",
-        backgroundColor: getMarkerColor(shot),
-        boxShadow: `0 -4px 8px ${getMarkerColor(
-          shot
-        )}, 0 4px 8px ${getMarkerColor(shot)}`, // effet de débordement haut/bas
-
-        cursor: "pointer",
+        top: shot.y * scale - 2,
+        left: shot.x * scale - 2,
       }}
-      animate={{
-        scale: [0, 1.5, 1], // L'animation consiste à faire grossir et rétrécir le tir
-        opacity: [0, 1], // Faire apparaître le tir
-      }}
-      transition={{
-        duration: 0.5, // Durée de l'animation
-        ease: "easeInOut",
-      }}
+      animate={{ scale: [0, 1.5, 1], opacity: [0, 1] }}
+      transition={{ duration: 0.5, ease: "easeInOut" }}
       onMouseEnter={onShowTooltip}
       onMouseLeave={onHideTooltip}
+      onClick={() => onClick(shot.timestamp)}
     >
+      {/* Icone Circle ou X */}
+      <Icon
+        size={12}
+        color={color}
+        className="shadow-[0_-4px_8px_rgba(0,0,0,0.2),0_4px_8px_rgba(0,0,0,0.2)]"
+        style={{ transform: "translate(-50%, -50%)" }}
+      />
+
+      {/* Tooltip */}
       {isTooltipVisible && (
         <div
-          style={{
-            position: "absolute",
-            top: -60,
-            left: 8,
-            backgroundColor: "white",
-            border: "1px solid #ccc",
-            padding: 8,
-            borderRadius: 6,
-            zIndex: 100,
-            minWidth: 150,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          }}
+          className="absolute left-2 bg-white border border-gray-300 p-2 rounded-md z-50 min-w-[150px] shadow-md text-xs"
+          style={{ top: -tooltipOffset }}
         >
-          <div className="text-xs">
+          <div>
             {shot.typeItem === "shot" ? (
               <p>
                 <strong>{shot.type}</strong> —{" "}
@@ -101,14 +87,11 @@ export default function ShotMarker({
                 <strong>{shot.eventType}</strong>
               </p>
             )}
-
-            {/* Nom du joueur */}
             {shot.player && (
               <p>
                 👤 <strong>{shot.player}</strong>
               </p>
             )}
-
             <p>
               Temps:{" "}
               {new Date(shot.timestamp * 1000).toISOString().substr(11, 8)}

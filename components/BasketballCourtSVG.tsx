@@ -548,33 +548,6 @@ export default function BasketballCourtSVG({
         </div>
       </Card>
       <Card className="col-span-6 w-full">
-        <div className="flex justify-between w-full p-2 px-10">
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-                <Settings className="w-5 h-5" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48">
-              <div className="flex flex-col space-y-2">
-                <label className="flex items-center space-x-2">
-                  <Checkbox
-                  // checked={showShootingPercentage}
-                  // onCheckedChange={(checked) =>
-                  //   setShowShootingPercentage(!!checked)
-                  // }
-                  />
-                  <span>Pourcentage de tir</span>
-                </label>
-
-                {/* Tu peux ajouter d’autres options ici */}
-                <button className="text-left px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
-                  Déconnexion
-                </button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
         <div
           className="col-span-6 w-full flex items-center p-0"
           ref={containerRef}
@@ -728,6 +701,84 @@ export default function BasketballCourtSVG({
                 />
               );
             })}
+
+          <svg
+            width={stageSize.width}
+            height={stageSize.height}
+            stroke="red"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              pointerEvents: "none",
+            }}
+          >
+            <circle
+              cx={basketLeft.x * stageSize.scale}
+              cy={basketLeft.y * stageSize.scale}
+              r={threePointRadius} // déjà scaled
+              stroke="yellow"
+              strokeWidth={1 * stageSize.scale}
+              fill="none"
+            />
+            <circle
+              cx={basketRight.x * stageSize.scale}
+              cy={basketRight.y * stageSize.scale}
+              r={threePointRadius} // déjà scaled
+              stroke="yellow"
+              strokeWidth={1 * stageSize.scale}
+              fill="none"
+            />
+            {/* Zone corner gauche */}
+
+            <rect
+              x={75 * stageSize.scale}
+              y={39 * stageSize.scale}
+              width={875 * stageSize.scale} // svgWidthResponsive
+              height={0.425 * sceneWidth * stageSize.scale} // svgHeightResponsive
+              stroke="orange"
+              strokeWidth={2 * stageSize.scale}
+              fill="none"
+            />
+
+            {/* Zones corner */}
+            {/* Left Top */}
+            <rect
+              x={cornerLeftTop.x * stageSize.scale}
+              y={cornerLeftTop.y * stageSize.scale}
+              width={cornerZoneWidth * stageSize.scale}
+              height={cornerZoneHeight}
+              fill="red"
+              opacity={0.5}
+            />
+            {/* Left Bottom */}
+            <rect
+              x={cornerLeftBottom.x * stageSize.scale}
+              y={cornerLeftBottom.y * stageSize.scale}
+              width={cornerZoneWidth * stageSize.scale}
+              height={cornerZoneHeight}
+              fill="red"
+              opacity={0.5}
+            />
+            {/* Right Top */}
+            <rect
+              x={cornerRightTop.x * stageSize.scale}
+              y={cornerRightTop.y * stageSize.scale}
+              width={cornerZoneWidth * stageSize.scale}
+              height={cornerZoneHeight * stageSize.scale}
+              fill="red"
+              opacity={0.5}
+            />
+            {/* Right Bottom */}
+            <rect
+              x={cornerRightBottom.x * stageSize.scale}
+              y={cornerRightBottom.y * stageSize.scale}
+              width={cornerZoneWidth * stageSize.scale}
+              height={cornerZoneHeight * stageSize.scale}
+              fill="red"
+              opacity={0.5}
+            />
+          </svg>
 
           {/* Affichage des événements */}
           {/* {actions
