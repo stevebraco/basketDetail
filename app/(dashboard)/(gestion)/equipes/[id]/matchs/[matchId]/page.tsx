@@ -168,7 +168,7 @@ export default function MatchDetailPage({
                 <tr
                   key={player.id}
                   className={`border-t cursor-pointer ${
-                    selectedPlayer === player.name ? "bg-blue-100" : ""
+                    selectedPlayer.name === player.name ? "bg-blue-100" : ""
                   }`}
                   onClick={() => handlePlayerClick(player.name)}
                 >

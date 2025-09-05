@@ -9,6 +9,8 @@ import {
   Line,
   Arrow,
   Image as KonvaImage,
+  Group,
+  Rect,
 } from "react-konva";
 
 import { Button } from "./ui/button";
@@ -18,6 +20,8 @@ import { Card } from "./ui/card";
 import BasketBallCourtKonva from "./BasketBallCourtKonva";
 import { useResponsiveCourt } from "@/hooks/useResponsiveCourt";
 import { useTacticsBoard } from "@/hooks/useTacticsBoard";
+import { ReactMediaRecorder } from "react-media-recorder";
+import Konva from "konva";
 
 function useImage(url: string) {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
@@ -33,6 +37,11 @@ function useImage(url: string) {
 
 export default function TacticBoard() {
   const image = useImage("/ball.png"); // chemin de l'image dans public/
+
+  const stageRef = useRef<Konva.Stage>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null); // <-- ici
+  const [videoURL, setVideoURL] = useState<string | null>(null);
+  const [recording, setRecording] = useState(false);
 
   const { containerRef, stageSize } = useResponsiveCourt({
     sceneWidth: 1010,
@@ -76,14 +85,71 @@ export default function TacticBoard() {
     setCurrentComment,
   } = useTacticsBoard();
 
+  useEffect(() => {
+    if (!recording || !currentSystem) return;
+
+    // Si on est arrivé à la dernière étape
+    if (replayIndex === currentSystem.recording.length - 1) {
+      const timeout = setTimeout(() => {
+        // Arrêter l'enregistrement après 3 secondes
+        stopRecording();
+      }, 3000); // délai de 3 secondes
+
+      return () => clearTimeout(timeout); // cleanup si le composant se démonte
+    }
+  }, [replayIndex, recording, currentSystem]);
+
+  const startRecording = () => {
+    if (!stageRef.current) return;
+
+    const stage = stageRef.current.getStage();
+    const canvas = stage.content.children[0] as HTMLCanvasElement;
+
+    if (!canvas.captureStream) {
+      console.error(
+        "captureStream n'est pas disponible dans cet environnement"
+      );
+      return;
+    }
+
+    const stream = canvas.captureStream(60);
+    const mediaRecorder = new MediaRecorder(stream, { mimeType: "video/mp4" });
+    const chunks: BlobPart[] = [];
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks, { type: "video/mp4" });
+      const url = URL.createObjectURL(blob);
+      setVideoURL(url);
+
+      // Télécharger automatiquement
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "tactic-video.mp4";
+      a.click();
+    };
+
+    mediaRecorder.start();
+    mediaRecorderRef.current = mediaRecorder;
+    setRecording(true);
+
+    // Lancer la lecture automatiquement
+    if (currentSystem && currentSystem.recording.length) {
+      handleReplay();
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setRecording(false);
+  };
+
   return (
     <>
-      <div className="flex gap-2 mt-2 flex-wrap justify-center"></div>
-
-      <div className="mt-4 text-center text-lg font-semibold">
-        {currentComment}
-      </div>
-
+      <div className="mt-4 text-center text-lg font-semibold"></div>
       <Card className="relative w-full min-w-full bg-[#1C1E2B] col-span-12 xl:col-end-9 overflow-hidden gap-0">
         <div className="flex gap-2 flex-wrap">
           <Input
@@ -98,7 +164,12 @@ export default function TacticBoard() {
           <div className="mt-2 text-center text-sm text-gray-300">
             Étape {stepProgress}
           </div>
-
+          <Button onClick={startRecording} disabled={recording}>
+            ⏺️ Démarrer l'enregistrement
+          </Button>
+          <Button onClick={stopRecording} disabled={!recording}>
+            ⏹️ Arrêter l'enregistrement
+          </Button>
           <Button onClick={addStep} disabled={isRecording || isReplaying}>
             ➕ Ajouter une étape
           </Button>
@@ -126,6 +197,7 @@ export default function TacticBoard() {
         </div>
         <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
           <Stage
+            ref={stageRef}
             width={stageSize.width}
             height={stageSize.height}
             scaleX={stageSize.scale}
@@ -142,6 +214,7 @@ export default function TacticBoard() {
           >
             <Layer>
               <BasketBallCourtKonva />
+
               {players.map((pos, i) => (
                 <Circle
                   key={i}
@@ -158,6 +231,26 @@ export default function TacticBoard() {
                   shadowOpacity={0.7}
                 />
               ))}
+
+              {/* {(recording || isReplaying) && currentComment && (
+                <Group key={"comment-" + replayIndex} x={200} y={200}>
+                  <Rect
+                    width={200}
+                    height={50}
+                    fill="rgba(0,0,0,0.6)"
+                    cornerRadius={5}
+                    shadowBlur={5}
+                  />
+                  <Text
+                    text={currentComment}
+                    fontSize={14}
+                    fill="white"
+                    padding={10}
+                    width={200}
+                    height={50}
+                  />
+                </Group>
+              )} */}
 
               {/* Balle */}
               {/* <Circle

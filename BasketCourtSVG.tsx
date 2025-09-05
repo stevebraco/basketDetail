@@ -14,6 +14,7 @@ import { EventHistory } from "./EventHistory";
 import { Card } from "./ui/card";
 import BasketBallCourtKonva from "./BasketBallCourtKonva";
 import { relative } from "path";
+import BasketBallHalfCourtKonva from "./components/BasketBallCourtHalfKonva";
 
 export default function BasketballCourtSVG({
   initialShots = [],
@@ -259,7 +260,8 @@ export default function BasketballCourtSVG({
           }}
         >
           <Layer>
-            <BasketBallCourtKonva />
+            {/* <BasketBallCourtKonva /> */}
+            <BasketBallHalfCourtKonva />
           </Layer>
         </Stage>
 

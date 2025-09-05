@@ -19,10 +19,14 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { Textarea } from "./input/TextArea";
-import { Input } from "./ui/input";
-import { Settings } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Checkbox } from "./ui/checkbox";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function BasketballCourtSVG({
   initialShots = [],
@@ -31,7 +35,7 @@ export default function BasketballCourtSVG({
   videoId,
 }: {
   initialShots?: Shot[];
-  selectedPlayer?: string | null;
+  selectedPlayer?: any;
   onUpdateStats: (
     update: PlayerStatsUpdate,
     shotOrEvent: Shot | CustomEventType
@@ -41,6 +45,10 @@ export default function BasketballCourtSVG({
   const [tooltipIndex, setTooltipIndex] = useState<number | null>(null);
   const refs = useRef<{ [key: string]: Konva.Shape | null }>({});
   const popupRef = useRef<HTMLDivElement | null>(null);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [selectedEventFilter, setSelectedEventFilter] = useState<
+    string | "all"
+  >("all");
 
   const [clickInfo, setClickInfo] = useState<string>("");
 
@@ -477,25 +485,68 @@ export default function BasketballCourtSVG({
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
-  const stats = calculateZoneStats(actions, zonesData, refs.current);
+  // const stats = calculateZoneStats(actions, zonesData, refs.current);
 
-  // Fusionner les stats dans zonesData pour le rendu
+  // // Fusionner les stats dans zonesData pour le rendu
+  // const zonesWithStats = zonesData.map((zone) => {
+  //   const stat = stats.find((s) => s.id === zone.id);
+  //   return {
+  //     ...zone,
+  //     percentage: stat?.percentage ?? 0,
+  //   };
+  // });
+
+  // Actions filtrées selon le joueur sélectionné
+  const filteredActionsForDisplay = React.useMemo(() => {
+    let filtered = actions;
+
+    // Filtrer par joueur si nécessaire
+    if (selectedPlayer?.name) {
+      filtered = filtered.filter((a) => a.player === selectedPlayer.name);
+    }
+
+    // Filtrer par type d’action si un filtre est sélectionné
+    if (selectedEventFilter !== "all") {
+      filtered = filtered.filter((a) => a.eventType === selectedEventFilter);
+    }
+
+    return filtered;
+  }, [actions, selectedPlayer, selectedEventFilter]);
+
+  const filteredActions = React.useMemo(() => {
+    if (!selectedPlayer?.name) {
+      // ✅ Pas de joueur sélectionné → on prend toutes les actions (stats équipe)
+      return actions;
+    }
+    // ✅ Joueur sélectionné → uniquement ses actions
+    return actions.filter((a) => a.player === selectedPlayer.name);
+  }, [actions, selectedPlayer]);
+
+  // Calcul des stats uniquement pour ces actions
+  const stats = React.useMemo(() => {
+    return calculateZoneStats(filteredActions, zonesData, refs.current);
+  }, [filteredActions, zonesData, refs.current]);
+
+  // Fusionner stats avec zonesData pour l'affichage
   const zonesWithStats = zonesData.map((zone) => {
     const stat = stats.find((s) => s.id === zone.id);
     return {
       ...zone,
       percentage: stat?.percentage ?? 0,
+      attempts: stat?.attempts ?? 0,
+      makes: stat?.makes ?? 0,
     };
   });
 
   const eventOptions = [
     { value: "tir", label: "Tir", initial: "T" },
-    { value: "passe décisive", label: "Passe Décisive", initial: "PD" },
+    { value: "assist", label: "Passe Décisive", initial: "PD" },
     { value: "faute", label: "Faute", initial: "F" },
     { value: "rebond_off", label: "Rebond Offensif", initial: "RO" },
     { value: "rebond_def", label: "Rebond Défensif", initial: "RD" },
     { value: "perte_de_balle", label: "Perte de balle", initial: "P" },
     { value: "interception", label: "Interception", initial: "I" },
+    { value: "contre", label: "Contre", initial: "C" },
     // Lancers francs
     { value: "LF0/1", label: "Lancer franc 0/1", initial: "LF0" },
     { value: "LF0/2", label: "Lancer franc 0/2", initial: "LF0/2" },
@@ -527,6 +578,37 @@ export default function BasketballCourtSVG({
   }, [pendingEvent]);
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-5">
+      {/* <div className="mb-2">
+        <label className="mr-2 text-sm font-medium">Filtrer par action :</label>
+        <Select
+          value={selectedEventFilter}
+          onValueChange={(value) => setSelectedEventFilter(value)}
+        >
+          <SelectTrigger className="w-[180px] border border-gray-300 rounded-md bg-[#05051F] text-white hover:border-gray-400 focus:ring-1 focus:ring-blue-500 focus:outline-none">
+            <SelectValue placeholder="Toutes" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#05051F] text-white border border-gray-700 rounded-md shadow-lg">
+            <SelectItem
+              value="all"
+              className="hover:bg-blue-600 hover:text-white"
+            >
+              Toutes
+            </SelectItem>
+            {eventOptions
+              .filter((option) => !option.value.startsWith("LF"))
+              .map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className="hover:bg-blue-600 hover:text-white"
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+      </div> */}
+
       {/* Player YouTube */}
       <Card className="col-span-6">
         <div ref={playerRef} className="mt-4 relative pb-[56.25%] h-0">
@@ -576,7 +658,7 @@ export default function BasketballCourtSVG({
             }}
             onClick={(e) => {
               if (isReadOnly) return;
-              if (!selectedPlayer || !player) return;
+              if (!selectedPlayer.name || !player) return;
               if (e.target !== e.target.getStage()) return;
 
               const stage = e.target.getStage();
@@ -629,9 +711,15 @@ export default function BasketballCourtSVG({
                   centerX += 85;
                   centerY += s.height / 2;
                 } else if (zone.type === "concave") {
+                  if (zone.id === "three_left_inverted") {
+                    centerX = 380 ?? zone.x + (s.rectW || 0) / 2;
+                    centerY = s.centerY + 300 ?? zone.y + (s.rectH || 0) / 2;
+                  }
                   // approximation: centre du rectangle de référence
-                  centerX = 380 ?? zone.x + (s.rectW || 0) / 2;
-                  centerY = s.centerY + 10 ?? zone.y + (s.rectH || 0) / 2;
+                  else {
+                    centerX = 380 ?? zone.x + (s.rectW || 0) / 2;
+                    centerY = s.centerY - 280 ?? zone.y + (s.rectH || 0) / 2;
+                  }
                 } else if (zone.type === "arc") {
                   // pour l'arc, on place le texte au milieu du rayon extérieur
                   centerX = s.x + 390;
@@ -639,7 +727,7 @@ export default function BasketballCourtSVG({
                 }
 
                 return (
-                  <div key={zone.id}>
+                  <Group key={zone.id}>
                     <Shape
                       ref={(el) => (refs.current[zone.id] = el)}
                       x={zone.x}
@@ -672,7 +760,7 @@ export default function BasketballCourtSVG({
                       offsetY={(s.height || 50) / 2} // centre vertical
                       listening={false}
                     />
-                  </div>
+                  </Group>
                 );
               })}
             </Layer>
@@ -680,27 +768,20 @@ export default function BasketballCourtSVG({
           {/* Lignes à 3 points */}
 
           {/* Affichage des tirs */}
-          {actions
-            .filter(
-              (a) =>
-                (!selectedPlayer || a.player === selectedPlayer) &&
-                (a.typeItem === "shot" || a.typeItem === "event")
-            )
-            .map((shot, i) => {
-              console.log(shot);
-              return (
-                <ShotMarker
-                  key={`shot-${i}`}
-                  shot={shot as Shot}
-                  isTooltipVisible={tooltipIndex === i}
-                  onShowTooltip={() => setTooltipIndex(i)}
-                  onHideTooltip={() => setTooltipIndex(null)}
-                  onClick={() => seekTo(Math.max(shot.timestamp - 5, 0))}
-                  scale={stageSize.scale}
-                  getCurrentTime={getCurrentTime}
-                />
-              );
-            })}
+          {filteredActionsForDisplay
+            .filter((a) => a.typeItem === "shot" || a.typeItem === "event")
+            .map((shot, i) => (
+              <ShotMarker
+                key={`shot-${i}`}
+                shot={shot as Shot}
+                isTooltipVisible={tooltipIndex === i}
+                onShowTooltip={() => setTooltipIndex(i)}
+                onHideTooltip={() => setTooltipIndex(null)}
+                onClick={() => seekTo(Math.max(shot.timestamp - 5, 0))}
+                scale={stageSize.scale}
+                getCurrentTime={getCurrentTime}
+              />
+            ))}
 
           <svg
             width={stageSize.width}
@@ -820,30 +901,56 @@ export default function BasketballCourtSVG({
             >
               <TooltipProvider>
                 <div className="grid grid-cols-7 gap-1.5">
-                  {eventOptions.map((option) => (
-                    <div key={option.value} className="flex justify-center">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant={
-                              eventType === option.value ? "default" : "outline"
-                            }
-                            size="icon"
-                            onClick={() => setEventType(option.value)}
-                            className="px-3 h-8 w-11 border border-white/10"
+                  {eventOptions.map((option) => {
+                    return (
+                      <div key={option.value} className="flex justify-center">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant={
+                                eventType === option.value
+                                  ? "default"
+                                  : "outline"
+                              }
+                              size="icon"
+                              onClick={() => setEventType(option.value)}
+                              onDoubleClick={() => confirmEvent(true)}
+                              onMouseDown={
+                                option.initial === "T"
+                                  ? () => {
+                                      console.log("ICI");
+                                      pressTimer.current = setTimeout(
+                                        () => confirmEvent(false),
+                                        600
+                                      );
+                                    }
+                                  : undefined
+                              }
+                              onMouseUp={
+                                option.initial === "T"
+                                  ? () => {
+                                      if (pressTimer.current) {
+                                        clearTimeout(pressTimer.current);
+                                        pressTimer.current = null; // on reset proprement
+                                      }
+                                    }
+                                  : undefined
+                              }
+                              className="px-3 h-8 w-11 border border-white/10"
+                            >
+                              {option.initial}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="bottom"
+                            className="bg-[#05051F] text-white text-xs px-2 py-1 rounded-md shadow-lg"
                           >
-                            {option.initial}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="bottom"
-                          className="bg-[#05051F] text-white text-xs px-2 py-1 rounded-md shadow-lg"
-                        >
-                          {option.label}
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  ))}
+                            {option.label}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    );
+                  })}
                 </div>
               </TooltipProvider>
 

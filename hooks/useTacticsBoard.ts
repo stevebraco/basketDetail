@@ -7,11 +7,11 @@ export function useTacticsBoard() {
   const PROXIMITY_THRESHOLD = 50;
 
   const initialPositions = Array.from({ length: PLAYER_COUNT }, (_, i) => ({
-    x: 50 + (i % 5) * 80, // 5 joueurs par ligne
-    y: 100 + Math.floor(i / 5) * 100, // 2 lignes : 0 et 1
+    x: 150 + i * 80, // chaque joueur est espacé de 80px en X
+    y: 15, // tous sur la même ligne
   }));
 
-  const initialBallPosition = { x: 400, y: 250 };
+  const initialBallPosition = { x: 501, y: 250 };
 
   // Preset simplifié
   const presetSystem = [
@@ -39,12 +39,16 @@ export function useTacticsBoard() {
   const [currentSystemId, setCurrentSystemId] = useState("main");
   const [players, setPlayers] = useState(initialPositions);
   const [ball, setBall] = useState(initialBallPosition);
+  const [ballOffset, setBallOffset] = useState<{ x: number; y: number } | null>(
+    null
+  );
 
   const [isRecording, setIsRecording] = useState(false);
   const [isReplaying, setIsReplaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [replaySpeed, setReplaySpeed] = useState(800);
   const [currentComment, setCurrentComment] = useState("");
+
   const [replayIndex, setReplayIndex] = useState(0);
   const [playerWithBall, setPlayerWithBall] = useState(null);
   const [playersDirection, setPlayersDirection] = useState(
@@ -72,15 +76,17 @@ export function useTacticsBoard() {
 
   const checkCollision = () => {
     for (let i = 0; i < players.length; i++) {
-      const dx = players[i].x - ball.x;
-      const dy = players[i].y - ball.y;
+      const dx = ball.x - players[i].x;
+      const dy = ball.y - players[i].y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       if (distance <= PLAYER_RADIUS + BALL_RADIUS) {
         setPlayerWithBall(i);
+        setBallOffset({ x: dx, y: dy }); // 👈 on garde la distance relative
         return;
       }
     }
     setPlayerWithBall(null);
+    setBallOffset(null);
   };
 
   const stepProgress = currentSystem
@@ -106,47 +112,31 @@ export function useTacticsBoard() {
 
   const handleDragMove = (index, e) => {
     if (isReplaying) return;
+
     const newP = [...players];
-    newP[index] = { x: e.target.x(), y: e.target.y() };
+    const newX = e.target.x();
+    const newY = e.target.y();
+    newP[index] = { x: newX, y: newY };
     setPlayers(newP);
+
+    if (playerWithBall === index && ballOffset) {
+      setBall({
+        x: newX + ballOffset.x,
+        y: newY + ballOffset.y,
+      });
+    }
+
     checkProximity();
   };
 
   const handleBallDrag = (e) => {
     if (isReplaying) return;
+
     setBall({ x: e.target.x(), y: e.target.y() });
+    setPlayerWithBall(null);
+    setBallOffset(null); // 👈 plus de lien
     checkCollision();
     checkProximity();
-  };
-
-  const setRecordingForCurrentSystem = (newRecording) => {
-    setSystems((prev) =>
-      prev.map((s) =>
-        s.id === currentSystemId ? { ...s, recording: newRecording } : s
-      )
-    );
-  };
-
-  const addStepAuto = () => {
-    if (!currentSystem) return;
-    setSystems((prev) =>
-      prev.map((s) =>
-        s.id === currentSystemId
-          ? {
-              ...s,
-              recording: [
-                ...s.recording,
-                {
-                  time: Date.now(),
-                  players: [...playersRef.current],
-                  ball: { ...ballRef.current },
-                  comment: "", // 👈 pas currentComment
-                },
-              ],
-            }
-          : s
-      )
-    );
   };
 
   const addStep = () => {
@@ -186,6 +176,8 @@ export function useTacticsBoard() {
         return { ...s, recording: newRecording };
       })
     );
+
+    console.log(systems);
 
     setCurrentComment("");
     setDrawMode("");

@@ -16,8 +16,9 @@ export default function StatsMatch({
   handlePlayerClick,
   selectedPlayer,
 }: any) {
+  console.log(matchPlayed);
   return (
-    <Card className="w-full max-w-4xl bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl col-span-2">
+    <Card className="w-full  bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl col-span-2">
       <CardHeader>
         <CardTitle>Derniers matchs</CardTitle>
       </CardHeader>
@@ -47,33 +48,38 @@ export default function StatsMatch({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {matchPlayed.map((item, idx) => (
-              <TableRow key={idx} className="text-sm text-white/90">
-                <TableCell
-                  className={`${
-                    selectedPlayer === item?.player?.nom ? "bg-blue-100" : ""
-                  }`}
-                  onClick={() => handlePlayerClick(item.player.nom)}
-                >
-                  {item.player?.nom
-                    ? `${item.player.prenom} ${item.player.nom}`
-                    : `${item.match?.nom}`}
-                </TableCell>
-                <TableCell>{item.stats.points}</TableCell>
-                <TableCell>{item.stats.assists}</TableCell>
-                <TableCell>{calculateTotalRebounds(item.stats)}</TableCell>
-                <TableCell>{item.stats.steals}</TableCell>
-                <TableCell>{item.stats.fgm}</TableCell>
-                <TableCell>{item.stats.fga}</TableCell>
-                <TableCell>{item.stats.threePM}</TableCell>
-                <TableCell>{item.stats.threePA}</TableCell>
-                <TableCell>{item.stats.ftm}</TableCell>
-                <TableCell>{item.stats.fta}</TableCell>
-                <TableCell>{item.stats.fautes}</TableCell>
-                <TableCell>{item.stats.minutes}</TableCell>
-                <TableCell>{item.stats.plusMinus}</TableCell>
-              </TableRow>
-            ))}
+            {matchPlayed.map((item, idx) => {
+              if (!item.stats) return;
+              return (
+                <TableRow key={idx} className="text-sm text-white/90">
+                  <TableCell
+                    className={`${
+                      selectedPlayer === item?.player?.nom ? "bg-blue-100" : ""
+                    }`}
+                    onClick={() =>
+                      handlePlayerClick(item.player.nom, item.player.id)
+                    }
+                  >
+                    {item.player?.nom
+                      ? `${item.player.prenom} ${item.player.nom}`
+                      : `${item.match?.nom}`}
+                  </TableCell>
+                  <TableCell>{item.stats.points}</TableCell>
+                  <TableCell>{item.stats.assists}</TableCell>
+                  <TableCell>{calculateTotalRebounds(item.stats)}</TableCell>
+                  <TableCell>{item.stats.steals}</TableCell>
+                  <TableCell>{item.stats.fgm}</TableCell>
+                  <TableCell>{item.stats.fga}</TableCell>
+                  <TableCell>{item.stats.threePM}</TableCell>
+                  <TableCell>{item.stats.threePA}</TableCell>
+                  <TableCell>{item.stats.ftm}</TableCell>
+                  <TableCell>{item.stats.fta}</TableCell>
+                  <TableCell>{item.stats.fautes}</TableCell>
+                  <TableCell>{item.stats.minutes}</TableCell>
+                  <TableCell>{item.stats.plusMinus}</TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </CardContent>

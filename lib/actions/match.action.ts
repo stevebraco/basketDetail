@@ -6,7 +6,6 @@ import { redirect } from "next/navigation";
 
 export async function createMatch(params: any) {
   const { nom, videoId, versus, playerIds } = params;
-  console.log(nom, videoId, versus, playerIds);
 
   try {
     // 1️⃣ Créer le match sans playerMatches
@@ -62,5 +61,65 @@ export async function createMatch(params: any) {
   } catch (error) {
     console.error("Erreur création match:", error);
     throw new Error("Impossible de créer le match");
+  }
+}
+
+export async function AddStatsMatch(
+  id: string,
+  shots: any[],
+  playersStats: { playerId: string; stats: any }[]
+) {
+  try {
+    console.log("id", id);
+
+    const match = await prisma.match.findUnique({
+      where: { id },
+    });
+
+    if (!match) {
+      console.error(`Match avec id ${id} introuvable`);
+      return;
+    }
+
+    // Ajouter les tirs
+    const updatedTirs = [...(match.tirs || []), ...shots];
+
+    await prisma.match.update({
+      where: { id },
+      data: { tirs: updatedTirs },
+    });
+
+    console.log(`Tirs ajoutés avec succès au match ${id}`);
+
+    // Ajouter ou mettre à jour les stats des joueurs dans playerMatch
+    for (const playerStat of playersStats) {
+      try {
+        await prisma.playerMatch.update({
+          where: {
+            playerId_matchId: {
+              playerId: playerStat.playerId,
+              matchId: id,
+            },
+          },
+          data: {
+            stats: playerStat.stats,
+          },
+        });
+      } catch (error: any) {
+        // Si la ligne n'existe pas, Prisma renvoie l'erreur P2025
+        if (error.code === "P2025") {
+          console.warn(
+            `playerMatch pour playerId ${playerStat.playerId} et matchId ${id} n'existe pas`
+          );
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    console.log(`Stats des joueurs ajoutées/mises à jour pour le match ${id}`);
+  } catch (error) {
+    console.error("Erreur lors de l'ajout des tirs ou stats :", error);
+    throw error;
   }
 }

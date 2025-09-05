@@ -88,7 +88,6 @@ const mockActions = [
 ];
 
 const CourtWithShotsPDF: React.FC = ({ shots }: any) => {
-  console.log(shots);
   const stageRef = useRef<any>(null);
   const [terrainImage, setTerrainImage] = useState<string | null>(null);
 

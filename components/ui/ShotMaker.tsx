@@ -49,6 +49,8 @@ export default function ShotMarker({
   // Choisir icône Circle si réussi, X si raté
   const Icon = shot.typeItem === "shot" ? (shot.made ? Circle : X) : Circle;
 
+  console.log("shot", shot);
+
   return (
     <motion.div
       className="absolute cursor-pointer"
