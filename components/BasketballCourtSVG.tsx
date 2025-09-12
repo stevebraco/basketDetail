@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import BasketBallHalfCourtKonva from "./BasketBallCourtHalfKonva";
 
 export default function BasketballCourtSVG({
   initialShots = [],
@@ -55,69 +56,48 @@ export default function BasketballCourtSVG({
   const searchParams = useSearchParams();
   const isReadOnly = searchParams.get("view");
 
-  const sceneWidth = 1010;
-  const maxWidth = 1010;
+  const sceneWidth = 850;
+  const maxWidth = 850;
   const { containerRef, stageSize } = useResponsiveCourt({
     sceneWidth,
-    sceneHeight: 500,
-    maxWidth: 1011,
+    sceneHeight: 660,
+    maxWidth: 850,
   });
 
   const courtWidth = 500;
 
   const svgWidth = 930 * stageSize.scale;
 
-  const basketLeft = { x: 185, y: 508 / 2 };
-  const basketRight = { x: 832, y: 508 / 2 };
-  const threePointRadius = (100 / courtWidth) * 875 * stageSize.scale;
+  const basketLeft = { x: 430, y: 850 / 2 };
+  const threePointRadius = (177 / courtWidth) * 875 * stageSize.scale;
 
-  const cornerZoneHeight = 50;
-  const cornerZoneWidth = 90;
+  const cornerZoneHeight = 200;
+  const cornerZoneWidth = 120;
 
   // Zone gauche (haut et bas)
-  const cornerLeftTop = { x: 50, y: 80 };
+  const cornerLeftTop = { x: 120, y: 450 };
   const cornerLeftBottom = {
-    x: 50,
-    y: 360,
-  };
-
-  // Zone droite (haut et bas)
-  const cornerRightTop = { x: 950 - cornerZoneWidth, y: 80 };
-  const cornerRightBottom = {
-    x: 860,
-    y: 375,
+    x: 620,
+    y: 450,
   };
 
   const isThreePointShot = (x: number, y: number) => {
-    const isLeft = x < svgWidth / 2;
-    const basket = isLeft ? basketLeft : basketRight;
-
     // Vérifie si le tir est dans l'une des zones de corner
     const inCornerZone =
-      (isLeft &&
-        ((x >= cornerLeftTop.x &&
-          x <= cornerLeftTop.x + cornerZoneWidth &&
-          y >= cornerLeftTop.y &&
-          y <= cornerLeftTop.y + cornerZoneHeight) ||
-          (x >= cornerLeftBottom.x &&
-            x <= cornerLeftBottom.x + cornerZoneWidth &&
-            y >= cornerLeftBottom.y &&
-            y <= cornerLeftBottom.y + cornerZoneHeight))) ||
-      (!isLeft &&
-        ((x >= cornerRightTop.x &&
-          x <= cornerRightTop.x + cornerZoneWidth &&
-          y >= cornerRightTop.y &&
-          y <= cornerRightTop.y + cornerZoneHeight) ||
-          (x >= cornerRightBottom.x &&
-            x <= cornerRightBottom.x + cornerZoneWidth &&
-            y >= cornerRightBottom.y &&
-            y <= cornerRightBottom.y + cornerZoneHeight)));
+      (x >= cornerLeftTop.x &&
+        x <= cornerLeftTop.x + cornerZoneWidth &&
+        y >= cornerLeftTop.y &&
+        y <= cornerLeftTop.y + cornerZoneHeight) ||
+      (x >= cornerLeftBottom.x &&
+        x <= cornerLeftBottom.x + cornerZoneWidth &&
+        y >= cornerLeftBottom.y &&
+        y <= cornerLeftBottom.y + cornerZoneHeight);
 
     if (inCornerZone) return false; // 2 points
 
     // Sinon, distance au panier
-    const dx = x - basket.x;
-    const dy = y - basket.y;
+    const dx = x - basketLeft.x;
+    const dy = y - basketLeft.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     return distance * stageSize.scale > threePointRadius; // true = 3 points
@@ -548,14 +528,8 @@ export default function BasketballCourtSVG({
     { value: "interception", label: "Interception", initial: "I" },
     { value: "contre", label: "Contre", initial: "C" },
     // Lancers francs
-    { value: "LF0/1", label: "Lancer franc 0/1", initial: "LF0" },
-    { value: "LF0/2", label: "Lancer franc 0/2", initial: "LF0/2" },
-    { value: "LF0/3", label: "Lancer franc 0/3", initial: "LF0/3" },
-    { value: "LF1/2", label: "Lancer franc 1/2", initial: "LF1/2" },
-    { value: "LF2/2", label: "Lancer franc 2/2", initial: "LF2/2" },
-    { value: "LF1/3", label: "Lancer franc 1/3", initial: "LF1/3" },
-    { value: "LF2/3", label: "Lancer franc 2/3", initial: "LF2/3" },
-    { value: "LF3/3", label: "Lancer franc 3/3", initial: "LF3/3" },
+    { value: "LF0/1", label: "Lancer franc réussi", initial: "LF0" },
+    { value: "LF1/1", label: "Lancer franc raté", initial: "LF1/1" },
   ];
 
   useEffect(() => {
@@ -697,75 +671,59 @@ export default function BasketballCourtSVG({
             }}
           >
             <Layer listening={false}>
-              <BasketBallCourtKonva />
-            </Layer>
-            <Layer>
-              {zonesWithStats.map((zone) => {
-                const s = zone.shapeProps;
-
-                // Calcul du centre de la zone selon le type
-                let centerX = zone.x;
-                let centerY = zone.y;
-
-                if (zone.type === "rect") {
-                  centerX += 85;
-                  centerY += s.height / 2;
-                } else if (zone.type === "concave") {
-                  if (zone.id === "three_left_inverted") {
-                    centerX = 380 ?? zone.x + (s.rectW || 0) / 2;
-                    centerY = s.centerY + 300 ?? zone.y + (s.rectH || 0) / 2;
-                  }
-                  // approximation: centre du rectangle de référence
-                  else {
-                    centerX = 380 ?? zone.x + (s.rectW || 0) / 2;
-                    centerY = s.centerY - 280 ?? zone.y + (s.rectH || 0) / 2;
-                  }
-                } else if (zone.type === "arc") {
-                  // pour l'arc, on place le texte au milieu du rayon extérieur
-                  centerX = s.x + 390;
-                  centerY = s.y + 200;
-                }
-
-                return (
-                  <Group key={zone.id}>
-                    <Shape
-                      ref={(el) => (refs.current[zone.id] = el)}
-                      x={zone.x}
-                      y={zone.y}
-                      rotation={zone.shapeProps.rotation || 0}
-                      offsetX={zone.shapeProps.offsetX || 0}
-                      offsetY={zone.shapeProps.offsetY || 0}
-                      sceneFunc={(context, shape) => {
-                        drawZone(context, zone);
-                        context.fillStyle = getColorFromPercentage(
-                          zone.percentage,
-                          0.3
-                        );
-                        context.fill();
-                        // context.stroke();
-                      }}
-                    />
-                    <Text
-                      text={`${zone.percentage}%`}
-                      x={centerX}
-                      y={centerY}
-                      fontSize={16}
-                      fill="yellow"
-                      width={s.width || 100} // largeur du texte / zone approximative
-                      height={s.height || 50} // hauteur du texte / zone approximative
-                      align="center"
-                      verticalAlign="middle"
-                      rotation={s.rotation || 0} // rotation si nécessaire
-                      offsetX={(s.width || 100) / 2} // centre horizontal
-                      offsetY={(s.height || 50) / 2} // centre vertical
-                      listening={false}
-                    />
-                  </Group>
-                );
-              })}
+              {/* <BasketBallCourtKonva /> */}
+              <BasketBallHalfCourtKonva />
             </Layer>
           </Stage>
           {/* Lignes à 3 points */}
+          <svg
+            width={stageSize.width}
+            height={stageSize.height}
+            stroke="red"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              pointerEvents: "none",
+            }}
+          >
+            <rect
+              x={24 * stageSize.scale}
+              y={20 * stageSize.scale}
+              width={800 * stageSize.scale} // svgWidthResponsive
+              height={0.73 * sceneWidth * stageSize.scale} // svgHeightResponsive
+              stroke="orange"
+              strokeWidth={2 * stageSize.scale}
+              fill="none"
+            />
+            <circle
+              cx={basketLeft.x * stageSize.scale}
+              cy={basketLeft.y * stageSize.scale}
+              r={threePointRadius} // déjà scaled
+              stroke="yellow"
+              strokeWidth={1 * stageSize.scale}
+              fill="none"
+            />
+
+            {/* Zones corner */}
+            {/* Left Top */}
+            <rect
+              x={cornerLeftTop.x * stageSize.scale}
+              y={cornerLeftTop.y * stageSize.scale}
+              width={cornerZoneWidth * stageSize.scale}
+              height={cornerZoneHeight}
+              fill="red"
+              opacity={0.5}
+            />
+            <rect
+              x={cornerLeftBottom.x * stageSize.scale}
+              y={cornerLeftBottom.y * stageSize.scale}
+              width={cornerZoneWidth * stageSize.scale}
+              height={cornerZoneHeight}
+              fill="red"
+              opacity={0.5}
+            />
+          </svg>
 
           {/* Affichage des tirs */}
           {filteredActionsForDisplay
@@ -782,84 +740,6 @@ export default function BasketballCourtSVG({
                 getCurrentTime={getCurrentTime}
               />
             ))}
-
-          <svg
-            width={stageSize.width}
-            height={stageSize.height}
-            stroke="red"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              pointerEvents: "none",
-            }}
-          >
-            <circle
-              cx={basketLeft.x * stageSize.scale}
-              cy={basketLeft.y * stageSize.scale}
-              r={threePointRadius} // déjà scaled
-              stroke="yellow"
-              strokeWidth={1 * stageSize.scale}
-              fill="none"
-            />
-            <circle
-              cx={basketRight.x * stageSize.scale}
-              cy={basketRight.y * stageSize.scale}
-              r={threePointRadius} // déjà scaled
-              stroke="yellow"
-              strokeWidth={1 * stageSize.scale}
-              fill="none"
-            />
-            {/* Zone corner gauche */}
-
-            <rect
-              x={75 * stageSize.scale}
-              y={39 * stageSize.scale}
-              width={875 * stageSize.scale} // svgWidthResponsive
-              height={0.425 * sceneWidth * stageSize.scale} // svgHeightResponsive
-              stroke="orange"
-              strokeWidth={2 * stageSize.scale}
-              fill="none"
-            />
-
-            {/* Zones corner */}
-            {/* Left Top */}
-            <rect
-              x={cornerLeftTop.x * stageSize.scale}
-              y={cornerLeftTop.y * stageSize.scale}
-              width={cornerZoneWidth * stageSize.scale}
-              height={cornerZoneHeight}
-              fill="red"
-              opacity={0.5}
-            />
-            {/* Left Bottom */}
-            <rect
-              x={cornerLeftBottom.x * stageSize.scale}
-              y={cornerLeftBottom.y * stageSize.scale}
-              width={cornerZoneWidth * stageSize.scale}
-              height={cornerZoneHeight}
-              fill="red"
-              opacity={0.5}
-            />
-            {/* Right Top */}
-            <rect
-              x={cornerRightTop.x * stageSize.scale}
-              y={cornerRightTop.y * stageSize.scale}
-              width={cornerZoneWidth * stageSize.scale}
-              height={cornerZoneHeight * stageSize.scale}
-              fill="red"
-              opacity={0.5}
-            />
-            {/* Right Bottom */}
-            <rect
-              x={cornerRightBottom.x * stageSize.scale}
-              y={cornerRightBottom.y * stageSize.scale}
-              width={cornerZoneWidth * stageSize.scale}
-              height={cornerZoneHeight * stageSize.scale}
-              fill="red"
-              opacity={0.5}
-            />
-          </svg>
 
           {/* Affichage des événements */}
           {/* {actions
