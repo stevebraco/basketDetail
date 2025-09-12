@@ -15,23 +15,52 @@ export function useResponsiveCourt({
   const [stageSize, setStageSize] = useState({
     width: sceneWidth,
     height: sceneHeight,
-    scale,
+    scale: 1,
   });
+
+  // const updateSize = () => {
+  //   if (!containerRef.current) return;
+  //   let containerWidth = containerRef.current.offsetWidth;
+
+  //   if (maxWidth && containerWidth > maxWidth) {
+  //     containerWidth = maxWidth;
+  //   }
+
+  //   // const computedScale = (containerWidth / sceneWidth) * scale;
+
+  //   const scaleX = containerWidth / sceneWidth;
+  //   const scaleY = containerRef.current.offsetHeight / sceneHeight;
+
+  //   // Contain
+  //   const computedScale = Math.min(scaleX, scaleY) * scale;
+
+  //   setStageSize({
+  //     width: sceneWidth * scale,
+  //     height: sceneHeight * scale,
+  //     scale: computedScale,
+  //   });
+  // };
 
   const updateSize = () => {
     if (!containerRef.current) return;
+
     let containerWidth = containerRef.current.offsetWidth;
+    let containerHeight = containerRef.current.offsetHeight;
 
     if (maxWidth && containerWidth > maxWidth) {
       containerWidth = maxWidth;
     }
 
-    const scale = containerWidth / sceneWidth;
+    const scaleX = containerWidth / sceneWidth;
+    const scaleY = containerHeight / sceneHeight;
+
+    // Responsive, mais jamais > 1
+    const computedScale = Math.min(1, Math.min(scaleX, scaleY) * 1);
 
     setStageSize({
-      width: sceneWidth * scale,
-      height: sceneHeight * scale,
-      scale,
+      width: sceneWidth * computedScale,
+      height: sceneHeight * computedScale,
+      scale: computedScale,
     });
   };
 

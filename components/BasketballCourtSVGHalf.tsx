@@ -19,9 +19,8 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { Textarea } from "./input/TextArea";
-import { Settings } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Checkbox } from "./ui/checkbox";
+
+import BasketBallHalfCourtKonva from "./BasketBallHalfCourtKonva";
 
 export default function BasketballCourtSVG({
   initialShots = [],
@@ -30,7 +29,7 @@ export default function BasketballCourtSVG({
   videoId,
 }: {
   initialShots?: Shot[];
-  selectedPlayer?: string | null;
+  selectedPlayer?: any;
   onUpdateStats: (
     update: PlayerStatsUpdate,
     shotOrEvent: Shot | CustomEventType
@@ -40,6 +39,12 @@ export default function BasketballCourtSVG({
   const [tooltipIndex, setTooltipIndex] = useState<number | null>(null);
   const refs = useRef<{ [key: string]: Konva.Shape | null }>({});
   const popupRef = useRef<HTMLDivElement | null>(null);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [selectedEventFilter, setSelectedEventFilter] = useState<
+    string | "all"
+  >("all");
+
+  const halfCourt = false;
 
   const [clickInfo, setClickInfo] = useState<string>("");
 
@@ -52,6 +57,7 @@ export default function BasketballCourtSVG({
     sceneWidth,
     sceneHeight: 500,
     maxWidth: 1011,
+    scale: 1,
   });
 
   const courtWidth = 500;
@@ -476,25 +482,68 @@ export default function BasketballCourtSVG({
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
-  const stats = calculateZoneStats(actions, zonesData, refs.current);
+  // const stats = calculateZoneStats(actions, zonesData, refs.current);
 
-  // Fusionner les stats dans zonesData pour le rendu
+  // // Fusionner les stats dans zonesData pour le rendu
+  // const zonesWithStats = zonesData.map((zone) => {
+  //   const stat = stats.find((s) => s.id === zone.id);
+  //   return {
+  //     ...zone,
+  //     percentage: stat?.percentage ?? 0,
+  //   };
+  // });
+
+  // Actions filtrées selon le joueur sélectionné
+  const filteredActionsForDisplay = React.useMemo(() => {
+    let filtered = actions;
+
+    // Filtrer par joueur si nécessaire
+    if (selectedPlayer?.name) {
+      filtered = filtered.filter((a) => a.player === selectedPlayer.name);
+    }
+
+    // Filtrer par type d’action si un filtre est sélectionné
+    if (selectedEventFilter !== "all") {
+      filtered = filtered.filter((a) => a.eventType === selectedEventFilter);
+    }
+
+    return filtered;
+  }, [actions, selectedPlayer, selectedEventFilter]);
+
+  const filteredActions = React.useMemo(() => {
+    if (!selectedPlayer?.name) {
+      // ✅ Pas de joueur sélectionné → on prend toutes les actions (stats équipe)
+      return actions;
+    }
+    // ✅ Joueur sélectionné → uniquement ses actions
+    return actions.filter((a) => a.player === selectedPlayer.name);
+  }, [actions, selectedPlayer]);
+
+  // Calcul des stats uniquement pour ces actions
+  const stats = React.useMemo(() => {
+    return calculateZoneStats(filteredActions, zonesData, refs.current);
+  }, [filteredActions, zonesData, refs.current]);
+
+  // Fusionner stats avec zonesData pour l'affichage
   const zonesWithStats = zonesData.map((zone) => {
     const stat = stats.find((s) => s.id === zone.id);
     return {
       ...zone,
       percentage: stat?.percentage ?? 0,
+      attempts: stat?.attempts ?? 0,
+      makes: stat?.makes ?? 0,
     };
   });
 
   const eventOptions = [
     { value: "tir", label: "Tir", initial: "T" },
-    { value: "passe décisive", label: "Passe Décisive", initial: "PD" },
+    { value: "assist", label: "Passe Décisive", initial: "PD" },
     { value: "faute", label: "Faute", initial: "F" },
     { value: "rebond_off", label: "Rebond Offensif", initial: "RO" },
     { value: "rebond_def", label: "Rebond Défensif", initial: "RD" },
     { value: "perte_de_balle", label: "Perte de balle", initial: "P" },
     { value: "interception", label: "Interception", initial: "I" },
+    { value: "contre", label: "Contre", initial: "C" },
     // Lancers francs
     { value: "LF0/1", label: "Lancer franc 0/1", initial: "LF0" },
     { value: "LF0/2", label: "Lancer franc 0/2", initial: "LF0/2" },
@@ -526,70 +575,56 @@ export default function BasketballCourtSVG({
   }, [pendingEvent]);
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-5">
-      {/* Player YouTube */}
-      <Card className="col-span-6">
-        <div ref={playerRef} className="mt-4 relative pb-[56.25%] h-0">
-          <YouTube
-            videoId={VIDEO_ID}
-            onReady={handleReady}
-            opts={{
-              height: "100%",
-              width: "100%",
-              playerVars: { autoplay: 0, rel: 0 },
-            }}
-            className="absolute top-0 left-0 w-full h-full"
-          />
-          {currentTime !== null && (
-            <Button variant="secondary" className="mt-2" onClick={reset}>
-              Fermer la vidéo
-            </Button>
-          )}
-        </div>
-      </Card>
-      <Card className="col-span-6 w-full">
-        <div className="flex justify-between w-full p-2 px-10">
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-                <Settings className="w-5 h-5" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48">
-              <div className="flex flex-col space-y-2">
-                <label className="flex items-center space-x-2">
-                  <Checkbox
-                  // checked={showShootingPercentage}
-                  // onCheckedChange={(checked) =>
-                  //   setShowShootingPercentage(!!checked)
-                  // }
-                  />
-                  <span>Pourcentage de tir</span>
-                </label>
+      {/* <div className="mb-2">
+        <label className="mr-2 text-sm font-medium">Filtrer par action :</label>
+        <Select
+          value={selectedEventFilter}
+          onValueChange={(value) => setSelectedEventFilter(value)}
+        >
+          <SelectTrigger className="w-[180px] border border-gray-300 rounded-md bg-[#05051F] text-white hover:border-gray-400 focus:ring-1 focus:ring-blue-500 focus:outline-none">
+            <SelectValue placeholder="Toutes" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#05051F] text-white border border-gray-700 rounded-md shadow-lg">
+            <SelectItem
+              value="all"
+              className="hover:bg-blue-600 hover:text-white"
+            >
+              Toutes
+            </SelectItem>
+            {eventOptions
+              .filter((option) => !option.value.startsWith("LF"))
+              .map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className="hover:bg-blue-600 hover:text-white"
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+      </div> */}
 
-                {/* Tu peux ajouter d’autres options ici */}
-                <button className="text-left px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
-                  Déconnexion
-                </button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
+      {/* Player YouTube */}
+
+      <Card className="col-span-12 w-full">
         <div
-          className="col-span-6 w-full flex items-center p-0"
+          className=""
           ref={containerRef}
-          style={{
-            width: "100%",
-            height: "100%",
-            position: "relative",
-            maxWidth: `${maxWidth}px`,
-          }}
+          // style={{
+          //   width: "100%",
+          //   height: "100%",
+          //   position: "relative",
+          //   // maxWidth: `${maxWidth}px`,
+          // }}
         >
           <Stage
-            width={stageSize.width}
-            height={stageSize.height}
-            scaleX={stageSize.scale}
-            scaleY={stageSize.scale}
-            // x={-20}
+            width={858}
+            height={660}
+            scaleX={1}
+            scaleY={1}
+            x={-17}
             // y={-5}
             opacity={1}
             style={{
@@ -599,10 +634,11 @@ export default function BasketballCourtSVG({
               zIndex: 0,
               width: "100%",
               height: "100%",
+              background: "orange",
             }}
             onClick={(e) => {
               if (isReadOnly) return;
-              if (!selectedPlayer || !player) return;
+              if (!selectedPlayer.name || !player) return;
               if (e.target !== e.target.getStage()) return;
 
               const stage = e.target.getStage();
@@ -624,7 +660,6 @@ export default function BasketballCourtSVG({
                 )
                 .filter(Boolean)
                 .join(", ");
-              console.log(info);
 
               if (pointerPosition) {
                 // handleCourtClick(realX, realY, currentTime, stageSize.scale);
@@ -642,91 +677,26 @@ export default function BasketballCourtSVG({
           >
             <Layer listening={false}>
               <BasketBallCourtKonva />
-            </Layer>
-            <Layer>
-              {zonesWithStats.map((zone) => {
-                const s = zone.shapeProps;
-
-                // Calcul du centre de la zone selon le type
-                let centerX = zone.x;
-                let centerY = zone.y;
-
-                if (zone.type === "rect") {
-                  centerX += 85;
-                  centerY += s.height / 2;
-                } else if (zone.type === "concave") {
-                  // approximation: centre du rectangle de référence
-                  centerX = 380 ?? zone.x + (s.rectW || 0) / 2;
-                  centerY = s.centerY + 10 ?? zone.y + (s.rectH || 0) / 2;
-                } else if (zone.type === "arc") {
-                  // pour l'arc, on place le texte au milieu du rayon extérieur
-                  centerX = s.x + 390;
-                  centerY = s.y + 200;
-                }
-
-                return (
-                  <div key={zone.id}>
-                    <Shape
-                      ref={(el) => (refs.current[zone.id] = el)}
-                      x={zone.x}
-                      y={zone.y}
-                      rotation={zone.shapeProps.rotation || 0}
-                      offsetX={zone.shapeProps.offsetX || 0}
-                      offsetY={zone.shapeProps.offsetY || 0}
-                      sceneFunc={(context, shape) => {
-                        drawZone(context, zone);
-                        context.fillStyle = getColorFromPercentage(
-                          zone.percentage,
-                          0.3
-                        );
-                        context.fill();
-                        // context.stroke();
-                      }}
-                    />
-                    <Text
-                      text={`${zone.percentage}%`}
-                      x={centerX}
-                      y={centerY}
-                      fontSize={16}
-                      fill="yellow"
-                      width={s.width || 100} // largeur du texte / zone approximative
-                      height={s.height || 50} // hauteur du texte / zone approximative
-                      align="center"
-                      verticalAlign="middle"
-                      rotation={s.rotation || 0} // rotation si nécessaire
-                      offsetX={(s.width || 100) / 2} // centre horizontal
-                      offsetY={(s.height || 50) / 2} // centre vertical
-                      listening={false}
-                    />
-                  </div>
-                );
-              })}
+              {/* <BasketBallHalfCourtKonva /> */}
             </Layer>
           </Stage>
           {/* Lignes à 3 points */}
 
           {/* Affichage des tirs */}
-          {actions
-            .filter(
-              (a) =>
-                (!selectedPlayer || a.player === selectedPlayer) &&
-                (a.typeItem === "shot" || a.typeItem === "event")
-            )
-            .map((shot, i) => {
-              console.log(shot);
-              return (
-                <ShotMarker
-                  key={`shot-${i}`}
-                  shot={shot as Shot}
-                  isTooltipVisible={tooltipIndex === i}
-                  onShowTooltip={() => setTooltipIndex(i)}
-                  onHideTooltip={() => setTooltipIndex(null)}
-                  onClick={() => seekTo(Math.max(shot.timestamp - 5, 0))}
-                  scale={stageSize.scale}
-                  getCurrentTime={getCurrentTime}
-                />
-              );
-            })}
+          {filteredActionsForDisplay
+            .filter((a) => a.typeItem === "shot" || a.typeItem === "event")
+            .map((shot, i) => (
+              <ShotMarker
+                key={`shot-${i}`}
+                shot={shot as Shot}
+                isTooltipVisible={tooltipIndex === i}
+                onShowTooltip={() => setTooltipIndex(i)}
+                onHideTooltip={() => setTooltipIndex(null)}
+                onClick={() => seekTo(Math.max(shot.timestamp - 5, 0))}
+                scale={stageSize.scale}
+                getCurrentTime={getCurrentTime}
+              />
+            ))}
 
           {/* Affichage des événements */}
           {/* {actions
@@ -768,30 +738,56 @@ export default function BasketballCourtSVG({
             >
               <TooltipProvider>
                 <div className="grid grid-cols-7 gap-1.5">
-                  {eventOptions.map((option) => (
-                    <div key={option.value} className="flex justify-center">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant={
-                              eventType === option.value ? "default" : "outline"
-                            }
-                            size="icon"
-                            onClick={() => setEventType(option.value)}
-                            className="px-3 h-8 w-11 border border-white/10"
+                  {eventOptions.map((option) => {
+                    return (
+                      <div key={option.value} className="flex justify-center">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant={
+                                eventType === option.value
+                                  ? "default"
+                                  : "outline"
+                              }
+                              size="icon"
+                              onClick={() => setEventType(option.value)}
+                              onDoubleClick={() => confirmEvent(true)}
+                              onMouseDown={
+                                option.initial === "T"
+                                  ? () => {
+                                      console.log("ICI");
+                                      pressTimer.current = setTimeout(
+                                        () => confirmEvent(false),
+                                        600
+                                      );
+                                    }
+                                  : undefined
+                              }
+                              onMouseUp={
+                                option.initial === "T"
+                                  ? () => {
+                                      if (pressTimer.current) {
+                                        clearTimeout(pressTimer.current);
+                                        pressTimer.current = null; // on reset proprement
+                                      }
+                                    }
+                                  : undefined
+                              }
+                              className="px-3 h-8 w-11 border border-white/10"
+                            >
+                              {option.initial}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="bottom"
+                            className="bg-[#05051F] text-white text-xs px-2 py-1 rounded-md shadow-lg"
                           >
-                            {option.initial}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="bottom"
-                          className="bg-[#05051F] text-white text-xs px-2 py-1 rounded-md shadow-lg"
-                        >
-                          {option.label}
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  ))}
+                            {option.label}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    );
+                  })}
                 </div>
               </TooltipProvider>
 

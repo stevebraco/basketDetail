@@ -2,12 +2,12 @@
 import React, { useState } from "react";
 import InfosMatch from "./InfosMatch";
 import StatsMatch from "./StatsMatch";
-import BasketballCourtSVG from "./BasketballCourtSVG";
 import StatsAdvancedByPlayer from "./StatsAdvancedByPlayer";
 import GeneratePDF from "./GeneratePDF";
 import { Button } from "./ui/button";
 import { AddStatsMatch } from "@/lib/actions/match.action";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import BasketballCourtSVG from "./BasketballCourtSVG";
 
 export default function AnalysisVideo({ matchDetails }: { matchDetails: any }) {
   const [playersStats, setPlayersStats] = useState(matchDetails.playerMatches);
