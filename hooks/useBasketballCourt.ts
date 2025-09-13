@@ -26,7 +26,7 @@ export function useBasketballCourt({
   isThreePointShot: (x: number, y: number) => boolean;
   getCurrentTime: any;
 }) {
-  const [actions, setActions] = useState<ActionItem[]>(initialShots);
+  const [actions, setActions] = useState(initialShots);
   const [pendingEvent, setPendingEvent] = useState<PendingEvent>(null);
   const [pendingTimestamp, setPendingTimestamp] = useState<string | null>(null);
   const [commentaire, setCommentaire] = useState("");

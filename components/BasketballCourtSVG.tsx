@@ -12,6 +12,8 @@ import { Card } from "./ui/card";
 import BasketBallCourtKonva from "./BasketBallCourtKonva";
 import { useResponsiveCourt } from "@/hooks/useResponsiveCourt";
 import { useSearchParams } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import {
   Tooltip,
   TooltipContent,
@@ -19,27 +21,25 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { Textarea } from "./input/TextArea";
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import StatsMatch from "./StatsMatch";
+import { EventHistory } from "./EventHistory";
 
 export default function BasketballCourtSVG({
-  initialShots = [],
-  selectedPlayer,
-  onUpdateStats,
+  // initialShots = [],
+  // selectedPlayer,
+  // onUpdateStats,
   videoId,
+  // playersStats,
+  matchDetails,
 }: {
-  initialShots?: Shot[];
+  matchDetails: any;
+  // initialShots?: Shot[];
   selectedPlayer?: any;
-  onUpdateStats: (
-    update: PlayerStatsUpdate,
-    shotOrEvent: Shot | CustomEventType
-  ) => void;
+  // playersStats: any;
+  // onUpdateStats: (
+  //   update: PlayerStatsUpdate,
+  //   shotOrEvent: Shot | CustomEventType
+  // ) => void;
   videoId?: string;
 }) {
   const [tooltipIndex, setTooltipIndex] = useState<number | null>(null);
@@ -49,6 +49,69 @@ export default function BasketballCourtSVG({
   const [selectedEventFilter, setSelectedEventFilter] = useState<
     string | "all"
   >("all");
+  const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+  const [shots, setShots] = useState([]);
+  const [playersStats, setPlayersStats] = useState(matchDetails.playerMatches);
+
+  const handleUpdateStats = (
+    update: { player: string; statsUpdate: any },
+    newShot: Shot
+  ) => {
+    setShots((prevShots) => [...prevShots, newShot]);
+
+    setPlayersStats((prevStats) =>
+      prevStats.map((p) => {
+        if (p.player.nom === update.name) {
+          return {
+            ...p,
+            stats: {
+              ...p.stats,
+              points: p.stats.points + (update.points ?? 0),
+              fgm:
+                newShot.typeItem === "shot" && newShot.made
+                  ? p.stats.fgm + 1
+                  : p.stats.fgm,
+              fga:
+                newShot.typeItem === "shot" && newShot.type !== "FT"
+                  ? p.stats.fga + 1
+                  : p.stats.fga,
+              threePM:
+                newShot.typeItem === "shot" &&
+                newShot.type === "3PT" &&
+                newShot.made
+                  ? p.stats.threePM + 1
+                  : p.stats.threePM,
+              threePA:
+                newShot.typeItem === "shot" && newShot.type === "3PT"
+                  ? p.stats.threePA + 1
+                  : p.stats.threePA,
+              ftm: p.stats.ftm + (update.ftm ?? 0),
+              fta: p.stats.fta + (update.fta ?? 0),
+              reboundsOff: p.stats.reboundsOff + (update.reboundsOff ?? 0),
+              reboundsDef: p.stats.reboundsDef + (update.reboundsDef ?? 0),
+              reboundsTotal:
+                p.stats.reboundsTotal +
+                (update.reboundsOff ?? 0) +
+                (update.reboundsDef ?? 0),
+              assists: p.stats.assists + (update.assists ?? 0),
+              steals: p.stats.steals + (update.steals ?? 0),
+              blocks: p.stats.blocks + (update.blocks ?? 0),
+              turnovers: p.stats.turnovers + (update.turnovers ?? 0),
+              fautes: p.stats.fautes + (update.fautes ?? 0),
+              plusMinus: p.stats.plusMinus + (update.plusMinus ?? 0),
+            },
+          };
+        }
+        return p;
+      })
+    );
+  };
+
+  const handlePlayerClick = (name: string, id: string) => {
+    setSelectedPlayer(
+      (prev) => (prev?.id === id ? null : { name, id }) // si déjà sélectionné -> deselect
+    );
+  };
 
   const [clickInfo, setClickInfo] = useState<string>("");
 
@@ -148,9 +211,9 @@ export default function BasketballCourtSVG({
     confirmEvent,
     resetPending,
   } = useBasketballCourt({
-    initialShots,
+    initialShots: matchDetails?.tirs,
     selectedPlayer,
-    onUpdateStats,
+    onUpdateStats: handleUpdateStats,
     isThreePointShot,
     getCurrentTime,
   });
@@ -548,14 +611,8 @@ export default function BasketballCourtSVG({
     { value: "interception", label: "Interception", initial: "I" },
     { value: "contre", label: "Contre", initial: "C" },
     // Lancers francs
-    { value: "LF0/1", label: "Lancer franc 0/1", initial: "LF0" },
-    { value: "LF0/2", label: "Lancer franc 0/2", initial: "LF0/2" },
-    { value: "LF0/3", label: "Lancer franc 0/3", initial: "LF0/3" },
-    { value: "LF1/2", label: "Lancer franc 1/2", initial: "LF1/2" },
-    { value: "LF2/2", label: "Lancer franc 2/2", initial: "LF2/2" },
-    { value: "LF1/3", label: "Lancer franc 1/3", initial: "LF1/3" },
-    { value: "LF2/3", label: "Lancer franc 2/3", initial: "LF2/3" },
-    { value: "LF3/3", label: "Lancer franc 3/3", initial: "LF3/3" },
+    { value: "LF0/1", label: "Lancer franc raté", initial: "LF0" },
+    { value: "LF1/1", label: "Lancer franc réussi", initial: "LF1/1" },
   ];
 
   useEffect(() => {
@@ -993,18 +1050,35 @@ export default function BasketballCourtSVG({
           )}
         </div>
       </Card>
+      <div className="col-span-12">
+        <Tabs defaultValue="account" className="w-full bg-[#1B1E2B]">
+          <TabsList>
+            <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="password">Password</TabsTrigger>
+          </TabsList>
+          <TabsContent value="account">
+            <StatsMatch
+              matchPlayed={playersStats}
+              handlePlayerClick={handlePlayerClick}
+              selectedPlayer={selectedPlayer?.name}
+            />
+          </TabsContent>
+          <TabsContent value="password">
+            <EventHistory
+              actions={actions}
+              onDelete={(index) => {
+                setActions((prev) => prev.filter((_, i) => i !== index));
+              }}
+              onSeekVideo={(time) => {
+                if (videoRef.current) {
+                  videoRef.current.seekTo(time, "seconds");
+                }
+              }}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
       {/* Historique */}
-      {/* <EventHistory
-        actions={actions}
-        onDelete={(index) => {
-          setActions((prev) => prev.filter((_, i) => i !== index));
-        }}
-        onSeekVideo={(time) => {
-          if (videoRef.current) {
-            videoRef.current.seekTo(time, "seconds");
-          }
-        }}
-      /> */}
     </div>
   );
 }
