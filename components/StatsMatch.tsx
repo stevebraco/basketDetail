@@ -48,7 +48,7 @@ export default function StatsMatch({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {matchPlayed.map((item, idx) => {
+            {matchPlayed?.map((item, idx) => {
               if (!item.stats) return;
               return (
                 <TableRow key={idx} className="text-sm text-white/90">

@@ -7,7 +7,7 @@ export default function SystemPage() {
       <div className="col-span-12">
         {/* <SystemList title="Liste des Système" /> */}
       </div>
-      <div className="col-span-12">
+      <div className="col-span-8">
         <TacticBoard />
       </div>
     </div>

@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 export function useTacticsBoard() {
   const PLAYER_COUNT = 10;
-  const PLAYER_RADIUS = 30;
-  const BALL_RADIUS = 20;
+  const PLAYER_RADIUS = 15;
+  const BALL_RADIUS = 10;
   const PROXIMITY_THRESHOLD = 50;
 
   const initialPositions = Array.from({ length: PLAYER_COUNT }, (_, i) => ({
@@ -49,8 +49,6 @@ export function useTacticsBoard() {
   const [lastDragTime, setLastDragTime] = useState<{ [key: number]: number }>(
     {}
   );
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-
   const [currentDragPaths, setCurrentDragPaths] = useState<{
     [key: number]: { x: number; y: number }[];
   } | null>(null);
@@ -110,9 +108,9 @@ export function useTacticsBoard() {
   };
 
   const getPlayerColor = (i: number) => {
-    if (playerWithBall === i) return "orange";
+    if (playerWithBall === i) return "red";
     if (playersDirection[i]) return "blue";
-    return i < 5 ? "#212121" : "grey";
+    return i < 5 ? "#DE392E" : "#0062FF";
   };
 
   const handleDragStart = (index: number) => {
@@ -121,8 +119,8 @@ export function useTacticsBoard() {
 
   const handleDragMove = (index: number, e: any) => {
     if (isReplaying) return;
-
     const now = Date.now();
+    const minDelay = 30;
     const last = lastDragTime[index] || 0;
 
     const newX = e.target.x();
@@ -132,52 +130,19 @@ export function useTacticsBoard() {
     const dy = newY - players[index].y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (now - last > 30 || dist > 8) {
-      // ✅ Déplacer le joueur
+    if (now - last > minDelay || dist > 4) {
       setPlayers((p) => {
         const copy = [...p];
         copy[index] = { x: newX, y: newY };
         return copy;
       });
 
-      // ✅ Si ce joueur a la balle, déplacer la balle avec lui
-      if (playerWithBall === index && ballOffset) {
-        setBall({
-          x: newX + ballOffset.x,
-          y: newY + ballOffset.y,
-        });
-      }
-
-      // 🔹 Enregistrer le chemin du joueur (filtré)
-      setDragPath((prev) => {
-        const rawPath = [...(prev[index] || []), { x: newX, y: newY }];
-        const filteredPath = rawPath.filter((point, i, arr) => {
-          if (i === 0) return true;
-          const dx = point.x - arr[i - 1].x;
-          const dy = point.y - arr[i - 1].y;
-          return Math.sqrt(dx * dx + dy * dy) > 8;
-        });
-        return { ...prev, [index]: filteredPath };
-      });
-
+      setDragPath((prev) => ({
+        ...prev,
+        [index]: [...(prev[index] || []), { x: newX, y: newY }],
+      }));
       setLastDragTime((prev) => ({ ...prev, [index]: now }));
     }
-  };
-
-  const handlePlayerDoubleClick = (index: number) => {
-    const player = players[index];
-    if (!player) return;
-
-    // Ajouter un dessin "T" sur le terrain à la position du joueur
-    setDrawings((prev) => [
-      ...prev,
-      {
-        type: "T", // Type de dessin : on pourra le gérer dans ton rendu
-        x: player.x,
-        y: player.y,
-        id: Date.now(),
-      },
-    ]);
   };
 
   const handleDragEnd = (index: number) => {
@@ -189,73 +154,49 @@ export function useTacticsBoard() {
     if (isReplaying) return;
 
     const node = e.target;
+    if (!node || typeof node.x !== "function" || typeof node.y !== "function")
+      return;
+
     const newX = node.x();
     const newY = node.y();
 
     setBall({ x: newX, y: newY });
-
-    // Filtrage du chemin de la balle
-    setDragPath((prev) => {
-      const rawPath = [...(prev.ball || []), { x: newX, y: newY }];
-      const filteredPath = rawPath.filter((point, i, arr) => {
-        if (i === 0) return true;
-        const dx = point.x - arr[i - 1].x;
-        const dy = point.y - arr[i - 1].y;
-        return Math.sqrt(dx * dx + dy * dy) > 8;
-      });
-      return { ...prev, ball: filteredPath };
-    });
-
     setPlayerWithBall(null);
     setBallOffset(null);
     checkCollision();
-    // checkProximity();
+    checkProximity();
   };
 
   const addStep = () => {
     if (!currentSystem) return;
-
-    const dragPathsWithBall = { ...dragPath };
-
-    const arrowPaths = Object.fromEntries(
-      Object.entries(dragPathsWithBall).map(([key, path]) => {
-        const points: number[] = [];
-        path.forEach((p) => {
-          points.push(p.x, p.y);
-        });
-        return [key, points];
-      })
-    );
-
-    const newStep = {
-      time: Date.now(),
-      players: [...players],
-      ball: { ...ball },
-      playerWithBall,
-      ballOffset,
-      comment: currentComment,
-      drawings: [...drawings],
-      dragPaths: dragPathsWithBall,
-      arrowPaths, // <-- on stocke les flèches ici
-    };
-
-    let newRecording = [...currentSystem.recording];
-
-    if (newRecording.length === 0) {
-      newRecording = [newStep];
-      setReplayIndex(0);
-    } else if (replayIndex === newRecording.length - 1) {
-      newRecording.push(newStep);
-      setReplayIndex(newRecording.length - 1);
-    } else {
-      newRecording = [...newRecording.slice(0, replayIndex + 1), newStep];
-      setReplayIndex(newRecording.length - 1);
-    }
-
     setSystems((prev) =>
-      prev.map((s) =>
-        s.id === currentSystemId ? { ...s, recording: newRecording } : s
-      )
+      prev.map((s) => {
+        if (s.id !== currentSystemId) return s;
+
+        const newStep = {
+          time: Date.now(),
+          players: [...players],
+          ball: { ...ball },
+          comment: currentComment,
+          drawings: [...drawings],
+          dragPaths: { ...dragPath },
+        };
+
+        let newRecording = [...s.recording];
+
+        if (newRecording.length === 0) {
+          newRecording = [newStep];
+          setReplayIndex(0);
+        } else if (replayIndex === newRecording.length - 1) {
+          newRecording.push(newStep);
+          setReplayIndex(newRecording.length - 1);
+        } else {
+          newRecording = [...newRecording.slice(0, replayIndex + 1), newStep];
+          setReplayIndex(newRecording.length - 1);
+        }
+
+        return { ...s, recording: newRecording };
+      })
     );
 
     setDragPath({});
@@ -287,27 +228,17 @@ export function useTacticsBoard() {
         x: p.x + (end.players[i].x - p.x) * t,
         y: p.y + (end.players[i].y - p.y) * t,
       }));
-
-      let newBall;
-      if (playerWithBall !== null && ballOffset) {
-        // balle suit le joueur
-        newBall = {
-          x: newPlayers[playerWithBall].x + ballOffset.x,
-          y: newPlayers[playerWithBall].y + ballOffset.y,
-        };
-      } else {
-        newBall = {
-          x: start.ball.x + (end.ball.x - start.ball.x) * t,
-          y: start.ball.y + (end.ball.y - start.ball.y) * t,
-        };
-      }
+      const newBall = {
+        x: start.ball.x + (end.ball.x - start.ball.x) * t,
+        y: start.ball.y + (end.ball.y - start.ball.y) * t,
+      };
 
       setPlayers(newPlayers);
       setBall(newBall);
 
       // 🔴 Recalculer collisions et proximité pendant le replay
       checkCollision();
-      // checkProximity();
+      checkProximity();
 
       requestAnimationFrame(animate);
     };
@@ -318,29 +249,40 @@ export function useTacticsBoard() {
   // 🔄 Nouvelle fonction pour replay avec flèche
   // 🔄 Replay des chemins avec flèches visibles avant le mouvement
   const replayDragPathsWithArrow = (
-    paths: { [key: string]: { x: number; y: number }[] },
-    playerWithBallInStep: number | null,
-    ballOffsetInStep: { x: number; y: number } | null,
+    paths: { [key: number]: { x: number; y: number }[] },
     onFinish: () => void
   ) => {
-    const keys = Object.keys(paths);
-    const startTime = performance.now();
-    const duration = 1500; // durée totale de l'animation
+    const playerIndices = Object.keys(paths).map(Number);
+
+    // Afficher d'abord les flèches
+    setDrawings((prev) => [
+      ...prev,
+      ...playerIndices.map((idx) => ({
+        type: "arrow",
+        points: paths[idx].flatMap((p) => [p.x, p.y]),
+        id: Date.now() + idx,
+        tension: 0, // 0 = droite, 0.5 = arrondi
+        lineCap: "round",
+        lineJoin: "round",
+        stroke: "white",
+        strokeWidth: 3,
+      })),
+    ]);
+
+    // Puis animer les joueurs le long du chemin
+    const start = performance.now();
+    const duration = 1500;
 
     const animate = (time: number) => {
-      const t = Math.min((time - startTime) / duration, 1);
+      const t = Math.min((time - start) / duration, 1);
 
-      setPlayers((prevPlayers) => {
-        const updated = [...prevPlayers];
-        let newBall = ballRef.current;
-
-        keys.forEach((key) => {
-          const path = paths[key];
+      setPlayers((players) => {
+        const updated = [...players];
+        playerIndices.forEach((idx) => {
+          const path = paths[idx];
           if (!path || path.length === 0) return;
-
           if (path.length === 1) {
-            if (key === "ball") newBall = path[0];
-            else updated[parseInt(key)] = path[0];
+            updated[idx] = path[0];
             return;
           }
 
@@ -352,34 +294,11 @@ export function useTacticsBoard() {
           if (!p0 || !p1) return;
 
           const frac = pos - i;
-          const interpolated = {
+          updated[idx] = {
             x: p0.x + (p1.x - p0.x) * frac,
             y: p0.y + (p1.y - p0.y) * frac,
           };
-
-          if (key === "ball") newBall = interpolated;
-          else updated[parseInt(key)] = interpolated;
         });
-
-        // 🔹 Animation fluide de la balle vers le joueur avec la balle
-        if (
-          playerWithBallInStep !== null &&
-          ballOffsetInStep &&
-          updated[playerWithBallInStep]
-        ) {
-          const targetBallPos = {
-            x: updated[playerWithBallInStep].x + ballOffsetInStep.x,
-            y: updated[playerWithBallInStep].y + ballOffsetInStep.y,
-          };
-
-          // interpolation entre la position actuelle et la position cible
-          newBall = {
-            x: newBall.x + (targetBallPos.x - newBall.x) * t,
-            y: newBall.y + (targetBallPos.y - newBall.y) * t,
-          };
-        }
-
-        setBall(newBall);
         return updated;
       });
 
@@ -392,20 +311,9 @@ export function useTacticsBoard() {
 
   const handleReplay = () => {
     if (!currentSystem || !currentSystem.recording.length) return;
-
-    // 🔹 Commencer avec la première étape du recording
-    const firstStep = currentSystem.recording[0];
-    setPlayers(firstStep.players);
-    setBall(firstStep.ball);
-    setPlayerWithBall(firstStep.playerWithBall ?? null);
-    setBallOffset(firstStep.ballOffset ?? null);
-    setCurrentComment(firstStep.comment || "");
-    setDrawings(firstStep.drawings || []);
-    setReplayIndex(0);
-
     setIsReplaying(true);
     setIsPaused(false);
-    setSelectedId(0);
+    setReplayIndex(0);
   };
 
   useEffect(() => {
@@ -414,54 +322,79 @@ export function useTacticsBoard() {
     const playStep = (index: number) => {
       const current = currentSystem.recording[index];
       const next = currentSystem.recording[index + 1];
+
       if (!next) {
         setIsReplaying(false);
         setCurrentComment("");
+        setDrawings([]);
         return;
       }
 
       setCurrentComment(next.comment || "");
-      setDrawings(next.drawings || []);
-
+      setDrawings([]); // reset des dessins précédents
       const nextIndex = index + 1;
 
-      if (next.dragPaths && Object.keys(next.dragPaths).length > 0) {
-        replayDragPathsWithArrow(
-          next.dragPaths,
-          next.playerWithBall ?? null,
-          next.ballOffset ?? null,
-          () => {
-            setPlayerWithBall(next.playerWithBall ?? null);
-            setBallOffset(next.ballOffset ?? null);
-            setReplayIndex(nextIndex);
-            playStep(nextIndex);
+      const animateStep = (
+        start: any,
+        end: any,
+        duration: number,
+        onFinish: () => void
+      ) => {
+        const frames = 40;
+        let step = 0;
+
+        const animate = () => {
+          step++;
+          const t = step / frames;
+          if (t > 1) {
+            onFinish();
+            return;
           }
-        );
+
+          // Calcul intermédiaire des positions des joueurs
+          const newPlayers = start.players.map((p: any, i: number) => ({
+            x: p.x + (end.players[i].x - p.x) * t,
+            y: p.y + (end.players[i].y - p.y) * t,
+          }));
+
+          // Calcul intermédiaire de la position de la balle
+          const newBall = {
+            x: start.ball.x + (end.ball.x - start.ball.x) * t,
+            y: start.ball.y + (end.ball.y - start.ball.y) * t,
+          };
+
+          setPlayers(newPlayers);
+          setBall(newBall);
+
+          // 🔴 Recalcul des collisions et de la proximité à chaque frame
+          checkCollision();
+          checkProximity();
+
+          requestAnimationFrame(animate);
+        };
+
+        animate();
+      };
+
+      if (next.dragPaths && Object.keys(next.dragPaths).length > 0) {
+        // Replay avec flèches visibles
+        setCurrentDragPaths(next.dragPaths);
+        replayDragPathsWithArrow(next.dragPaths, () => {
+          setCurrentDragPaths(null);
+          setReplayIndex(nextIndex);
+          playStep(nextIndex);
+        });
       } else {
-        setPlayers(next.players);
-        setBall(next.ball);
-
-        // 🔴 Recalculer collisions et proximité
-        checkCollision();
-        // checkProximity();
-
-        // 🔴 Si un joueur a la balle, on fait suivre la balle
-        if (playerWithBall !== null && ballOffset) {
-          setBall({
-            x: next.players[playerWithBall].x + ballOffset.x,
-            y: next.players[playerWithBall].y + ballOffset.y,
-          });
-        }
-
-        setPlayerWithBall(next.playerWithBall ?? null);
-        setBallOffset(next.ballOffset ?? null);
-        setReplayIndex(nextIndex);
-        playStep(nextIndex);
+        // Replay normal : mouvement joueurs + balle
+        animateStep(current, next, replaySpeed, () => {
+          setReplayIndex(nextIndex);
+          playStep(nextIndex);
+        });
       }
     };
 
     playStep(replayIndex);
-  }, [isReplaying, isPaused, currentSystem, replayIndex]);
+  }, [isReplaying, isPaused, replaySpeed, currentSystem, replayIndex]);
 
   const togglePause = () => setIsPaused((prev) => !prev);
 
@@ -515,24 +448,8 @@ export function useTacticsBoard() {
 
   const handleMouseDown = (e: any) => {
     if (isReplaying || isRecording) return;
-    const pos = e.target.getStage().getPointerPosition();
-
-    if (drawMode === "T") {
-      setDrawings((prev) => [
-        ...prev,
-        {
-          type: "T",
-          id: Date.now(),
-          x: pos.x,
-          y: pos.y,
-          rotation: 0,
-        },
-      ]);
-      setDrawMode(""); // ❌ Désactive le mode T après placement
-      return;
-    }
-
     setDrawing(true);
+    const pos = e.target.getStage().getPointerPosition();
     setNewShapePoints([pos.x, pos.y]);
   };
 
@@ -556,7 +473,6 @@ export function useTacticsBoard() {
     }
 
     setNewShapePoints([]);
-    setDrawMode("");
   };
 
   const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -603,7 +519,5 @@ export function useTacticsBoard() {
     setPlayers,
     setBall,
     setIsReplaying,
-    selectedId,
-    setSelectedId,
   };
 }

@@ -20,22 +20,24 @@ import { Card } from "./ui/card";
 import BasketBallCourtKonva from "./BasketBallCourtKonva";
 import { useResponsiveCourt } from "@/hooks/useResponsiveCourt";
 import { useTacticsBoard } from "@/hooks/useTacticsBoard";
-import TShape from "./TShape";
-import useImage from "@/hooks/useImage";
+import useImage from "./hooks/useImage";
 
 export default function TacticBoard() {
   const image = useImage("/ball.png");
-  const courtImage = useImage("/halfcourt.png");
 
   const stageRef = useRef<Konva.Stage>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [videoURL, setVideoURL] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
 
+  const [arrowPaths, setArrowPaths] = useState<
+    { points: number[]; id: number }[]
+  >([]);
+
   const { containerRef, stageSize } = useResponsiveCourt({
-    sceneWidth: 800,
-    sceneHeight: 550,
-    maxWidth: 1010,
+    sceneWidth: 1010,
+    sceneHeight: 500,
+    maxWidth: 1011,
   });
 
   const {
@@ -75,9 +77,16 @@ export default function TacticBoard() {
     replayIndex,
     setCurrentComment,
     setDrawings,
-    selectedId,
-    setSelectedId,
   } = useTacticsBoard();
+
+  useEffect(() => {
+    if (!recording || !currentSystem) return;
+
+    if (replayIndex === currentSystem.recording.length - 1) {
+      const timeout = setTimeout(() => stopRecording(), 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [replayIndex, recording, currentSystem]);
 
   const startRecording = () => {
     if (!stageRef.current) return;
@@ -123,7 +132,120 @@ export default function TacticBoard() {
     setRecording(false);
   };
 
+  // 🔄 Replay avec flèche
+  const replayDragPathsWithArrow = (
+    paths: { [key: number]: { x: number; y: number }[] },
+    onFinish: () => void
+  ) => {
+    const arrows: { points: number[]; id: number }[] = [];
+
+    Object.keys(paths).forEach((idxStr) => {
+      const idx = Number(idxStr);
+      const path = paths[idx];
+      if (!path || path.length < 2) return;
+      const points: number[] = [];
+      path.forEach((p) => points.push(p.x, p.y));
+      arrows.push({ points, id: Date.now() + idx });
+    });
+
+    // Affiche les flèches
+    setArrowPaths(arrows);
+
+    setTimeout(() => {
+      const frames = 40;
+      let step = 0;
+
+      const animate = () => {
+        step++;
+        const t = step / frames;
+        if (t > 1) {
+          setArrowPaths([]);
+          onFinish();
+          return;
+        }
+
+        setPlayers((players) => {
+          const updated = [...players];
+          Object.keys(paths).forEach((idxStr) => {
+            const idx = Number(idxStr);
+            const path = paths[idx];
+            if (!path || path.length < 2) return;
+
+            const pos = t * (path.length - 1);
+            const i = Math.floor(pos);
+            const nextIndex = Math.min(i + 1, path.length - 1);
+            const p0 = path[i];
+            const p1 = path[nextIndex];
+            if (!p0 || !p1) return;
+
+            const frac = pos - i;
+            updated[idx] = {
+              x: p0.x + (p1.x - p0.x) * frac,
+              y: p0.y + (p1.y - p0.y) * frac,
+            };
+          });
+          return updated;
+        });
+
+        requestAnimationFrame(animate);
+      };
+
+      animate();
+    }, 300);
+  };
+
   // 🔄 Hook replay pour chaque étape
+  useEffect(() => {
+    if (!isReplaying || isPaused || !currentSystem) return;
+
+    const playStep = (index: number) => {
+      const current = currentSystem.recording[index];
+      const next = currentSystem.recording[index + 1];
+      if (!next) {
+        setIsReplaying(false);
+        setCurrentComment("");
+        return;
+      }
+
+      setCurrentComment(next.comment || "");
+      setDrawings(next.drawings || []);
+      const nextIndex = index + 1;
+
+      if (next.dragPaths && Object.keys(next.dragPaths).length > 0) {
+        replayDragPathsWithArrow(next.dragPaths, () => {
+          setReplayIndex(nextIndex);
+          playStep(nextIndex);
+        });
+      } else {
+        // smoothTransition classique si pas de dragPaths
+        const frames = 40;
+        let step = 0;
+        const animate = () => {
+          step++;
+          const t = step / frames;
+          if (t > 1) {
+            setReplayIndex(nextIndex);
+            playStep(nextIndex);
+            return;
+          }
+          setPlayers(() =>
+            current.players.map((p: any, i: number) => ({
+              x: p.x + (next.players[i].x - p.x) * t,
+              y: p.y + (next.players[i].y - p.y) * t,
+            }))
+          );
+          setBall({
+            x: current.ball.x + (next.ball.x - current.ball.x) * t,
+            y: current.ball.y + (next.ball.y - current.ball.y) * t,
+          });
+          requestAnimationFrame(animate);
+        };
+        animate();
+      }
+    };
+
+    playStep(replayIndex);
+  }, [isReplaying, isPaused, replaySpeed, currentSystem, replayIndex]);
 
   const getArrowHeadSize = (points: number[]) => {
     const dx = points[points.length - 2] - points[points.length - 4] || 1;
@@ -131,19 +253,17 @@ export default function TacticBoard() {
     const length = Math.sqrt(dx * dx + dy * dy);
     return Math.min(10, length / 2); // jamais plus grand que la moitié de la flèche
   };
-  const getArrowPointsFromPath = (path: { x: number; y: number }[]) => {
+  const getStraightArrowPoints = (path: { x: number; y: number }[]) => {
     if (!path || path.length < 2) return [];
-    const points: number[] = [];
-    for (let i = 0; i < path.length; i++) {
-      points.push(path[i].x, path[i].y);
-    }
-    return points;
+    const start = path[0];
+    const end = path[path.length - 1];
+    return [start.x, start.y, end.x, end.y];
   };
 
   return (
     <>
-      <Card className="relative w-full min-w-full bg-[#1C1E2B]  xl:col-end-9 overflow-hidden gap-0">
-        {/* <div className="flex gap-2 flex-wrap">
+      <Card className="relative w-full min-w-full bg-[#1C1E2B] col-span-12 xl:col-end-9 overflow-hidden gap-0">
+        <div className="flex gap-2 flex-wrap">
           <Input
             type="range"
             min="200"
@@ -186,21 +306,17 @@ export default function TacticBoard() {
           >
             ▶️ Étape suivante
           </Button>
-        </div> */}
-        <div
-          ref={containerRef}
-          style={{ width: "100%", maxWidth: "100%", height: "100%" }}
-        >
+        </div>
+        <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
           <Stage
             ref={stageRef}
             width={stageSize.width}
             height={stageSize.height}
-            // scaleX={stageSize.scale}
-            // scaleY={stageSize.scale}
+            scaleX={stageSize.scale}
+            scaleY={stageSize.scale}
             style={{
               position: "relative",
               zIndex: 1,
-              background: "red",
               cursor: drawing ? "crosshair" : "default",
               width: "100%",
             }}
@@ -209,18 +325,7 @@ export default function TacticBoard() {
             onMouseUp={handleMouseUp}
           >
             <Layer>
-              {courtImage && (
-                <KonvaImage
-                  image={courtImage}
-                  x={0}
-                  y={0}
-                  width={courtImage.width}
-                  height={courtImage.height}
-                  scaleX={stageSize.scale}
-                  scaleY={stageSize.scale}
-                />
-              )}
-              {/* <BasketBallCourtKonva /> */}
+              <BasketBallCourtKonva />
 
               {players.map((pos, i) => (
                 <Circle
@@ -241,18 +346,6 @@ export default function TacticBoard() {
                 />
               ))}
 
-              {players.map((pos, i) => (
-                <Text
-                  key={"text-" + i}
-                  x={pos.x - 5}
-                  y={pos.y - 7}
-                  text={`${i + 1}`}
-                  fontSize={15}
-                  fill="white"
-                  listening={false}
-                />
-              ))}
-
               {image && (
                 <KonvaImage
                   image={image}
@@ -261,10 +354,22 @@ export default function TacticBoard() {
                   radius={BALL_RADIUS}
                   draggable={!isReplaying}
                   onDragMove={handleBallDrag}
-                  width={30}
-                  height={30}
+                  width={20}
+                  height={20}
                 />
               )}
+
+              {arrowPaths.map((arrow) => (
+                <Arrow
+                  key={arrow.id}
+                  points={arrow.points}
+                  pointerLength={10}
+                  pointerWidth={10}
+                  fill="yellow"
+                  stroke="yellow"
+                  strokeWidth={3}
+                />
+              ))}
 
               {/* Dessins existants */}
               {drawings.map((shape) => {
@@ -279,6 +384,9 @@ export default function TacticBoard() {
                         fill={shape.fill || "white"}
                         stroke={shape.stroke || "white"}
                         strokeWidth={shape.strokeWidth || 3}
+                        tension={0} // 0 = droite, 0.5 = arrondi
+                        lineCap={shape.lineCap || "round"}
+                        lineJoin={shape.lineJoin || "round"}
                       />
                     );
                   case "screen":
@@ -290,6 +398,8 @@ export default function TacticBoard() {
                         strokeWidth={shape.strokeWidth || 3}
                         dash={shape.dash || [10, 5]}
                         tension={shape.tension ?? 0.5}
+                        lineCap={shape.lineCap || "round"}
+                        lineJoin={shape.lineJoin || "round"}
                       />
                     );
                   case "line":
@@ -299,20 +409,9 @@ export default function TacticBoard() {
                         points={shape.points}
                         stroke={shape.stroke || "green"}
                         strokeWidth={shape.strokeWidth || 2}
-                      />
-                    );
-                  case "T":
-                    return (
-                      <TShape
-                        key={shape.id}
-                        shapeProps={shape}
-                        isSelected={shape.id === selectedId}
-                        onSelect={() => setSelectedId(shape.id)}
-                        onChange={(newAttrs) => {
-                          setDrawings((prev) =>
-                            prev.map((s) => (s.id === shape.id ? newAttrs : s))
-                          );
-                        }}
+                        tension={shape.tension ?? 0.5}
+                        lineCap={shape.lineCap || "round"}
+                        lineJoin={shape.lineJoin || "round"}
                       />
                     );
                   default:
@@ -356,46 +455,14 @@ export default function TacticBoard() {
           </Stage>
         </div>
       </Card>
-      {/* <div className="mt-4 flex gap-4 flex-wrap justify-center">
-        <Button
-          variant={drawMode === "arrow" ? "secondary" : "default"}
-          onClick={() => setDrawMode("arrow")}
-        >
-          🏹 Flèche
-        </Button>
-        <Button
-          variant={drawMode === "screen" ? "secondary" : "default"}
-          onClick={() => setDrawMode("screen")}
-        >
-          🟦 Écran
-        </Button>
-        <Button
-          variant={drawMode === "T" ? "secondary" : "default"}
-          onClick={() => setDrawMode("T")}
-        >
-          🟨 T
-        </Button>
-        <Button
-          variant={drawMode === "line" ? "secondary" : "default"}
-          onClick={() => setDrawMode("line")}
-        >
-          ➖ Ligne
-        </Button>
-        <Button
-          variant={drawMode === "erase" ? "secondary" : "default"}
-          onClick={() => setDrawMode("erase")}
-        >
-          🗑️ Effacer
-        </Button>
-      </div> */}
-      {/* <div className="col-span-4 h-full">
+      <div className="col-span-4 h-full">
         <Textarea
           placeholder="Commentaire"
           value={currentComment}
           onChange={setCurrentComment}
           className="border px-2 py-1 h-full"
         />
-      </div> */}
+      </div>
     </>
   );
 }

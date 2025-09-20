@@ -14,6 +14,7 @@ export async function createMatch(params: any) {
         nom,
         videoId,
         versus,
+        isHalfCourt: false,
       },
     });
 

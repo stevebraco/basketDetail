@@ -4,34 +4,34 @@ export function useResponsiveCourt({
   sceneWidth,
   sceneHeight,
   maxWidth,
-  scale = 1,
 }: {
   sceneWidth: number;
   sceneHeight: number;
   maxWidth?: number;
-  scale?: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({
     width: sceneWidth,
     height: sceneHeight,
-    scale,
+    scale: 1,
   });
 
   const updateSize = () => {
     if (!containerRef.current) return;
-    let containerWidth = containerRef.current.offsetWidth;
 
+    // Largeur disponible
+    let containerWidth = containerRef.current.offsetWidth;
     if (maxWidth && containerWidth > maxWidth) {
       containerWidth = maxWidth;
     }
 
-    const scale = containerWidth / sceneWidth;
+    // 👉 On garde les proportions d’origine
+    const computedScale = containerWidth / sceneWidth;
 
     setStageSize({
-      width: sceneWidth * scale,
-      height: sceneHeight * scale,
-      scale,
+      width: sceneWidth * computedScale,
+      height: sceneHeight * computedScale,
+      scale: computedScale,
     });
   };
 

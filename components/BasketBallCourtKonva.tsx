@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Layer, Group, Rect, Line, Arc } from "react-konva";
+import {
+  Layer,
+  Group,
+  Rect,
+  Line,
+  Arc,
+  Image as KonvaImage,
+} from "react-konva";
 
 function generateArcPoints(
   cx,
@@ -27,6 +34,8 @@ function generateArcPoints(
 const BasketBallCourtKonva = ({
   lineColor = "white",
   backgroundCourt = "black",
+  backgroundImage,
+  stage,
 }) => {
   // const [isHovered, setIsHovered] = useState(false);
 
@@ -53,6 +62,16 @@ const BasketBallCourtKonva = ({
       // onMouseEnter={() => setIsHovered(true)}
       // onMouseLeave={() => setIsHovered(false)}
       >
+        {backgroundImage && (
+          <KonvaImage
+            image={backgroundImage}
+            x={75}
+            y={40}
+            width={875}
+            height={430}
+            listening={false} // évite de bloquer les clics
+          />
+        )}
         {/* Fond terrain */}
         <Rect
           x={75}
@@ -61,7 +80,7 @@ const BasketBallCourtKonva = ({
           height={430}
           opacity={1}
           stroke={lineColor}
-          fill={backgroundCourt}
+          fill="transparent"
         />
         {/* Ligne centrale */}
         <Line

@@ -66,7 +66,7 @@ export default function ShotMarker({
     >
       {/* Icone Circle ou X */}
       <Icon
-        size={12}
+        size={22 * scale}
         color={color}
         className="shadow-[0_-4px_8px_rgba(0,0,0,0.2),0_4px_8px_rgba(0,0,0,0.2)]"
         style={{ transform: "translate(-50%, -50%)" }}

@@ -3,7 +3,7 @@ import PlayerDetail from "@/components/PlayerDetail";
 import RadarChart from "@/components/RadarChart";
 import StatsMatch from "@/components/StatsMatch";
 import { prisma } from "@/lib/prisma";
-import { getAverageStatsAndCount } from "@/utils/averagesStats";
+import { getAverageStatsAndCount } from "@/utils/AveragesStats";
 import React from "react";
 
 export default async function PlayerDetailPage({
@@ -22,13 +22,24 @@ export default async function PlayerDetailPage({
           id: true,
           stats: true,
           matchId: true,
-          // on ne fait pas include: match pour éviter l'erreur
+          match: {
+            select: {
+              id: true,
+              nom: true,
+              tirs: true, // récupère tous les tirs du match
+            },
+          },
         },
       },
     },
   });
 
-  console.log(playerDetail);
+  // Filtrer les tirs pour ne garder que ceux du joueur
+  const playerTirs = playerDetail.playerMatches.flatMap((pm) =>
+    pm.match.tirs.filter((tir) => tir.playerId === playerDetail.id)
+  );
+
+  console.log(playerTirs);
 
   const { averages, matchesPlayed } = getAverageStatsAndCount(
     playerDetail?.playerMatches

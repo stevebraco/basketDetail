@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import YouTube from "react-youtube";
 import { Stage, Layer, Group, Rect, Text, Circle, Shape } from "react-konva";
@@ -12,22 +12,108 @@ import { Card } from "./ui/card";
 import BasketBallCourtKonva from "./BasketBallCourtKonva";
 import { useResponsiveCourt } from "@/hooks/useResponsiveCourt";
 import { useSearchParams } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
+import { Textarea } from "./input/TextArea";
+import StatsMatch from "./StatsMatch";
+import { EventHistory } from "./EventHistory";
 
 export default function BasketballCourtSVG({
-  initialShots = [],
-  selectedPlayer,
-  onUpdateStats,
+  // initialShots = [],
+  // selectedPlayer,
+  // onUpdateStats,
   videoId,
+  // playersStats,
+  matchDetails,
 }: {
-  initialShots?: Shot[];
-  selectedPlayer?: string | null;
-  onUpdateStats: (
-    update: PlayerStatsUpdate,
-    shotOrEvent: Shot | CustomEventType
-  ) => void;
+  matchDetails: any;
+  // initialShots?: Shot[];
+  selectedPlayer?: any;
+  // playersStats: any;
+  // onUpdateStats: (
+  //   update: PlayerStatsUpdate,
+  //   shotOrEvent: Shot | CustomEventType
+  // ) => void;
   videoId?: string;
 }) {
   const [tooltipIndex, setTooltipIndex] = useState<number | null>(null);
+  const refs = useRef<{ [key: string]: Konva.Shape | null }>({});
+  const popupRef = useRef<HTMLDivElement | null>(null);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [selectedEventFilter, setSelectedEventFilter] = useState<
+    string | "all"
+  >("all");
+  const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+  const [shots, setShots] = useState([]);
+  const [playersStats, setPlayersStats] = useState(matchDetails.playerMatches);
+
+  const handleUpdateStats = (
+    update: { player: string; statsUpdate: any },
+    newShot: Shot
+  ) => {
+    setShots((prevShots) => [...prevShots, newShot]);
+
+    setPlayersStats((prevStats) =>
+      prevStats.map((p) => {
+        if (p.player.nom === update.name) {
+          return {
+            ...p,
+            stats: {
+              ...p.stats,
+              points: p.stats.points + (update.points ?? 0),
+              fgm:
+                newShot.typeItem === "shot" && newShot.made
+                  ? p.stats.fgm + 1
+                  : p.stats.fgm,
+              fga:
+                newShot.typeItem === "shot" && newShot.type !== "FT"
+                  ? p.stats.fga + 1
+                  : p.stats.fga,
+              threePM:
+                newShot.typeItem === "shot" &&
+                newShot.type === "3PT" &&
+                newShot.made
+                  ? p.stats.threePM + 1
+                  : p.stats.threePM,
+              threePA:
+                newShot.typeItem === "shot" && newShot.type === "3PT"
+                  ? p.stats.threePA + 1
+                  : p.stats.threePA,
+              ftm: p.stats.ftm + (update.ftm ?? 0),
+              fta: p.stats.fta + (update.fta ?? 0),
+              reboundsOff: p.stats.reboundsOff + (update.reboundsOff ?? 0),
+              reboundsDef: p.stats.reboundsDef + (update.reboundsDef ?? 0),
+              reboundsTotal:
+                p.stats.reboundsTotal +
+                (update.reboundsOff ?? 0) +
+                (update.reboundsDef ?? 0),
+              assists: p.stats.assists + (update.assists ?? 0),
+              steals: p.stats.steals + (update.steals ?? 0),
+              blocks: p.stats.blocks + (update.blocks ?? 0),
+              turnovers: p.stats.turnovers + (update.turnovers ?? 0),
+              fautes: p.stats.fautes + (update.fautes ?? 0),
+              plusMinus: p.stats.plusMinus + (update.plusMinus ?? 0),
+            },
+          };
+        }
+        return p;
+      })
+    );
+  };
+
+  const handlePlayerClick = (name: string, id: string) => {
+    setSelectedPlayer(
+      (prev) => (prev?.id === id ? null : { name, id }) // si déjà sélectionné -> deselect
+    );
+  };
+
+  const [clickInfo, setClickInfo] = useState<string>("");
 
   const searchParams = useSearchParams();
   const isReadOnly = searchParams.get("view");
@@ -44,24 +130,24 @@ export default function BasketballCourtSVG({
 
   const svgWidth = 930 * stageSize.scale;
 
-  const basketLeft = { x: 165, y: 500 / 2 };
-  const basketRight = { x: 811, y: 500 / 2 };
+  const basketLeft = { x: 185, y: 508 / 2 };
+  const basketRight = { x: 832, y: 508 / 2 };
   const threePointRadius = (100 / courtWidth) * 875 * stageSize.scale;
 
   const cornerZoneHeight = 50;
   const cornerZoneWidth = 90;
 
   // Zone gauche (haut et bas)
-  const cornerLeftTop = { x: 50, y: 75 };
+  const cornerLeftTop = { x: 50, y: 80 };
   const cornerLeftBottom = {
     x: 50,
-    y: 375,
+    y: 360,
   };
 
   // Zone droite (haut et bas)
-  const cornerRightTop = { x: 930 - cornerZoneWidth, y: 75 };
+  const cornerRightTop = { x: 950 - cornerZoneWidth, y: 80 };
   const cornerRightBottom = {
-    x: 850,
+    x: 860,
     y: 375,
   };
 
@@ -97,7 +183,7 @@ export default function BasketballCourtSVG({
     const dy = y - basket.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    return distance > threePointRadius; // true = 3 points
+    return distance * stageSize.scale > threePointRadius; // true = 3 points
   };
   const {
     player,
@@ -125,9 +211,9 @@ export default function BasketballCourtSVG({
     confirmEvent,
     resetPending,
   } = useBasketballCourt({
-    initialShots,
+    initialShots: matchDetails?.tirs,
     selectedPlayer,
-    onUpdateStats,
+    onUpdateStats: handleUpdateStats,
     isThreePointShot,
     getCurrentTime,
   });
@@ -139,137 +225,298 @@ export default function BasketballCourtSVG({
   // Récupère la largeur du conteneur
   const containerWidth = containerRef.current?.offsetWidth ?? originalSvgWidth;
 
-  type Zone = {
-    id: string;
-    label: string;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    contains: (x: number, y: number) => boolean;
-  };
-
-  const zones: Zone[] = [
+  const zonesData: any = [
     {
       id: "paint",
       label: "Raquette",
-      x: 80,
+      x: 75,
       y: 180,
-      width: 195,
-      height: 145,
-      useRadius: false,
-      contains: (px, py) =>
-        px >= 50 && px <= 62 + 195 && py >= 180 && py <= 180 + 145,
+      type: "rect",
+      shapeProps: { width: 200, height: 145 },
     },
     {
       id: "mid_left",
       label: "Mid-range Gauche",
-      x: 80,
+      x: 75,
       y: 325,
-      width: 195,
-      height: 100,
-      useRadius: true,
-      cornerRadius: [0, 0, 50, 0], // coin inférieur droit arrondi
-      contains: (px, py) => {
-        const rectLeft = 50;
-        const rectTop = 325;
-        const rectRight = rectLeft + 195;
-        const rectBottom = rectTop + 100;
-        const radius = 50; // arrondi coin bas-droit
-
-        // Si le tir est en dehors du rectangle global → return false
-        if (
-          px < rectLeft ||
-          px > rectRight ||
-          py < rectTop ||
-          py > rectBottom
-        ) {
-          return false;
-        }
-
-        // Vérifie la zone arrondie en bas à droite
-        if (px > rectRight - radius && py > rectBottom - radius) {
-          const dx = px - (rectRight - radius);
-          const dy = py - (rectBottom - radius);
-          return dx * dx + dy * dy <= radius * radius;
-        }
-
-        // Sinon, c’est bien dans le rectangle
-        return true;
+      type: "rect",
+      shapeProps: {
+        width: 200,
+        height: 100,
+        cornerRadius: [0, 0, 45, 0], // coin en bas à gauche arrondi
       },
     },
-
+    {
+      id: "mid_right",
+      label: "Mid-range droit",
+      x: 75,
+      y: 80,
+      type: "rect",
+      shapeProps: {
+        width: 200,
+        height: 100,
+        cornerRadius: [0, 45, 0, 0], // coin en bas à gauche arrondi
+      },
+    },
+    {
+      id: "corner_right",
+      label: "Corner droit",
+      x: 75,
+      y: 40,
+      type: "rect",
+      shapeProps: {
+        width: 130,
+        height: 40,
+        // cornerRadius: [0, 60, 0, 0], // coin en bas à gauche arrondi
+      },
+    },
+    {
+      id: "corner_left",
+      label: "Corner gauche",
+      x: 75,
+      y: 430,
+      type: "rect",
+      shapeProps: {
+        width: 130,
+        height: 40,
+        // cornerRadius: [0, 60, 0, 0], // coin en bas à gauche arrondi
+      },
+    },
     {
       id: "three_right",
       label: "3-points Droite",
-      x: 450,
+      x: 440,
       y: 100,
-      width: 50,
-      height: 250,
-      useShape: true,
+      type: "concave",
       shapeProps: {
         x: 450,
         y: 100,
         rotation: 90,
         offsetX: 150,
-        offsetY: 105,
+        offsetY: 115,
         rectX: 92,
-        rectY: 92,
-        rectW: 80, // élargir vers la gauche
-        rectH: 250,
+        rectY: 88,
+        rectW: 91,
+        rectH: 260,
         centerX: 300,
-        centerY: 360,
+        centerY: 367,
         radius: 173,
         arcStart: -Math.PI / 1.6,
-        arcEnd: 3.25,
+        arcEnd: 3.2282,
       },
-      contains: (px, py) => {
-        const s = zones.find((z) => z.id === "three_right")!.shapeProps;
-        const localX = px - s.x + s.offsetX;
-        const localY = py - s.y + s.offsetY;
+    },
 
-        // rectangle
-        const inRect =
-          localX >= s.rectX &&
-          localX <= s.rectX + s.rectW &&
-          localY >= s.rectY &&
-          localY <= s.rectY + s.rectH;
-
-        // arc
-        const dx = localX - s.centerX;
-        const dy = localY - s.centerY;
-        const inArc =
-          dx * dx + dy * dy <= s.radius * s.radius && localX >= s.centerX;
-
-        return inRect || inArc;
+    {
+      id: "three_left_inverted",
+      label: "3-points Gauche Inversé",
+      x: 440,
+      y: 100,
+      type: "concave",
+      shapeProps: {
+        x: 450,
+        y: 100,
+        rotation: -90, // on inverse la rotation
+        offsetX: 460,
+        offsetY: 327,
+        rectX: 92,
+        rectY: 92,
+        rectW: 94.5,
+        rectH: 260,
+        centerX: 303,
+        centerY: 75, // cercle juste au-dessus
+        radius: 173,
+        arcStart: 3.08, // inversé
+        arcEnd: 1.955, // inversé
+      },
+    },
+    {
+      id: "three_center",
+      label: "3-points axe",
+      x: 170,
+      // x: 160,
+      y: 205,
+      type: "arc",
+      shapeProps: {
+        x: 10, // centre de l'arc
+        y: 50,
+        innerRadius: 173, // rayon intérieur
+        outerRadius: 305, // rayon extérieur
+        angle: 47, // angle total en degrés
+        rotation: -11.61, // rotation de l’arc
+        fill: "rgba(0,150,255,0.5)", // couleur de remplissage
+        // stroke: "blue", // contour
+        strokeWidth: 3,
       },
     },
   ];
 
-  // function calculateZoneStats(actions: Action[], zones: Zone[]) {
-  //   // On garde seulement les tirs
-  //   const shots = actions.filter((a) => a.typeItem === "shot");
+  // Fonction générique pour vérifier si un point est dans la zone
+  const containsPoint = (zone: any, px: number, py: number, ref: any) => {
+    if (!ref) return false;
+    const transform = ref.getTransform().copy().invert();
+    const local = transform.point({ x: px, y: py });
+    const s = zone.shapeProps;
 
-  //   return zones.map((zone) => {
-  //     const attempts = shots.filter((s) => zone.contains(s.x, s.y)).length;
-  //     const makes = shots.filter(
-  //       (s) => zone.contains(s.x, s.y) && s.made
-  //     ).length;
-  //     return {
-  //       ...zone,
-  //       attempts,
-  //       makes,
-  //       percentage: attempts > 0 ? Math.round((makes / attempts) * 100) : 0,
-  //     };
-  //   });
-  // }
+    if (zone.type === "rect") {
+      console.log("rect");
+      return (
+        local.x >= 0 &&
+        local.x <= s.width &&
+        local.y >= 0 &&
+        local.y <= s.height
+      );
+    } else if (zone.type === "concave") {
+      const path = new Path2D();
+      path.moveTo(s.rectX, s.rectY + s.rectH);
+      path.lineTo(s.rectX, s.rectY);
+      path.lineTo(s.rectX + s.rectW, s.rectY);
+      path.arc(s.centerX, s.centerY, s.radius, s.arcStart, s.arcEnd, true);
+      path.lineTo(s.rectX + s.rectW, s.rectY + s.rectH);
+      path.lineTo(s.rectX, s.rectY + s.rectH);
+      path.closePath();
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d")!;
+      return context.isPointInPath(path, local.x, local.y);
+    } else if (zone.type === "arc") {
+      const path = new Path2D();
 
-  function calculateZoneStats(actions: Action[], zones: Zone[]) {
+      const scaleX = s.scaleX ?? 1;
+      const scaleY = s.scaleY ?? 1;
+
+      // Fonction helper pour transformer les coordonnées selon le scale
+      const transformPoint = (x: number, y: number) => {
+        return {
+          x: s.x + (x - s.x) * scaleX,
+          y: s.y + (y - s.y) * scaleY,
+        };
+      };
+
+      // On calcule l'arc extérieur avec le scale appliqué
+      const outerStartAngle = (s.rotation * Math.PI) / 180;
+      const outerEndAngle = ((s.rotation + s.angle) * Math.PI) / 180;
+
+      const innerStartAngle = outerEndAngle;
+      const innerEndAngle = outerStartAngle;
+
+      const steps = 50; // nombre de points pour approximer l’arc
+      for (let i = 0; i <= steps; i++) {
+        const angle =
+          outerStartAngle + ((outerEndAngle - outerStartAngle) * i) / steps;
+        const x = s.x + s.outerRadius * Math.cos(angle);
+        const y = s.y + s.outerRadius * Math.sin(angle);
+        const { x: tx, y: ty } = transformPoint(x, y);
+        if (i === 0) path.moveTo(tx, ty);
+        else path.lineTo(tx, ty);
+      }
+
+      for (let i = 0; i <= steps; i++) {
+        const angle =
+          innerStartAngle + ((innerEndAngle - innerStartAngle) * i) / steps;
+        const x = s.x + s.innerRadius * Math.cos(angle);
+        const y = s.y + s.innerRadius * Math.sin(angle);
+        const { x: tx, y: ty } = transformPoint(x, y);
+        path.lineTo(tx, ty);
+      }
+
+      path.closePath();
+
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d")!;
+      return context.isPointInPath(path, local.x, local.y);
+    }
+
+    return false;
+  };
+
+  // Fonction générique pour dessiner une zone selon son type
+  const drawZone = (context: CanvasRenderingContext2D, zone: any) => {
+    const s = zone.shapeProps;
+    context.beginPath();
+
+    if (zone.type === "rect") {
+      const [tl, tr, br, bl] = s.cornerRadius || [0, 0, 0, 0];
+      context.moveTo(0 + tl, 0);
+      context.lineTo(s.width - tr, 0);
+      context.quadraticCurveTo(s.width, 0, s.width, tr);
+      context.lineTo(s.width, s.height - br);
+      context.quadraticCurveTo(s.width, s.height, s.width - br, s.height);
+      context.lineTo(bl, s.height);
+      context.quadraticCurveTo(0, s.height, 0, s.height - bl);
+      context.lineTo(0, tl);
+      context.quadraticCurveTo(0, 0, tl, 0);
+    } else if (zone.type === "concave") {
+      context.moveTo(s.rectX, s.rectY + s.rectH);
+      context.lineTo(s.rectX, s.rectY);
+      context.lineTo(s.rectX + s.rectW, s.rectY);
+      context.arc(s.centerX, s.centerY, s.radius, s.arcStart, s.arcEnd, true);
+      context.lineTo(s.rectX + s.rectW, s.rectY + s.rectH);
+      context.lineTo(s.rectX, s.rectY + s.rectH);
+    } else if (zone.type === "arc") {
+      const scaleX = s.scaleX ?? 1;
+      const scaleY = s.scaleY ?? 1;
+
+      const outerStartAngle = (s.rotation * Math.PI) / 180;
+      const outerEndAngle = ((s.rotation + s.angle) * Math.PI) / 180;
+
+      const innerStartAngle = outerEndAngle;
+      const innerEndAngle = outerStartAngle;
+
+      const steps = 50; // nombre de segments pour approximer l’arc
+
+      // Helper pour appliquer le scale par rapport au centre
+      const transformPoint = (x: number, y: number) => {
+        return {
+          x: s.x + (x - s.x) * scaleX,
+          y: s.y + (y - s.y) * scaleY,
+        };
+      };
+
+      context.beginPath();
+
+      // Arc extérieur
+      for (let i = 0; i <= steps; i++) {
+        const angle =
+          outerStartAngle + ((outerEndAngle - outerStartAngle) * i) / steps;
+        const x = s.x + s.outerRadius * Math.cos(angle);
+        const y = s.y + s.outerRadius * Math.sin(angle);
+        const { x: tx, y: ty } = transformPoint(x, y);
+        if (i === 0) context.moveTo(tx, ty);
+        else context.lineTo(tx, ty);
+      }
+
+      // Arc intérieur (en sens inverse)
+      for (let i = 0; i <= steps; i++) {
+        const angle =
+          innerStartAngle + ((innerEndAngle - innerStartAngle) * i) / steps;
+        const x = s.x + s.innerRadius * Math.cos(angle);
+        const y = s.y + s.innerRadius * Math.sin(angle);
+        const { x: tx, y: ty } = transformPoint(x, y);
+        context.lineTo(tx, ty);
+      }
+
+      context.closePath();
+    }
+
+    context.closePath();
+  };
+
+  function calculateZoneStats(
+    actions: Action[],
+    zones: Zone[],
+    refs: { [key: string]: any }
+  ) {
+    // On garde seulement les tirs
     const shots = actions.filter((a) => a.typeItem === "shot");
+    console.log(shots);
 
     return zones.map((zone) => {
-      const attempts = shots.filter((s) => s.zoneId === zone.id).length;
-      const makes = shots.filter((s) => s.zoneId === zone.id && s.made).length;
+      const attempts = shots.filter((s) =>
+        containsPoint(zone, s.x, s.y, refs[zone.id])
+      ).length;
+
+      const makes = shots.filter(
+        (s) => s.made && containsPoint(zone, s.x, s.y, refs[zone.id])
+      ).length;
 
       return {
         ...zone,
@@ -281,21 +528,144 @@ export default function BasketballCourtSVG({
   }
 
   function getColorFromPercentage(pct: number) {
-    if (pct >= 60) return "green";
-    if (pct >= 40) return "orange";
-    if (pct > 0) return "red";
-    return "red";
+    // clamp entre 0 et 100
+    const clamped = Math.max(0, Math.min(100, pct));
+
+    // Couleur cible : #6495ED (100,149,237)
+    const baseR = 100,
+      baseG = 149,
+      baseB = 237;
+
+    // Mix entre blanc (255,255,255) et la couleur
+    const t = clamped / 100; // 0% = blanc, 100% = bleu
+    const r = Math.round(255 + (baseR - 255) * t);
+    const g = Math.round(255 + (baseG - 255) * t);
+    const b = Math.round(255 + (baseB - 255) * t);
+
+    // Opacité : 0% → 0.1, 100% → 0.5
+    const alpha = 0.1 + t * (0.5 - 0.1);
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
-  const zoneStats = calculateZoneStats(actions, zones);
+  // const stats = calculateZoneStats(actions, zonesData, refs.current);
 
-  // useEffect(() => {
-  //   const stats = calculateZoneStats(actions, zones);
-  //   setZoneStats(stats);
-  // }, [actions]);
+  // // Fusionner les stats dans zonesData pour le rendu
+  // const zonesWithStats = zonesData.map((zone) => {
+  //   const stat = stats.find((s) => s.id === zone.id);
+  //   return {
+  //     ...zone,
+  //     percentage: stat?.percentage ?? 0,
+  //   };
+  // });
 
+  // Actions filtrées selon le joueur sélectionné
+  const filteredActionsForDisplay = React.useMemo(() => {
+    let filtered = actions;
+
+    // Filtrer par joueur si nécessaire
+    if (selectedPlayer?.name) {
+      filtered = filtered.filter((a) => a.player === selectedPlayer.name);
+    }
+
+    // Filtrer par type d’action si un filtre est sélectionné
+    if (selectedEventFilter !== "all") {
+      filtered = filtered.filter((a) => a.eventType === selectedEventFilter);
+    }
+
+    return filtered;
+  }, [actions, selectedPlayer, selectedEventFilter]);
+
+  const filteredActions = React.useMemo(() => {
+    if (!selectedPlayer?.name) {
+      // ✅ Pas de joueur sélectionné → on prend toutes les actions (stats équipe)
+      return actions;
+    }
+    // ✅ Joueur sélectionné → uniquement ses actions
+    return actions.filter((a) => a.player === selectedPlayer.name);
+  }, [actions, selectedPlayer]);
+
+  // Calcul des stats uniquement pour ces actions
+  const stats = React.useMemo(() => {
+    return calculateZoneStats(filteredActions, zonesData, refs.current);
+  }, [filteredActions, zonesData, refs.current]);
+
+  // Fusionner stats avec zonesData pour l'affichage
+  const zonesWithStats = zonesData.map((zone) => {
+    const stat = stats.find((s) => s.id === zone.id);
+    return {
+      ...zone,
+      percentage: stat?.percentage ?? 0,
+      attempts: stat?.attempts ?? 0,
+      makes: stat?.makes ?? 0,
+    };
+  });
+
+  const eventOptions = [
+    { value: "tir", label: "Tir", initial: "T" },
+    { value: "assist", label: "Passe Décisive", initial: "PD" },
+    { value: "faute", label: "Faute", initial: "F" },
+    { value: "rebond_off", label: "Rebond Offensif", initial: "RO" },
+    { value: "rebond_def", label: "Rebond Défensif", initial: "RD" },
+    { value: "perte_de_balle", label: "Perte de balle", initial: "P" },
+    { value: "interception", label: "Interception", initial: "I" },
+    { value: "contre", label: "Contre", initial: "C" },
+    // Lancers francs
+    { value: "LF0/1", label: "Lancer franc raté", initial: "LF0" },
+    { value: "LF1/1", label: "Lancer franc réussi", initial: "LF1/1" },
+  ];
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(event.target as Node)
+      ) {
+        resetPending(); // ferme la popup
+      }
+    }
+
+    if (pendingEvent) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [pendingEvent]);
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-5">
+      {/* <div className="mb-2">
+        <label className="mr-2 text-sm font-medium">Filtrer par action :</label>
+        <Select
+          value={selectedEventFilter}
+          onValueChange={(value) => setSelectedEventFilter(value)}
+        >
+          <SelectTrigger className="w-[180px] border border-gray-300 rounded-md bg-[#05051F] text-white hover:border-gray-400 focus:ring-1 focus:ring-blue-500 focus:outline-none">
+            <SelectValue placeholder="Toutes" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#05051F] text-white border border-gray-700 rounded-md shadow-lg">
+            <SelectItem
+              value="all"
+              className="hover:bg-blue-600 hover:text-white"
+            >
+              Toutes
+            </SelectItem>
+            {eventOptions
+              .filter((option) => !option.value.startsWith("LF"))
+              .map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className="hover:bg-blue-600 hover:text-white"
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+      </div> */}
+
       {/* Player YouTube */}
       <Card className="col-span-6">
         <div ref={playerRef} className="mt-4 relative pb-[56.25%] h-0">
@@ -316,231 +686,148 @@ export default function BasketballCourtSVG({
           )}
         </div>
       </Card>
-      <Card
-        className="col-span-6 flex items-center p-0"
-        ref={containerRef}
-        style={{
-          width: "100%",
-          height: "100%",
-          position: "relative",
-          maxWidth: `${maxWidth}px`,
-        }}
-      >
-        <Stage
-          width={stageSize.width}
-          height={stageSize.height}
-          scaleX={stageSize.scale}
-          scaleY={stageSize.scale}
-          x={-20}
-          y={-5}
-          opacity={1}
+      <Card className="col-span-6 w-full">
+        <div
+          className="col-span-6 w-full flex items-center p-0"
+          ref={containerRef}
           style={{
-            position: "relative",
-            top: 0,
-            left: 0,
-            zIndex: 0,
             width: "100%",
             height: "100%",
-          }}
-          onClick={(e) => {
-            if (isReadOnly) return;
-            if (!selectedPlayer || !player) return;
-            const stage = e.target.getStage();
-            const pointerPosition = stage.getPointerPosition();
-            if (pointerPosition) {
-              handleCourtClick(
-                pointerPosition.x,
-                pointerPosition.y,
-                currentTime,
-                stageSize.scale
-              );
-            }
+            position: "relative",
+            maxWidth: `${maxWidth}px`,
           }}
         >
-          <Layer>
-            <BasketBallCourtKonva />
+          <Stage
+            width={stageSize.width}
+            height={stageSize.height}
+            scaleX={stageSize.scale}
+            scaleY={stageSize.scale}
+            // x={-20}
+            // y={-5}
+            opacity={1}
+            style={{
+              position: "relative",
+              top: 0,
+              left: 0,
+              zIndex: 0,
+              width: "100%",
+              height: "100%",
+            }}
+            onClick={(e) => {
+              if (isReadOnly) return;
+              if (!selectedPlayer.name || !player) return;
+              if (e.target !== e.target.getStage()) return;
 
-            {zoneStats.map((zone) => (
-              <Group key={zone.id}>
-                {zone.useShape && zone.shapeProps ? (
-                  <Shape
-                    // onClick={() => calculateZoneStats(actions, zones)}
-                    x={zone.shapeProps.x}
-                    y={zone.shapeProps.y}
-                    rotation={zone.shapeProps.rotation}
-                    offsetX={zone.shapeProps.offsetX}
-                    offsetY={zone.shapeProps.offsetY}
-                    sceneFunc={(context, shape) => {
-                      const {
-                        rectX,
-                        rectY,
-                        rectW,
-                        rectH,
-                        centerX,
-                        centerY,
-                        radius,
-                        arcStart,
-                        arcEnd,
-                      } = zone.shapeProps;
+              const stage = e.target.getStage();
+              console.log(stage);
+              const pointerPosition = stage!.getPointerPosition();
+              console.log("Pointer raw:", pointerPosition);
 
-                      context.beginPath();
+              if (!pointerPosition) return;
 
-                      // Début bas gauche (angle droit)
-                      context.moveTo(rectX, rectY + rectH);
+              // 🔥 corriger les coordonnées en fonction du scale
+              const realX = pointerPosition.x / stageSize.scale;
+              const realY = pointerPosition.y / stageSize.scale;
+              console.log("Pointer corrected:", realX, realY);
+              const info = zonesData
+                .map((zone) =>
+                  containsPoint(zone, realX, realY, refs.current[zone.id])
+                    ? zone.id
+                    : null
+                )
+                .filter(Boolean)
+                .join(", ");
+              console.log(info);
 
-                      // Côté gauche (vertical)
-                      context.lineTo(rectX, rectY);
+              if (pointerPosition) {
+                // handleCourtClick(realX, realY, currentTime, stageSize.scale);
+                handleCourtClick(
+                  pointerPosition.x,
+                  pointerPosition.y,
+                  currentTime,
+                  stageSize.scale
+                );
+              }
 
-                      // Côté haut (horizontal)
-                      context.lineTo(rectX + rectW, rectY);
+              setClickInfo(info || "none");
+              console.log("Zone détectée:", info);
+            }}
+          >
+            <Layer listening={false}>
+              <BasketBallCourtKonva />
+            </Layer>
+            <Layer>
+              {zonesWithStats.map((zone) => {
+                const s = zone.shapeProps;
 
-                      // Arc concave
-                      context.arc(
-                        centerX,
-                        centerY,
-                        radius,
-                        arcStart,
-                        arcEnd,
-                        true
-                      );
+                // Calcul du centre de la zone selon le type
+                let centerX = zone.x;
+                let centerY = zone.y;
 
-                      // Descend verticalement (côté droit)
-                      context.lineTo(rectX + rectW, rectY + rectH);
+                if (zone.type === "rect") {
+                  centerX += 85;
+                  centerY += s.height / 2;
+                } else if (zone.type === "concave") {
+                  if (zone.id === "three_left_inverted") {
+                    centerX = 380 ?? zone.x + (s.rectW || 0) / 2;
+                    centerY = s.centerY + 300 ?? zone.y + (s.rectH || 0) / 2;
+                  }
+                  // approximation: centre du rectangle de référence
+                  else {
+                    centerX = 380 ?? zone.x + (s.rectW || 0) / 2;
+                    centerY = s.centerY - 280 ?? zone.y + (s.rectH || 0) / 2;
+                  }
+                } else if (zone.type === "arc") {
+                  // pour l'arc, on place le texte au milieu du rayon extérieur
+                  centerX = s.x + 390;
+                  centerY = s.y + 200;
+                }
 
-                      // Bas (ligne de fermeture)
-                      context.lineTo(rectX, rectY + rectH);
+                return (
+                  <Group key={zone.id}>
+                    <Shape
+                      ref={(el) => (refs.current[zone.id] = el)}
+                      x={zone.x}
+                      y={zone.y}
+                      rotation={zone.shapeProps.rotation || 0}
+                      offsetX={zone.shapeProps.offsetX || 0}
+                      offsetY={zone.shapeProps.offsetY || 0}
+                      sceneFunc={(context, shape) => {
+                        drawZone(context, zone);
+                        context.fillStyle = getColorFromPercentage(
+                          zone.percentage,
+                          0.3
+                        );
+                        context.fill();
+                        // context.stroke();
+                      }}
+                    />
+                    <Text
+                      text={`${zone.percentage}%`}
+                      x={centerX}
+                      y={centerY}
+                      fontSize={16}
+                      fill="yellow"
+                      width={s.width || 100} // largeur du texte / zone approximative
+                      height={s.height || 50} // hauteur du texte / zone approximative
+                      align="center"
+                      verticalAlign="middle"
+                      rotation={s.rotation || 0} // rotation si nécessaire
+                      offsetX={(s.width || 100) / 2} // centre horizontal
+                      offsetY={(s.height || 50) / 2} // centre vertical
+                      listening={false}
+                    />
+                  </Group>
+                );
+              })}
+            </Layer>
+          </Stage>
+          {/* Lignes à 3 points */}
 
-                      context.closePath();
-                      context.fillStrokeShape(shape);
-                    }}
-                    fill={getColorFromPercentage(zone.percentage)}
-                    stroke="black"
-                    strokeWidth={1}
-                    opacity={0.3}
-                  />
-                ) : zone.useRadius ? (
-                  <Rect
-                    x={zone.x}
-                    y={zone.y}
-                    width={zone.width}
-                    height={zone.height}
-                    fill={getColorFromPercentage(zone.percentage)}
-                    opacity={0.3}
-                    cornerRadius={zone.cornerRadius}
-                    onClick={() => console.log("RECT AVEC USERADUIS")}
-                  />
-                ) : (
-                  <Rect
-                    x={zone.x}
-                    y={zone.y}
-                    width={zone.width}
-                    height={zone.height}
-                    fill={getColorFromPercentage(zone.percentage)}
-                    opacity={0.3}
-                    onClick={() => console.log("RECT")}
-                  />
-                )}
-
-                <Text
-                  text={`${zone.percentage}%`}
-                  x={zone.x + zone.width / 2 - 15}
-                  y={zone.y + zone.height / 2 - 10}
-                  fontSize={16}
-                  fill="white"
-                />
-              </Group>
-            ))}
-          </Layer>
-        </Stage>
-        {/* Lignes à 3 points */}
-        <svg
-          width={stageSize.width}
-          height={stageSize.height}
-          stroke="red"
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            pointerEvents: "none",
-          }}
-        >
-          <circle
-            cx={basketLeft.x * stageSize.scale}
-            cy={basketLeft.y * stageSize.scale}
-            r={threePointRadius} // déjà scaled
-            stroke="yellow"
-            strokeWidth={1 * stageSize.scale}
-            fill="none"
-          />
-          <circle
-            cx={basketRight.x * stageSize.scale}
-            cy={basketRight.y * stageSize.scale}
-            r={threePointRadius} // déjà scaled
-            stroke="yellow"
-            strokeWidth={1 * stageSize.scale}
-            fill="none"
-          />
-          {/* Zone corner gauche */}
-
-          <rect
-            x={50 * stageSize.scale}
-            y={35 * stageSize.scale}
-            width={875 * stageSize.scale} // svgWidthResponsive
-            height={(214 / 430) * sceneWidth * stageSize.scale} // svgHeightResponsive
-            stroke="orange"
-            strokeWidth={2 * stageSize.scale}
-            fill="none"
-          />
-
-          {/* Zones corner */}
-          {/* Left Top */}
-          <rect
-            x={cornerLeftTop.x * stageSize.scale}
-            y={cornerLeftTop.y * stageSize.scale}
-            width={cornerZoneWidth * stageSize.scale}
-            height={cornerZoneHeight}
-            fill="red"
-            opacity={0.5}
-          />
-          {/* Left Bottom */}
-          <rect
-            x={cornerLeftBottom.x * stageSize.scale}
-            y={cornerLeftBottom.y * stageSize.scale}
-            width={cornerZoneWidth * stageSize.scale}
-            height={cornerZoneHeight}
-            fill="red"
-            opacity={0.5}
-          />
-          {/* Right Top */}
-          <rect
-            x={cornerRightTop.x * stageSize.scale}
-            y={cornerRightTop.y * stageSize.scale}
-            width={cornerZoneWidth * stageSize.scale}
-            height={cornerZoneHeight * stageSize.scale}
-            fill="red"
-            opacity={0.5}
-          />
-          {/* Right Bottom */}
-          <rect
-            x={cornerRightBottom.x * stageSize.scale}
-            y={cornerRightBottom.y * stageSize.scale}
-            width={cornerZoneWidth * stageSize.scale}
-            height={cornerZoneHeight * stageSize.scale}
-            fill="red"
-            opacity={0.5}
-          />
-        </svg>
-
-        {/* Affichage des tirs */}
-        {actions
-          .filter(
-            (a) =>
-              (!selectedPlayer || a.player === selectedPlayer) &&
-              (a.typeItem === "shot" || a.typeItem === "event")
-          )
-          .map((shot, i) => {
-            console.log(shot);
-            return (
+          {/* Affichage des tirs */}
+          {filteredActionsForDisplay
+            .filter((a) => a.typeItem === "shot" || a.typeItem === "event")
+            .map((shot, i) => (
               <ShotMarker
                 key={`shot-${i}`}
                 shot={shot as Shot}
@@ -551,11 +838,88 @@ export default function BasketballCourtSVG({
                 scale={stageSize.scale}
                 getCurrentTime={getCurrentTime}
               />
-            );
-          })}
+            ))}
 
-        {/* Affichage des événements */}
-        {/* {actions
+          <svg
+            width={stageSize.width}
+            height={stageSize.height}
+            stroke="red"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              pointerEvents: "none",
+            }}
+          >
+            <circle
+              cx={basketLeft.x * stageSize.scale}
+              cy={basketLeft.y * stageSize.scale}
+              r={threePointRadius} // déjà scaled
+              stroke="yellow"
+              strokeWidth={1 * stageSize.scale}
+              fill="none"
+            />
+            <circle
+              cx={basketRight.x * stageSize.scale}
+              cy={basketRight.y * stageSize.scale}
+              r={threePointRadius} // déjà scaled
+              stroke="yellow"
+              strokeWidth={1 * stageSize.scale}
+              fill="none"
+            />
+            {/* Zone corner gauche */}
+
+            <rect
+              x={75 * stageSize.scale}
+              y={39 * stageSize.scale}
+              width={875 * stageSize.scale} // svgWidthResponsive
+              height={0.425 * sceneWidth * stageSize.scale} // svgHeightResponsive
+              stroke="orange"
+              strokeWidth={2 * stageSize.scale}
+              fill="none"
+            />
+
+            {/* Zones corner */}
+            {/* Left Top */}
+            <rect
+              x={cornerLeftTop.x * stageSize.scale}
+              y={cornerLeftTop.y * stageSize.scale}
+              width={cornerZoneWidth * stageSize.scale}
+              height={cornerZoneHeight}
+              fill="red"
+              opacity={0.5}
+            />
+            {/* Left Bottom */}
+            <rect
+              x={cornerLeftBottom.x * stageSize.scale}
+              y={cornerLeftBottom.y * stageSize.scale}
+              width={cornerZoneWidth * stageSize.scale}
+              height={cornerZoneHeight}
+              fill="red"
+              opacity={0.5}
+            />
+            {/* Right Top */}
+            <rect
+              x={cornerRightTop.x * stageSize.scale}
+              y={cornerRightTop.y * stageSize.scale}
+              width={cornerZoneWidth * stageSize.scale}
+              height={cornerZoneHeight * stageSize.scale}
+              fill="red"
+              opacity={0.5}
+            />
+            {/* Right Bottom */}
+            <rect
+              x={cornerRightBottom.x * stageSize.scale}
+              y={cornerRightBottom.y * stageSize.scale}
+              width={cornerZoneWidth * stageSize.scale}
+              height={cornerZoneHeight * stageSize.scale}
+              fill="red"
+              opacity={0.5}
+            />
+          </svg>
+
+          {/* Affichage des événements */}
+          {/* {actions
           .filter((a) => a.typeItem === "event")
           .map((event, i) => (
             <svg
@@ -579,100 +943,142 @@ export default function BasketballCourtSVG({
             </svg>
           ))} */}
 
-        {/* Pop-up ajout événement */}
-        {pendingEvent && (
-          <div
-            className="absolute z-50 bg-white border p-3 rounded shadow-md"
-            style={{
-              top: pendingEvent.y - 160,
-              left: pendingEvent.x,
-              transform: "translateX(-50%)",
-              minWidth: 240,
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <label className="font-semibold block mb-1">Type d'événement</label>
-            <select
-              value={eventType}
-              onChange={(e) => setEventType(e.target.value)}
-              className="mb-2 w-full border px-2 py-1 rounded"
+          {/* Pop-up ajout événement */}
+          {pendingEvent && (
+            <Card
+              ref={popupRef}
+              className="absolute z-50 border p-3 rounded shadow-md gap-0"
+              style={{
+                top: pendingEvent.y - 160,
+                left: pendingEvent.x,
+                transform: "translateX(-50%)",
+                minWidth: 260,
+              }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <option value="tir">Tir</option>
-              <option value="rebond">Rebond</option>
-              <option value="perte_de_balle">Perte de balle</option>
-              <option value="interception">Interception</option>
-            </select>
+              <TooltipProvider>
+                <div className="grid grid-cols-7 gap-1.5">
+                  {eventOptions.map((option) => {
+                    return (
+                      <div key={option.value} className="flex justify-center">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant={
+                                eventType === option.value
+                                  ? "default"
+                                  : "outline"
+                              }
+                              size="icon"
+                              onClick={() => setEventType(option.value)}
+                              onDoubleClick={() => confirmEvent(true)}
+                              onMouseDown={
+                                option.initial === "T"
+                                  ? () => {
+                                      console.log("ICI");
+                                      pressTimer.current = setTimeout(
+                                        () => confirmEvent(false),
+                                        600
+                                      );
+                                    }
+                                  : undefined
+                              }
+                              onMouseUp={
+                                option.initial === "T"
+                                  ? () => {
+                                      if (pressTimer.current) {
+                                        clearTimeout(pressTimer.current);
+                                        pressTimer.current = null; // on reset proprement
+                                      }
+                                    }
+                                  : undefined
+                              }
+                              className="px-3 h-8 w-11 border border-white/10"
+                            >
+                              {option.initial}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="bottom"
+                            className="bg-[#05051F] text-white text-xs px-2 py-1 rounded-md shadow-lg"
+                          >
+                            {option.label}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    );
+                  })}
+                </div>
+              </TooltipProvider>
 
-            {eventType === "rebond" && (
-              <div className="mb-2">
-                <label className="block text-sm font-medium mb-1">
-                  Type de rebond
-                </label>
-                <select
-                  value={reboundType}
-                  onChange={(e) =>
-                    setReboundType(e.target.value as "off" | "def")
-                  }
-                  className="w-full border px-2 py-1 rounded"
-                >
-                  <option value="off">Offensif</option>
-                  <option value="def">Défensif</option>
-                </select>
-              </div>
-            )}
+              <Textarea
+                placeholder="Ajouter un commentaire..."
+                value={commentaire}
+                onChange={(e) => setCommentaire(e.target.value)}
+                className="h-16 text-sm"
+              />
 
-            <label className="block text-sm font-medium">Commentaire</label>
-            <textarea
-              value={commentaire}
-              onChange={(e) => setCommentaire(e.target.value)}
-              className="w-full border rounded px-2 py-1 mb-2"
-              rows={2}
-            />
-
-            <label className="text-sm font-medium block">
-              Temps (HH:MM:SS)
-            </label>
-            <input
+              {/* <Input
               type="text"
               value={pendingTimestamp ?? ""}
               onChange={(e) => setPendingTimestamp(e.target.value)}
-              className="border px-2 py-1 w-full mb-2 rounded"
-            />
+              placeholder="00:00:00"
+              className="mb-2"
+            /> */}
 
-            <div className="flex gap-2 justify-end">
-              {eventType === "tir" ? (
-                <>
-                  <Button onClick={() => confirmEvent(true)}>✅ Réussi</Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => confirmEvent(false)}
-                  >
-                    ❌ Raté
-                  </Button>
-                </>
-              ) : (
-                <Button onClick={() => confirmEvent()}>Ajouter</Button>
-              )}
-              <Button variant="secondary" onClick={resetPending}>
-                Annuler
-              </Button>
-            </div>
-          </div>
-        )}
+              <div className="flex gap-2 justify-end">
+                {eventType === "tir" ? (
+                  <>
+                    <Button onClick={() => confirmEvent(true)}>
+                      ✅ Réussi
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => confirmEvent(false)}
+                    >
+                      ❌ Manqué
+                    </Button>
+                  </>
+                ) : (
+                  <Button onClick={() => confirmEvent()}>Ajouter</Button>
+                )}
+                <Button variant="secondary" onClick={resetPending}>
+                  Annuler
+                </Button>
+              </div>
+            </Card>
+          )}
+        </div>
       </Card>
-
+      <div className="col-span-12">
+        <Tabs defaultValue="account" className="w-full bg-[#1B1E2B]">
+          <TabsList>
+            <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="password">Password</TabsTrigger>
+          </TabsList>
+          <TabsContent value="account">
+            <StatsMatch
+              matchPlayed={playersStats}
+              handlePlayerClick={handlePlayerClick}
+              selectedPlayer={selectedPlayer?.name}
+            />
+          </TabsContent>
+          <TabsContent value="password">
+            <EventHistory
+              actions={actions}
+              onDelete={(index) => {
+                setActions((prev) => prev.filter((_, i) => i !== index));
+              }}
+              onSeekVideo={(time) => {
+                if (videoRef.current) {
+                  videoRef.current.seekTo(time, "seconds");
+                }
+              }}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
       {/* Historique */}
-      {/* <EventHistory
-        actions={actions}
-        onDelete={(index) => {
-          setActions((prev) => prev.filter((_, i) => i !== index));
-        }}
-        onSeekVideo={(time) => {
-          if (videoRef.current) {
-            videoRef.current.seekTo(time, "seconds");
-          }
-        }}
-      /> */}
     </div>
   );
 }
