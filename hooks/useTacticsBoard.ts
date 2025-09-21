@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 export function useTacticsBoard() {
   const PLAYER_COUNT = 10;
-  const PLAYER_RADIUS = 30;
+  const PLAYER_RADIUS = 35;
   const BALL_RADIUS = 20;
   const PROXIMITY_THRESHOLD = 50;
 
@@ -38,10 +38,18 @@ export function useTacticsBoard() {
     null
   );
 
+  const [arrowProgress, setArrowProgress] = useState<{
+    [playerId: string]: number; // 0 → 1
+  }>({});
+
+  const [previewArrows, setPreviewArrows] = useState<{
+    [key: string]: { x: number; y: number }[];
+  }>({});
+
   const [isRecording, setIsRecording] = useState(false);
   const [isReplaying, setIsReplaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [replaySpeed, setReplaySpeed] = useState(800);
+  const [replaySpeed, setReplaySpeed] = useState(1200);
   const [currentComment, setCurrentComment] = useState("");
   const [dragPath, setDragPath] = useState<{
     [key: number]: { x: number; y: number }[];
@@ -268,7 +276,7 @@ export function useTacticsBoard() {
   const smoothTransition = (
     start: any,
     end: any,
-    duration = 800,
+    duration = replaySpeed,
     onFinish?: () => void
   ) => {
     const frames = 40;
@@ -290,7 +298,6 @@ export function useTacticsBoard() {
 
       let newBall;
       if (playerWithBall !== null && ballOffset) {
-        // balle suit le joueur
         newBall = {
           x: newPlayers[playerWithBall].x + ballOffset.x,
           y: newPlayers[playerWithBall].y + ballOffset.y,
@@ -304,10 +311,7 @@ export function useTacticsBoard() {
 
       setPlayers(newPlayers);
       setBall(newBall);
-
-      // 🔴 Recalculer collisions et proximité pendant le replay
       checkCollision();
-      // checkProximity();
 
       requestAnimationFrame(animate);
     };
@@ -325,7 +329,7 @@ export function useTacticsBoard() {
   ) => {
     const keys = Object.keys(paths);
     const startTime = performance.now();
-    const duration = 1500; // durée totale de l'animation
+    const duration = replaySpeed; // durée totale de l'animation
 
     const animate = (time: number) => {
       const t = Math.min((time - startTime) / duration, 1);
@@ -426,26 +430,36 @@ export function useTacticsBoard() {
       const nextIndex = index + 1;
 
       if (next.dragPaths && Object.keys(next.dragPaths).length > 0) {
-        replayDragPathsWithArrow(
-          next.dragPaths,
-          next.playerWithBall ?? null,
-          next.ballOffset ?? null,
-          () => {
-            setPlayerWithBall(next.playerWithBall ?? null);
-            setBallOffset(next.ballOffset ?? null);
-            setReplayIndex(nextIndex);
-            playStep(nextIndex);
-          }
-        );
+        // ✅ 1. On affiche les flèches immédiatement
+        setPreviewArrows(next.dragPaths);
+
+        // ✅ 2. On attend 1 seconde avant de lancer le déplacement
+        setTimeout(() => {
+          // ⛔️ NE PAS effacer ici ! (on veut la flèche pendant l'anim)
+
+          // 3️⃣ Lancer l'animation du déplacement
+          replayDragPathsWithArrow(
+            next.dragPaths,
+            next.playerWithBall ?? null,
+            next.ballOffset ?? null,
+            () => {
+              // ✅ 4. Quand le déplacement est terminé → on retire la flèche
+              setPreviewArrows({});
+
+              setPlayerWithBall(next.playerWithBall ?? null);
+              setBallOffset(next.ballOffset ?? null);
+              setReplayIndex(nextIndex);
+              playStep(nextIndex);
+            }
+          );
+        }, 100);
       } else {
+        // 🔹 Pas de déplacement → mise à jour immédiate
         setPlayers(next.players);
         setBall(next.ball);
 
-        // 🔴 Recalculer collisions et proximité
         checkCollision();
-        // checkProximity();
 
-        // 🔴 Si un joueur a la balle, on fait suivre la balle
         if (playerWithBall !== null && ballOffset) {
           setBall({
             x: next.players[playerWithBall].x + ballOffset.x,
@@ -605,5 +619,7 @@ export function useTacticsBoard() {
     setIsReplaying,
     selectedId,
     setSelectedId,
+    previewArrows,
+    playerWithBall,
   };
 }

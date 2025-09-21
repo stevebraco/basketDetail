@@ -19,19 +19,19 @@ export function useResponsiveCourt({
   const updateSize = () => {
     if (!containerRef.current) return;
 
-    // Largeur disponible
-    let containerWidth = containerRef.current.offsetWidth;
-    if (maxWidth && containerWidth > maxWidth) {
-      containerWidth = maxWidth;
-    }
+    const containerWidth = containerRef.current.offsetWidth;
+    const containerHeight = containerRef.current.offsetHeight;
 
-    // 👉 On garde les proportions d’origine
-    const computedScale = containerWidth / sceneWidth;
+    // Calcul du scale qui remplit la div sans déformer
+    const scale = Math.min(
+      containerWidth / sceneWidth,
+      containerHeight / sceneHeight
+    );
 
     setStageSize({
-      width: sceneWidth * computedScale,
-      height: sceneHeight * computedScale,
-      scale: computedScale,
+      width: containerWidth,
+      height: containerHeight,
+      scale,
     });
   };
 

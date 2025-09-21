@@ -50,8 +50,8 @@ const TShape: React.FC<TShapeProps> = ({
         }}
       >
         {/* Corps du T */}
-        <Rect x={-5} y={-20} width={10} height={25} fill="white" />
-        <Rect x={-15} y={-20} width={30} height={8} fill="white" />
+        <Rect x={-5} y={-20} width={15} height={35} fill="black" />
+        <Rect x={-22} y={-20} width={50} height={13} fill="black" />
       </Group>
 
       {isSelected && (

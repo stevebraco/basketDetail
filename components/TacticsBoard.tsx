@@ -31,12 +31,48 @@ export default function TacticBoard() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [videoURL, setVideoURL] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
+  const [arrowProgress, setArrowProgress] = useState<{
+    [playerId: string]: number;
+  }>({});
+  const [animatedArrowProgress, setAnimatedArrowProgress] = useState<{
+    [playerId: string]: number;
+  }>({});
+
+  const [showBlackPlayers, setShowBlackPlayers] = useState(true);
+  const [showGreyPlayers, setShowGreyPlayers] = useState(true);
 
   const { containerRef, stageSize } = useResponsiveCourt({
-    sceneWidth: 800,
-    sceneHeight: 550,
+    sceneWidth: 950,
+    sceneHeight: 700,
     maxWidth: 1010,
   });
+
+  function createWavyArrow(
+    start: { x: number; y: number },
+    end: { x: number; y: number },
+    amplitude = 8,
+    wavelength = 20
+  ) {
+    const points: { x: number; y: number }[] = [];
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const length = Math.hypot(dx, dy);
+    const angle = Math.atan2(dy, dx);
+
+    const steps = Math.floor(length / 2); // plus de steps = plus lisse
+
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = t * length;
+      const y = Math.sin((x / wavelength) * 2 * Math.PI) * amplitude;
+      // rotation pour aligner avec la direction
+      const rotatedX = x * Math.cos(angle) - y * Math.sin(angle);
+      const rotatedY = x * Math.sin(angle) + y * Math.cos(angle);
+      points.push({ x: start.x + rotatedX, y: start.y + rotatedY });
+    }
+
+    return points;
+  }
 
   const {
     players,
@@ -77,6 +113,8 @@ export default function TacticBoard() {
     setDrawings,
     selectedId,
     setSelectedId,
+    previewArrows,
+    playerWithBall,
   } = useTacticsBoard();
 
   const startRecording = () => {
@@ -123,6 +161,35 @@ export default function TacticBoard() {
     setRecording(false);
   };
 
+  function getPointAtProgress(path: { x: number; y: number }[], t: number) {
+    // t entre 0 et 1
+    const totalLen = path.reduce(
+      (len, p, i) => (i > 0 ? len + distance(path[i - 1], p) : 0),
+      0
+    );
+    let target = t * totalLen;
+    for (let i = 1; i < path.length; i++) {
+      const segLen = distance(path[i - 1], path[i]);
+      if (target <= segLen) {
+        const ratio = target / segLen;
+        return {
+          x: path[i - 1].x + ratio * (path[i].x - path[i - 1].x),
+          y: path[i - 1].y + ratio * (path[i].y - path[i - 1].y),
+        };
+      }
+      target -= segLen;
+    }
+    return path[path.length - 1];
+  }
+
+  function distance(
+    a: { x: number; y: number } | undefined,
+    b: { x: number; y: number } | undefined
+  ) {
+    if (!a || !b) return 0;
+    return Math.hypot(b.x - a.x, b.y - a.y);
+  }
+
   // 🔄 Hook replay pour chaque étape
 
   const getArrowHeadSize = (points: number[]) => {
@@ -140,19 +207,50 @@ export default function TacticBoard() {
     return points;
   };
 
+  function createZigZagPath(
+    path: { x: number; y: number }[],
+    amplitude = 10,
+    frequency = 0.2
+  ) {
+    return path.map((p, i) => {
+      const offsetX = Math.sin(i * frequency) * amplitude;
+      const offsetY = Math.cos(i * frequency) * amplitude;
+      return { x: p.x + offsetX, y: p.y + offsetY };
+    });
+  }
+
   return (
     <>
-      <Card className="relative w-full min-w-full bg-[#1C1E2B]  xl:col-end-9 overflow-hidden gap-0">
-        {/* <div className="flex gap-2 flex-wrap">
+      <Card className="col-span-4">
+        <div className="flex gap-2 flex-wrap">
           <Input
             type="range"
-            min="200"
-            max="2000"
-            step="100"
+            min={400} // vitesse la plus lente
+            max={2000} // vitesse la plus rapide
+            step={100}
             value={replaySpeed}
             onChange={(e) => setReplaySpeed(Number(e.target.value))}
             className="ml-2"
           />
+          <div className="flex gap-2 mb-2">
+            <Button
+              variant={showBlackPlayers ? "secondary" : "default"}
+              onClick={() => setShowBlackPlayers(!showBlackPlayers)}
+            >
+              {showBlackPlayers
+                ? "Masquer joueurs noirs"
+                : "Afficher joueurs noirs"}
+            </Button>
+
+            <Button
+              variant={showGreyPlayers ? "secondary" : "default"}
+              onClick={() => setShowGreyPlayers(!showGreyPlayers)}
+            >
+              {showGreyPlayers
+                ? "Masquer joueurs gris"
+                : "Afficher joueurs gris"}
+            </Button>
+          </div>
           <div className="mt-2 text-center text-sm text-gray-300">
             Étape {stepProgress}
           </div>
@@ -186,23 +284,62 @@ export default function TacticBoard() {
           >
             ▶️ Étape suivante
           </Button>
-        </div> */}
+        </div>
+        <div className="mt-4 flex gap-4 flex-wrap justify-center">
+          <Button
+            variant={drawMode === "arrow" ? "secondary" : "default"}
+            onClick={() => setDrawMode("arrow")}
+          >
+            🏹 Flèche
+          </Button>
+          <Button
+            variant={drawMode === "screen" ? "secondary" : "default"}
+            onClick={() => setDrawMode("screen")}
+          >
+            🟦 Écran
+          </Button>
+          <Button
+            variant={drawMode === "T" ? "secondary" : "default"}
+            onClick={() => setDrawMode("T")}
+          >
+            🟨 T
+          </Button>
+          <Button
+            variant={drawMode === "line" ? "secondary" : "default"}
+            onClick={() => setDrawMode("line")}
+          >
+            ➖ Ligne
+          </Button>
+          <Button
+            variant={drawMode === "erase" ? "secondary" : "default"}
+            onClick={() => setDrawMode("erase")}
+          >
+            🗑️ Effacer
+          </Button>
+        </div>
+      </Card>
+      <Card className="col-span-8 h-full">
         <div
           ref={containerRef}
-          style={{ width: "100%", maxWidth: "100%", height: "100%" }}
+          style={{
+            width: "100%",
+            height: "80vh",
+            background: "purple",
+          }}
         >
           <Stage
             ref={stageRef}
             width={stageSize.width}
             height={stageSize.height}
-            // scaleX={stageSize.scale}
-            // scaleY={stageSize.scale}
+            scaleX={stageSize.scale}
+            scaleY={stageSize.scale}
             style={{
               position: "relative",
               zIndex: 1,
-              background: "red",
+              // background: "red",
               cursor: drawing ? "crosshair" : "default",
               width: "100%",
+              height: "100%",
             }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
@@ -214,44 +351,64 @@ export default function TacticBoard() {
                   image={courtImage}
                   x={0}
                   y={0}
-                  width={courtImage.width}
-                  height={courtImage.height}
-                  scaleX={stageSize.scale}
-                  scaleY={stageSize.scale}
+                  width={stageSize.width / stageSize.scale}
+                  height={stageSize.height / stageSize.scale}
                 />
               )}
               {/* <BasketBallCourtKonva /> */}
 
-              {players.map((pos, i) => (
-                <Circle
-                  key={i}
-                  x={pos.x}
-                  y={pos.y}
-                  radius={PLAYER_RADIUS}
-                  fill={getPlayerColor(i)}
-                  draggable={!isReplaying}
-                  onDragMove={(e) => handleDragMove(i, e)}
-                  onDragStart={() => handleDragStart(i)}
-                  onDragEnd={() => handleDragEnd(i)}
-                  shadowColor={getPlayerColor(i)}
-                  shadowBlur={10}
-                  shadowOffsetX={0}
-                  shadowOffsetY={0}
-                  shadowOpacity={0.7}
-                />
-              ))}
+              {players.map((pos, i) => {
+                const color = getPlayerColor(i);
 
-              {players.map((pos, i) => (
-                <Text
-                  key={"text-" + i}
-                  x={pos.x - 5}
-                  y={pos.y - 7}
-                  text={`${i + 1}`}
-                  fontSize={15}
-                  fill="white"
-                  listening={false}
-                />
-              ))}
+                if (
+                  (color === "#212121" && !showBlackPlayers) ||
+                  (color === "grey" && !showGreyPlayers)
+                ) {
+                  return null; // joueur masqué
+                }
+
+                return (
+                  <Circle
+                    key={`circle-${i}`}
+                    x={pos.x}
+                    y={pos.y}
+                    radius={PLAYER_RADIUS}
+                    fill={color}
+                    draggable={!isReplaying}
+                    onDragMove={(e) => handleDragMove(i, e)}
+                    onDragStart={() => handleDragStart(i)}
+                    onDragEnd={() => handleDragEnd(i)}
+                    shadowColor={color}
+                    shadowBlur={10}
+                    shadowOffsetX={0}
+                    shadowOffsetY={0}
+                    shadowOpacity={0.7}
+                  />
+                );
+              })}
+
+              {players.map((pos, i) => {
+                const color = getPlayerColor(i);
+
+                if (
+                  (color === "#212121" && !showBlackPlayers) ||
+                  (color === "grey" && !showGreyPlayers)
+                ) {
+                  return null; // texte masqué
+                }
+
+                return (
+                  <Text
+                    key={`text-${i}`}
+                    x={pos.x - 5}
+                    y={pos.y - 7}
+                    text={`${i + 1}`}
+                    fontSize={15}
+                    fill="white"
+                    listening={false}
+                  />
+                );
+              })}
 
               {image && (
                 <KonvaImage
@@ -265,6 +422,133 @@ export default function TacticBoard() {
                   height={30}
                 />
               )}
+
+              {/* {Object.entries(previewArrows).map(([key, path]) => {
+                if (!path || path.length < 2) return null;
+
+                let arrowPoints: { x: number; y: number }[] = path;
+
+                // Joueur avec la balle → zig-zag wavy
+                if (playerWithBall === parseInt(key)) {
+                  arrowPoints = createWavyArrow(
+                    path[0],
+                    path[path.length - 1],
+                    8,
+                    20
+                  );
+                }
+
+                return (
+                  <Arrow
+                    key={`preview-${key}`}
+                    points={arrowPoints.flatMap((p) => [p.x, p.y])}
+                    pointerLength={10}
+                    pointerWidth={6}
+                    stroke={key === "ball" ? "orange" : "black"}
+                    fill={key === "ball" ? "orange" : "black"}
+                    strokeWidth={3}
+                    lineCap="round"
+                    lineJoin="round"
+                    dash={key === "ball" ? [15, 10] : []}
+                  />
+                );
+              })} */}
+
+              {Object.entries(previewArrows).map(([key, path]) => {
+                if (!path || path.length < 2) return null;
+
+                // 👉 ne filtre que si ce n’est PAS la balle
+                if (key !== "ball") {
+                  const playerIndex = parseInt(key);
+                  const color = getPlayerColor(playerIndex);
+
+                  if (
+                    (color === "#212121" && !showBlackPlayers) ||
+                    (color === "grey" && !showGreyPlayers)
+                  ) {
+                    return null; // flèche du joueur masquée
+                  }
+                }
+
+                // Lissage
+                const smoothPath = (
+                  pts: { x: number; y: number }[],
+                  windowSize = 5
+                ) => {
+                  if (pts.length <= windowSize) return pts;
+                  return pts.map((p, i, arr) => {
+                    const slice = arr.slice(
+                      Math.max(0, i - windowSize),
+                      Math.min(arr.length, i + windowSize)
+                    );
+                    const avgX =
+                      slice.reduce((a, b) => a + b.x, 0) / slice.length;
+                    const avgY =
+                      slice.reduce((a, b) => a + b.y, 0) / slice.length;
+                    return { x: avgX, y: avgY };
+                  });
+                };
+
+                const smooth = smoothPath(path);
+
+                // Portion déjà parcourue / restante
+                let traveledPoints: number[] = [];
+                let remainingPoints: number[] = [];
+
+                if (key === "ball") {
+                  remainingPoints = smooth.flatMap((p) => [p.x, p.y]);
+                } else {
+                  const playerIndex = parseInt(key);
+                  const playerPos = players[playerIndex];
+                  let traveledIndex = 0;
+
+                  for (let i = 1; i < smooth.length; i++) {
+                    if (
+                      distance(smooth[i], playerPos) <
+                      distance(smooth[i - 1], playerPos)
+                    ) {
+                      traveledIndex = i;
+                    } else break;
+                  }
+
+                  traveledPoints = smooth
+                    .slice(0, traveledIndex + 1)
+                    .flatMap((p) => [p.x, p.y]);
+                  remainingPoints = smooth
+                    .slice(traveledIndex)
+                    .flatMap((p) => [p.x, p.y]);
+                }
+
+                return (
+                  <Group key={`preview-${key}`}>
+                    {traveledPoints.length >= 4 && key !== "ball" && (
+                      <Line
+                        points={traveledPoints}
+                        stroke="black"
+                        strokeWidth={5}
+                        opacity={0.2}
+                        tension={0.5}
+                        lineCap="round"
+                        lineJoin="round"
+                      />
+                    )}
+                    {remainingPoints.length >= 4 && (
+                      <Arrow
+                        points={remainingPoints}
+                        pointerLength={10}
+                        pointerWidth={5}
+                        stroke={key === "ball" ? "orange" : "black"}
+                        fill={key === "ball" ? "orange" : "black"}
+                        strokeWidth={5}
+                        tension={0.5}
+                        lineCap="round"
+                        lineJoin="round"
+                        dash={key === "ball" ? [15, 10] : []} // pointillé si balle
+                      />
+                    )}
+                  </Group>
+                );
+              })}
 
               {/* Dessins existants */}
               {drawings.map((shape) => {
@@ -356,38 +640,7 @@ export default function TacticBoard() {
           </Stage>
         </div>
       </Card>
-      {/* <div className="mt-4 flex gap-4 flex-wrap justify-center">
-        <Button
-          variant={drawMode === "arrow" ? "secondary" : "default"}
-          onClick={() => setDrawMode("arrow")}
-        >
-          🏹 Flèche
-        </Button>
-        <Button
-          variant={drawMode === "screen" ? "secondary" : "default"}
-          onClick={() => setDrawMode("screen")}
-        >
-          🟦 Écran
-        </Button>
-        <Button
-          variant={drawMode === "T" ? "secondary" : "default"}
-          onClick={() => setDrawMode("T")}
-        >
-          🟨 T
-        </Button>
-        <Button
-          variant={drawMode === "line" ? "secondary" : "default"}
-          onClick={() => setDrawMode("line")}
-        >
-          ➖ Ligne
-        </Button>
-        <Button
-          variant={drawMode === "erase" ? "secondary" : "default"}
-          onClick={() => setDrawMode("erase")}
-        >
-          🗑️ Effacer
-        </Button>
-      </div> */}
+
       {/* <div className="col-span-4 h-full">
         <Textarea
           placeholder="Commentaire"
