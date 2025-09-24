@@ -28,6 +28,7 @@ type TirEvenement {
   eventType  String? // pour les événements
   typeItem   String  // "shot" ou "event"
   playerId   String    @db.ObjectId // lien direct vers Player.id
+  zone  String?
 
 }
 
@@ -93,6 +94,7 @@ model Match {
   videoId        String
   createdAt     DateTime      @default(now())
   versus        String
+  isHalfCourt   Boolean
   // score         String
   // hasWon        Boolean
   // location      String

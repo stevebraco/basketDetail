@@ -8,7 +8,7 @@ import {
   MatchEventType,
 } from "@/types/types";
 
-type PendingEvent = { x: number; y: number } | null;
+type PendingEvent = { x: number; y: number; zone: string } | null;
 
 export function useBasketballCourt({
   initialShots,
@@ -42,17 +42,17 @@ export function useBasketballCourt({
     x: number,
     y: number,
     currentTime: number,
-    scale: number
+    scale: number,
+    zone: string
   ) => {
     if (pendingEvent || !selectedPlayer.name) return;
     const realX = x / scale;
     const realY = y / scale;
     // setPendingEvent({ x, y });
-    setPendingEvent({ x: realX, y: realY });
+    setPendingEvent({ x: realX, y: realY, zone });
     setPendingTimestamp(secondsToHHMMSS(Math.floor(currentTime)));
     setCommentaire("");
     setEventType("tir");
-    console.log("here");
   };
 
   const confirmEvent = (made?: boolean) => {
@@ -101,6 +101,7 @@ export function useBasketballCourt({
         commentaire,
         eventType: eventType === "rebond" ? `rebond_${reboundType}` : eventType,
         player: selectedPlayer.name,
+        playerId: selectedPlayer.id,
         typeItem: "event",
       };
 

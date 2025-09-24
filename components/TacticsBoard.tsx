@@ -22,6 +22,7 @@ import { useResponsiveCourt } from "@/hooks/useResponsiveCourt";
 import { useTacticsBoard } from "@/hooks/useTacticsBoard";
 import TShape from "./TShape";
 import useImage from "@/hooks/useImage";
+import { Separator } from "./ui/separator";
 
 export default function TacticBoard() {
   const image = useImage("/ball.png");
@@ -31,9 +32,7 @@ export default function TacticBoard() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [videoURL, setVideoURL] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
-  const [arrowProgress, setArrowProgress] = useState<{
-    [playerId: string]: number;
-  }>({});
+
   const [animatedArrowProgress, setAnimatedArrowProgress] = useState<{
     [playerId: string]: number;
   }>({});
@@ -221,101 +220,158 @@ export default function TacticBoard() {
 
   return (
     <>
-      <Card className="col-span-4">
-        <div className="flex gap-2 flex-wrap">
-          <Input
-            type="range"
-            min={400} // vitesse la plus lente
-            max={2000} // vitesse la plus rapide
-            step={100}
-            value={replaySpeed}
-            onChange={(e) => setReplaySpeed(Number(e.target.value))}
-            className="ml-2"
-          />
-          <div className="flex gap-2 mb-2">
-            <Button
-              variant={showBlackPlayers ? "secondary" : "default"}
-              onClick={() => setShowBlackPlayers(!showBlackPlayers)}
-            >
-              {showBlackPlayers
-                ? "Masquer joueurs noirs"
-                : "Afficher joueurs noirs"}
-            </Button>
+      <Card className="col-span-2">
+        <div className="flex flex-col gap-4 w-full mx-auto p-3">
+          {/* 🎯 Vitesse de lecture */}
+          <div>
+            <h2 className="text-base font-semibold mb-1 text-center">
+              ⏱ Vitesse de lecture
+            </h2>
+            <Input
+              type="range"
+              min={400}
+              max={2000}
+              step={100}
+              value={replaySpeed}
+              onChange={(e) => setReplaySpeed(Number(e.target.value))}
+              className="w-full"
+            />
+            <div className="mt-1 text-center text-xs text-gray-300">
+              Étape {stepProgress}
+            </div>
+          </div>
 
-            <Button
-              variant={showGreyPlayers ? "secondary" : "default"}
-              onClick={() => setShowGreyPlayers(!showGreyPlayers)}
-            >
-              {showGreyPlayers
-                ? "Masquer joueurs gris"
-                : "Afficher joueurs gris"}
-            </Button>
+          <Separator />
+
+          {/* 🎬 Enregistrement & Lecture */}
+          <div>
+            <h2 className="text-base font-semibold mb-1 text-center">
+              🎬 Enregistrement
+            </h2>
+            <div className="flex flex-col gap-1">
+              <Button
+                size="sm"
+                onClick={startRecording}
+                disabled={recording}
+                className="w-full"
+              >
+                ⏺️ Démarrer
+              </Button>
+              <Button
+                size="sm"
+                onClick={stopRecording}
+                disabled={!recording}
+                className="w-full"
+              >
+                ⏹️ Arrêter
+              </Button>
+              <Button
+                size="sm"
+                onClick={addStep}
+                disabled={isRecording || isReplaying}
+                className="w-full"
+              >
+                ➕ Ajouter étape
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleReplay}
+                disabled={!currentSystem || !currentSystem.recording.length}
+                className="w-full"
+              >
+                🔁 Lire
+              </Button>
+              <div className="flex justify-between">
+                <Button
+                  size="sm"
+                  onClick={() => goToStep(replayIndex - 1)}
+                  disabled={replayIndex <= 0}
+                  className="w-[49%]"
+                >
+                  ◀️ Préc.
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => goToStep(replayIndex + 1)}
+                  disabled={
+                    !currentSystem ||
+                    replayIndex >= currentSystem.recording.length - 1
+                  }
+                  className="w-[49%]"
+                >
+                  ▶️ Suiv.
+                </Button>
+              </div>
+            </div>
           </div>
-          <div className="mt-2 text-center text-sm text-gray-300">
-            Étape {stepProgress}
+          <div>
+            <h2 className="text-base font-semibold mb-1 text-center">
+              🎨 Joueurs
+            </h2>
+            <div className="flex flex-col gap-1">
+              <Button
+                size="sm"
+                variant={showBlackPlayers ? "secondary" : "default"}
+                onClick={() => setShowBlackPlayers(!showBlackPlayers)}
+                className="w-full"
+              >
+                {showBlackPlayers
+                  ? "Masquer joueurs noirs"
+                  : "Afficher joueurs noirs"}
+              </Button>
+              <Button
+                size="sm"
+                variant={showGreyPlayers ? "secondary" : "default"}
+                onClick={() => setShowGreyPlayers(!showGreyPlayers)}
+                className="w-full"
+              >
+                {showGreyPlayers
+                  ? "Masquer joueurs gris"
+                  : "Afficher joueurs gris"}
+              </Button>
+            </div>
           </div>
-          <Button onClick={startRecording} disabled={recording}>
-            ⏺️ Démarrer l'enregistrement
-          </Button>
-          <Button onClick={stopRecording} disabled={!recording}>
-            ⏹️ Arrêter l'enregistrement
-          </Button>
-          <Button onClick={addStep} disabled={isRecording || isReplaying}>
-            ➕ Ajouter une étape
-          </Button>
-          <Button
-            onClick={handleReplay}
-            disabled={!currentSystem || !currentSystem.recording.length}
-          >
-            🔁 Lire l'enregistrement
-          </Button>
-          <Button
-            onClick={() => goToStep(replayIndex - 1)}
-            disabled={replayIndex <= 0}
-          >
-            ◀️ Étape précédente
-          </Button>
-          <Button
-            onClick={() => goToStep(replayIndex + 1)}
-            disabled={
-              !currentSystem ||
-              replayIndex >= currentSystem.recording.length - 1
-            }
-          >
-            ▶️ Étape suivante
-          </Button>
-        </div>
-        <div className="mt-4 flex gap-4 flex-wrap justify-center">
-          <Button
-            variant={drawMode === "arrow" ? "secondary" : "default"}
-            onClick={() => setDrawMode("arrow")}
-          >
-            🏹 Flèche
-          </Button>
-          <Button
-            variant={drawMode === "screen" ? "secondary" : "default"}
-            onClick={() => setDrawMode("screen")}
-          >
-            🟦 Écran
-          </Button>
-          <Button
-            variant={drawMode === "T" ? "secondary" : "default"}
-            onClick={() => setDrawMode("T")}
-          >
-            🟨 T
-          </Button>
-          <Button
-            variant={drawMode === "line" ? "secondary" : "default"}
-            onClick={() => setDrawMode("line")}
-          >
-            ➖ Ligne
-          </Button>
-          <Button
-            variant={drawMode === "erase" ? "secondary" : "default"}
-            onClick={() => setDrawMode("erase")}
-          >
-            🗑️ Effacer
-          </Button>
+
+          <Separator />
+
+          {/* ✏️ Dessin */}
+          <div>
+            <h2 className="text-base font-semibold mb-1 text-center">
+              ✏️ Outils
+            </h2>
+            <div className="flex flex-wrap gap-1 justify-center">
+              {["arrow", "screen", "T", "line", "erase"].map((mode) => (
+                <Button
+                  key={mode}
+                  size="sm"
+                  variant={drawMode === mode ? "secondary" : "default"}
+                  onClick={() => setDrawMode(mode)}
+                  className="w-[45%]"
+                >
+                  {mode === "arrow" && "🏹"}
+                  {mode === "screen" && "🟦"}
+                  {mode === "T" && "🟨"}
+                  {mode === "line" && "➖"}
+                  {mode === "erase" && "🗑️"}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* 💬 Commentaire */}
+          <div>
+            <h2 className="text-base font-semibold mb-1 text-center">
+              💬 Commentaire
+            </h2>
+            <Textarea
+              placeholder="Commentaire"
+              value={currentComment}
+              onChange={setCurrentComment}
+              className="border px-2 py-1 w-full text-sm h-20"
+            />
+          </div>
         </div>
       </Card>
       <Card className="col-span-8 h-full">
@@ -560,9 +616,9 @@ export default function TacticBoard() {
                         points={shape.points}
                         pointerLength={getArrowHeadSize(shape.points)}
                         pointerWidth={getArrowHeadSize(shape.points) / 2}
-                        fill={shape.fill || "white"}
-                        stroke={shape.stroke || "white"}
-                        strokeWidth={shape.strokeWidth || 3}
+                        fill={"white"}
+                        stroke={"white"}
+                        strokeWidth={5}
                       />
                     );
                   case "screen":
@@ -640,15 +696,6 @@ export default function TacticBoard() {
           </Stage>
         </div>
       </Card>
-
-      {/* <div className="col-span-4 h-full">
-        <Textarea
-          placeholder="Commentaire"
-          value={currentComment}
-          onChange={setCurrentComment}
-          className="border px-2 py-1 h-full"
-        />
-      </div> */}
     </>
   );
 }

@@ -376,6 +376,7 @@ async function main() {
           typeItem: "shot",
           playerId: createdPlayers[0].id,
           player: createdPlayers[0].prenom,
+          zone: "3-points Gauche Inversé",
         },
         {
           x: 414,
@@ -385,6 +386,7 @@ async function main() {
           typeItem: "event",
           playerId: createdPlayers[1].id,
           player: createdPlayers[1].prenom,
+          zone: "3-points Gauche Inversé",
         },
         {
           x: 345,
@@ -395,6 +397,7 @@ async function main() {
           typeItem: "shot",
           playerId: createdPlayers[0].id,
           player: createdPlayers[0].prenom,
+          zone: "3-points Gauche Inversé",
         },
       ],
     },
@@ -414,6 +417,7 @@ async function main() {
           typeItem: "shot",
           playerId: createdPlayers[1].id,
           player: createdPlayers[1].prenom,
+          zone: "3-points Gauche Inversé",
         },
         {
           x: 100,
@@ -423,6 +427,7 @@ async function main() {
           typeItem: "event",
           playerId: createdPlayers[0].id,
           player: createdPlayers[0].prenom,
+          zone: "3-points Gauche Inversé",
         },
       ],
     },

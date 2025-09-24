@@ -31,7 +31,13 @@ interface BasketballCourtProps {
   isReadOnly: boolean;
   selectedPlayer?: { name: string };
   matchDetails: { isHalfCourt: boolean };
-  handleCourtClick: (x: number, y: number, time: number, scale: number) => void;
+  handleCourtClick: (
+    x: number,
+    y: number,
+    time: number,
+    scale: number,
+    zone: string
+  ) => void;
   currentTime: number;
   actions: Action[];
 }
@@ -48,9 +54,17 @@ export default function BasketballCourt({
   const zonesData: Zone[] = useMemo(
     () => [
       {
-        id: "paint",
+        id: "paint_right",
         label: "Raquette",
         x: 75,
+        y: 180,
+        type: "rect",
+        shapeProps: { width: 200, height: 145 },
+      },
+      {
+        id: "paint_left",
+        label: "Raquette",
+        x: 750,
         y: 180,
         type: "rect",
         shapeProps: { width: 200, height: 145 },
@@ -64,6 +78,14 @@ export default function BasketballCourt({
         shapeProps: { width: 200, height: 100, cornerRadius: [0, 0, 45, 0] },
       },
       {
+        id: "mid_left",
+        label: "Mid-range basket right",
+        x: 750,
+        y: 325,
+        type: "rect",
+        shapeProps: { width: 200, height: 100, cornerRadius: [0, 0, 0, 45] },
+      },
+      {
         id: "mid_right",
         label: "Mid-range droit",
         x: 75,
@@ -72,9 +94,25 @@ export default function BasketballCourt({
         shapeProps: { width: 200, height: 100, cornerRadius: [0, 45, 0, 0] },
       },
       {
+        id: "mid_right",
+        label: "Mid-range droit",
+        x: 750,
+        y: 80,
+        type: "rect",
+        shapeProps: { width: 200, height: 100, cornerRadius: [45, 0, 0, 0] },
+      },
+      {
         id: "corner_right",
         label: "Corner droit",
         x: 75,
+        y: 40,
+        type: "rect",
+        shapeProps: { width: 130, height: 40 },
+      },
+      {
+        id: "corner_right",
+        label: "Corner droit",
+        x: 820,
         y: 40,
         type: "rect",
         shapeProps: { width: 130, height: 40 },
@@ -88,9 +126,17 @@ export default function BasketballCourt({
         shapeProps: { width: 130, height: 40 },
       },
       {
+        id: "corner_left_right",
+        label: "Corner gauche ",
+        x: 820,
+        y: 430,
+        type: "rect",
+        shapeProps: { width: 130, height: 40 },
+      },
+      {
         id: "three_right",
         label: "3-points Droite",
-        x: 440,
+        x: 490,
         y: 100,
         type: "concave",
         shapeProps: {
@@ -100,16 +146,40 @@ export default function BasketballCourt({
           offsetX: 150,
           offsetY: 115,
           rectX: 92,
-          rectY: 88,
-          rectW: 91,
-          rectH: 260,
-          centerX: 300,
-          centerY: 367,
+          rectY: 92,
+          rectW: 70,
+          rectH: 308,
+          centerX: 303,
+          centerY: 415,
           radius: 173,
           arcStart: -Math.PI / 1.6,
           arcEnd: 3.2282,
         },
       },
+      {
+        id: "three_right",
+        label: "3-points Droite droit",
+        x: 535,
+        y: 410,
+        type: "concave",
+        shapeProps: {
+          x: 450,
+          y: 100,
+          rotation: 270,
+          offsetX: 150,
+          offsetY: 115,
+          rectX: 92,
+          rectY: 92,
+          rectW: 70,
+          rectH: 308,
+          centerX: 303,
+          centerY: 415,
+          radius: 173,
+          arcStart: -Math.PI / 1.6,
+          arcEnd: 3.2282,
+        },
+      },
+
       {
         id: "three_left_inverted",
         label: "3-points Gauche Inversé",
@@ -122,14 +192,39 @@ export default function BasketballCourt({
           rotation: -90,
           offsetX: 460,
           offsetY: 327,
+          // offsetY: 327,
           rectX: 92,
           rectY: 92,
-          rectW: 94.5,
-          rectH: 260,
+          rectW: 75,
+          rectH: 306,
           centerX: 303,
           centerY: 75,
           radius: 173,
-          arcStart: 3.08,
+          arcStart: 3.05,
+          arcEnd: 1.955,
+        },
+      },
+      {
+        id: "three_left_inverted",
+        label: "3-points Gauche Inversé",
+        x: 585,
+        y: 410,
+        type: "concave",
+        shapeProps: {
+          x: 450,
+          y: 100,
+          rotation: -270,
+          offsetX: 460,
+          offsetY: 327,
+          // offsetY: 327,
+          rectX: 92,
+          rectY: 92,
+          rectW: 75,
+          rectH: 306,
+          centerX: 303,
+          centerY: 75,
+          radius: 173,
+          arcStart: 3.05,
           arcEnd: 1.955,
         },
       },
@@ -143,24 +238,38 @@ export default function BasketballCourt({
           x: 10,
           y: 50,
           innerRadius: 173,
-          outerRadius: 305,
+          outerRadius: 320,
           angle: 47,
           rotation: -11.61,
           fill: "rgba(0,150,255,0.5)",
           strokeWidth: 3,
         },
       },
+      // {
+      //   id: "three_center",
+      //   label: "3-points axe droit",
+      //   x: 878,
+      //   y: 220,
+      //   type: "arc",
+      //   shapeProps: {
+      //     x: 10,
+      //     y: 50,
+      //     innerRadius: 173,
+      //     outerRadius: 320,
+      //     angle: 47,
+      //     rotation: 76.9,
+      //     fill: "rgba(0,150,255,0.5)",
+      //     strokeWidth: 3,
+      //   },
+      // },
     ],
     []
   );
 
   const backgroundImage = useImage("/backCourt.png");
 
-  const { refs, stats, drawZone, getColorFromPercentage } = useBasketballStats(
-    zonesData,
-    actions,
-    selectedPlayer
-  );
+  const { refs, stats, drawZone, getColorFromPercentage, containsPoint } =
+    useBasketballStats(zonesData, actions, selectedPlayer);
 
   const zonesWithStats = zonesData.map((zone) => {
     const stat = stats.find((s) => s.id === zone.id);
@@ -171,7 +280,7 @@ export default function BasketballCourt({
       makes: stat?.makes ?? 0,
     };
   });
-  console.log("stageSize.width", stageSize.width);
+
   return (
     <Stage
       width={stageSize.width}
@@ -197,12 +306,21 @@ export default function BasketballCourt({
 
         if (!pointerPosition) return;
 
+        const scale = stage.scaleX(); // si scaleX = scaleY
+        const localX = (pointerPosition.x - stage.x()) / scale;
+        const localY = (pointerPosition.y - stage.y()) / scale;
+
+        const findZone = zonesWithStats.find((zone) =>
+          containsPoint(zone, localX, localY, refs.current[zone.id])
+        );
+
         if (pointerPosition) {
           handleCourtClick(
             pointerPosition.x,
             pointerPosition.y,
             currentTime,
-            stageSize.scale
+            stageSize.scale,
+            findZone?.label
           );
         }
       }}
@@ -217,7 +335,7 @@ export default function BasketballCourt({
           />
         )}
       </Layer>
-      <Layer>
+      {/* <Layer>
         {zonesWithStats.map((zone) => (
           <ZoneWithStats
             key={zone.id}
@@ -225,9 +343,10 @@ export default function BasketballCourt({
             refs={refs}
             drawZone={drawZone}
             getColorFromPercentage={getColorFromPercentage}
+            onClick={() => console.log("Zone cliquée :", zone.label)}
           />
         ))}
-      </Layer>
+      </Layer> */}
     </Stage>
   );
 }

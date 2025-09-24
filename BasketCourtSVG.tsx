@@ -277,6 +277,14 @@ export default function BasketballCourtSVG({
             pointerEvents: "none",
           }}
         >
+          <line
+            x1={150}
+            y1={150}
+            x2={150}
+            y2={150}
+            stroke="blue" // couleur de la ligne
+            strokeWidth={2} // épaisseur
+          />
           <circle
             cx={basketLeft.x * stageSize.scale}
             cy={basketLeft.y * stageSize.scale}

@@ -49,8 +49,6 @@ export default function ShotMarker({
   // Choisir icône Circle si réussi, X si raté
   const Icon = shot.typeItem === "shot" ? (shot.made ? Circle : X) : Circle;
 
-  console.log("shot", shot);
-
   return (
     <motion.div
       className="absolute cursor-pointer"
@@ -68,7 +66,7 @@ export default function ShotMarker({
       <Icon
         size={22 * scale}
         color={color}
-        className="shadow-[0_-4px_8px_rgba(0,0,0,0.2),0_4px_8px_rgba(0,0,0,0.2)]"
+        // className="shadow-[0_-4px_8px_rgba(0,0,0,0.2),0_4px_8px_rgba(0,0,0,0.2)]"
         style={{ transform: "translate(-50%, -50%)" }}
       />
 

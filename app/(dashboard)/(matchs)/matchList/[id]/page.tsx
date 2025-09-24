@@ -25,7 +25,5 @@ export default async function MatchPage({
     },
   });
 
-  console.log(matchDetails);
-
   return <AnalysisVideo matchDetails={matchDetails} />;
 }

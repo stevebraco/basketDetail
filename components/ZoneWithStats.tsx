@@ -5,6 +5,7 @@ interface ZoneWithStatsProps {
   refs: React.MutableRefObject<{ [key: string]: any }>;
   drawZone: (ctx: CanvasRenderingContext2D, zone: Zone) => void;
   getColorFromPercentage: (pct: number) => string;
+  onClick: any;
 }
 
 const ZoneWithStats: React.FC<ZoneWithStatsProps> = ({
@@ -12,6 +13,7 @@ const ZoneWithStats: React.FC<ZoneWithStatsProps> = ({
   refs,
   drawZone,
   getColorFromPercentage,
+  onClick,
 }) => {
   const s = zone.shapeProps;
 
@@ -34,6 +36,7 @@ const ZoneWithStats: React.FC<ZoneWithStatsProps> = ({
   return (
     <Group key={zone.id}>
       <Shape
+        onClick={onClick}
         ref={(el) => (refs.current[zone.id] = el)}
         x={zone.x}
         y={zone.y}

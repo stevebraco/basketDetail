@@ -1,7 +1,9 @@
 import AverageStats from "@/components/AverageStats";
 import PlayerDetail from "@/components/PlayerDetail";
+import PlayerStatsDetails from "@/components/PlayerStatsDetails";
 import RadarChart from "@/components/RadarChart";
 import StatsMatch from "@/components/StatsMatch";
+import ZoneStats from "@/components/ZoneStats";
 import { prisma } from "@/lib/prisma";
 import { getAverageStatsAndCount } from "@/utils/AveragesStats";
 import React from "react";
@@ -34,6 +36,8 @@ export default async function PlayerDetailPage({
     },
   });
 
+  console.log("playerDetail", playerDetail);
+
   // Filtrer les tirs pour ne garder que ceux du joueur
   const playerTirs = playerDetail.playerMatches.flatMap((pm) =>
     pm.match.tirs.filter((tir) => tir.playerId === playerDetail.id)
@@ -52,6 +56,7 @@ export default async function PlayerDetailPage({
       </div>
     );
   }
+
   return (
     <div className="min-h-screen bg-[#0F111C] text-white p-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -64,7 +69,11 @@ export default async function PlayerDetailPage({
           <StatsMatch matchPlayed={playerDetail.playerMatches} />
 
           {/* PROFIL TECHNIQUE */}
-          <RadarChart competences={playerDetail.competences} />
+          {/* <RadarChart competences={playerDetail.competences} /> */}
+          <PlayerStatsDetails
+            playerDetail={playerDetail}
+            playerTirs={playerTirs}
+          />
 
           {/* STATISTICS */}
           <AverageStats averages={averages} matchesPlayed={matchesPlayed} />

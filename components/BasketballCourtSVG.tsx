@@ -46,6 +46,7 @@ export default function BasketballCourtSVG({
 
   const onClickSave = () => {
     AddStatsMatch(matchDetails.id, shots, playersStats);
+    setShots([]);
   };
 
   const handleUpdateStats = (
@@ -110,6 +111,7 @@ export default function BasketballCourtSVG({
 
   const searchParams = useSearchParams();
   const isReadOnly = searchParams.get("view");
+  console.log(matchDetails);
 
   const sceneWidth = matchDetails.isHalfCourt ? 850 : 1010;
   const sceneHeight = matchDetails.isHalfCourt ? 660 : 600;
@@ -251,6 +253,35 @@ export default function BasketballCourtSVG({
     return filtered;
   }, [actions, selectedPlayer, selectedEventFilter]);
 
+  const basketLeftX = basketLeft.x;
+  const basketLeftY = basketLeft.y;
+  const basketRightX = basketRight.x;
+  const basketRightY = basketRight.y;
+
+  const centerX = stageSize.width / 2;
+
+  const leftShots = filteredActionsForDisplay.filter(
+    (shot) => shot.typeItem === "shot" && shot.x <= centerX
+  );
+
+  const mirroredRightShots = filteredActionsForDisplay
+    .filter((shot) => shot.typeItem === "shot" && shot.x > centerX)
+    .map((shot) => {
+      // vecteur du panier droit vers le tir
+      const dx = shot.x - basketRightX;
+      const dy = shot.y - basketRightY;
+
+      // rotation de 180° autour du panier gauche = on inverse le vecteur
+      return {
+        ...shot,
+        x: basketLeftX - dx,
+        y: basketLeftY - dy,
+        mirrored: true,
+      };
+    });
+
+  const allShotsForDisplay = [...leftShots, ...mirroredRightShots];
+
   const eventOptions = [
     { value: "tir", label: "Tir", initial: "T" },
     { value: "assist", label: "Passe Décisive", initial: "PD" },
@@ -283,7 +314,6 @@ export default function BasketballCourtSVG({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [pendingEvent]);
-  console.log("stageSize.width", stageSize.width);
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-5">
       {/* <div className="mb-2">
@@ -362,7 +392,7 @@ export default function BasketballCourtSVG({
             actions={actions}
           />
           {/* Affichage des tirs */}
-          {filteredActionsForDisplay
+          {allShotsForDisplay
             .filter((a) => a.typeItem === "shot" || a.typeItem === "event")
             .map((shot, i) => (
               <ShotMarker
@@ -388,6 +418,15 @@ export default function BasketballCourtSVG({
               pointerEvents: "none",
             }}
           >
+            <line
+              x1={stageSize.width / 2}
+              y1={0}
+              x2={stageSize.width / 2}
+              y2={stageSize.height}
+              stroke="blue" // couleur de la ligne
+              strokeWidth={2} // épaisseur
+              strokeDasharray="6 4" // optionnel : pointillés
+            />
             <circle
               cx={basketLeft.x * stageSize.scale}
               cy={basketLeft.y * stageSize.scale}
