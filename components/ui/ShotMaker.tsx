@@ -1,15 +1,20 @@
 import { Shot } from "@/types/types";
 import { motion } from "framer-motion";
 import { Circle, X } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Istok_Web } from "next/font/google";
 
 type Props = {
   shot: Shot;
-  isTooltipVisible: boolean;
-  onShowTooltip: () => void;
-  onHideTooltip: () => void;
-  onClick: (timestamp: number) => void;
+  isTooltipVisible?: boolean;
+  onShowTooltip?: () => void;
+  onHideTooltip?: () => void;
+  onClick?: (timestamp: number) => void;
   onEdit?: () => void;
   scale: number;
+  sizeIcon?: number;
+  onDelete?: () => void;
 };
 
 function getMarkerColor(shot?: Shot): string {
@@ -42,6 +47,8 @@ export default function ShotMarker({
   onClick,
   onEdit,
   scale,
+  sizeIcon = 22,
+  onDelete,
 }: Props) {
   const color = getMarkerColor(shot);
   const tooltipOffset = 60;
@@ -58,13 +65,13 @@ export default function ShotMarker({
       }}
       animate={{ scale: [0, 1.5, 1], opacity: [0, 1] }}
       transition={{ duration: 0.5, ease: "easeInOut" }}
-      onMouseEnter={onShowTooltip}
+      onClick={onShowTooltip}
       onMouseLeave={onHideTooltip}
-      onClick={() => onClick(shot.timestamp)}
+      // onClick={() => onClick(shot.timestamp)}
     >
       {/* Icone Circle ou X */}
       <Icon
-        size={22 * scale}
+        size={sizeIcon * scale}
         color={color}
         // className="shadow-[0_-4px_8px_rgba(0,0,0,0.2),0_4px_8px_rgba(0,0,0,0.2)]"
         style={{ transform: "translate(-50%, -50%)" }}
@@ -72,49 +79,70 @@ export default function ShotMarker({
 
       {/* Tooltip */}
       {isTooltipVisible && (
-        <div
-          className="absolute left-2 bg-white border border-gray-300 p-2 rounded-md z-50 min-w-[150px] shadow-md text-xs"
+        <Card
+          className="absolute left-2 min-w-[150px] z-50 shadow-md text-xs p-1"
           style={{ top: -tooltipOffset }}
         >
-          <div>
-            {shot.typeItem === "shot" ? (
-              <p>
-                <strong>{shot.type}</strong> —{" "}
-                {shot.made ? "✅ Réussi" : "❌ Raté"}
-              </p>
-            ) : (
-              <p>
-                <strong>{shot.eventType}</strong>
-              </p>
-            )}
+          <CardContent className="px-3 space-y-1">
+            {/* 1ère ligne : type du tir + bouton supprimer à droite */}
+            <div className="flex justify-between items-center">
+              {shot.typeItem === "shot" ? (
+                <p>
+                  <strong>{shot.type}</strong> —{" "}
+                  {shot.made ? "✅ Réussi" : "❌ Raté"}
+                </p>
+              ) : (
+                <p>
+                  <strong>{shot.eventType}</strong>
+                </p>
+              )}
+
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-4 w-4 p-0 text-gray-500 hover:text-red-600"
+                  onClick={onDelete}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
             {shot.player && (
               <p>
                 👤 <strong>{shot.player}</strong>
               </p>
             )}
+
             <p>
               Temps:{" "}
               {new Date(shot.timestamp * 1000).toISOString().substr(11, 8)}
             </p>
+
             {shot.commentaire && <p>💬 {shot.commentaire}</p>}
-            <div className="mt-1 flex gap-1">
-              <button
-                className="text-blue-600 text-xs underline"
-                onClick={() => onClick(shot.timestamp)}
+
+            <div className="mt-1 flex gap-2">
+              <Button
+                variant="link"
+                className="p-0 h-auto text-blue-600 text-xs"
+                onClick={() => onClick?.(shot.timestamp)}
               >
                 Aller à la vidéo
-              </button>
+              </Button>
+
               {onEdit && (
-                <button
-                  className="text-yellow-600 text-xs underline"
+                <Button
+                  variant="link"
+                  className="p-0 h-auto text-yellow-600 text-xs"
                   onClick={onEdit}
                 >
                   ✏️ Modifier
-                </button>
+                </Button>
               )}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </motion.div>
   );

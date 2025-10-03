@@ -1,5 +1,3 @@
-import { zoneBigRaquette, zoneLilRaquette } from "@/utils/zoneCourt";
-import { height } from "pdfkit/js/page";
 import { useState } from "react";
 import {
   Layer,
@@ -67,8 +65,10 @@ const BasketBallCourtKonva = ({
         {/* {backgroundImage && (
           <KonvaImage
             image={backgroundImage}
-            width={900}
-            height={600}
+            x={75}
+            y={40}
+            width={875}
+            height={430}
             listening={false} // évite de bloquer les clics
           />
         )} */}
@@ -264,7 +264,7 @@ const BasketBallCourtKonva = ({
             outerRadius={65} // rayon du cercle
             angle={180} // angle en degrés (180° pour un demi-cercle)
             rotation={270} // angle de départ en degrés (0 = à droite)
-            stroke={lineColor}
+            stroke={"purple"}
             strokeWidth={2}
           />
           <Arc
@@ -282,23 +282,23 @@ const BasketBallCourtKonva = ({
           <Rect
             x={0}
             y={220}
-            width={zoneBigRaquette.with}
-            height={zoneBigRaquette.height}
-            stroke={lineColor}
+            width={230}
+            height={160}
+            stroke={"red"}
             strokeWidth={2}
           />
           <Rect
             x={0}
             y={235}
-            width={zoneLilRaquette.with}
-            height={zoneLilRaquette.height}
-            stroke={lineColor}
+            width={230}
+            height={130}
+            stroke={"yellow"}
             strokeWidth={2}
           />
           <Group>
             <Line
               points={[cornerLineXRight, 50, 255, 50]}
-              stroke={lineColor}
+              stroke={"red"}
               strokeWidth={3}
               x={-255}
               y={477}
@@ -307,7 +307,7 @@ const BasketBallCourtKonva = ({
             {/* Lignes droites côtés droite */}
             <Line
               points={[cornerLineXRight, 50, 255, 50]}
-              stroke={lineColor}
+              stroke={"blue"}
               strokeWidth={3}
               x={-255}
               y={22}
@@ -530,7 +530,7 @@ const BasketBallCourtKonva = ({
               outerRadius={65} // rayon du cercle
               angle={180} // angle en degrés (180° pour un demi-cercle)
               rotation={270} // angle de départ en degrés (0 = à droite)
-              stroke={lineColor}
+              stroke={"red"}
               strokeWidth={2}
               dash={[12, 5]}
             />
@@ -541,7 +541,7 @@ const BasketBallCourtKonva = ({
               outerRadius={65} // rayon du cercle
               angle={180} // angle en degrés (180° pour un demi-cercle)
               rotation={90} // angle de départ en degrés (0 = à droite)
-              stroke={lineColor}
+              stroke={"red"}
               strokeWidth={2}
             />
           </Group>
@@ -549,23 +549,23 @@ const BasketBallCourtKonva = ({
           <Rect
             x={670}
             y={220}
-            width={zoneBigRaquette.with}
-            height={zoneBigRaquette.height}
-            stroke={lineColor}
+            width={230}
+            height={160}
+            stroke={"red"}
             strokeWidth={2}
           />
           <Rect
             x={670}
             y={235}
-            width={zoneLilRaquette.with}
-            height={zoneLilRaquette.height}
+            width={230}
+            height={130}
             stroke={lineColor}
             strokeWidth={2}
           />
           <Group>
             <Line
               points={[cornerLineXRight, 50, 255, 50]}
-              stroke={lineColor}
+              stroke={"red"}
               strokeWidth={3}
               x={500}
               y={477}
@@ -574,7 +574,7 @@ const BasketBallCourtKonva = ({
             {/* Lignes droites côtés droite */}
             <Line
               points={[cornerLineXRight, 50, 255, 50]}
-              stroke={lineColor}
+              stroke={"purple"}
               strokeWidth={3}
               x={500}
               y={22}

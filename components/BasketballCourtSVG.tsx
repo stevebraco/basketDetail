@@ -13,6 +13,7 @@ import BasketBallCourtKonva from "./BasketBallCourtKonva";
 import { useResponsiveCourt } from "@/hooks/useResponsiveCourt";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { motion, AnimatePresence } from "framer-motion";
 
 import {
   Tooltip,
@@ -26,6 +27,8 @@ import { EventHistory } from "./EventHistory";
 import BasketBallHalfCourtKonva from "./BasketballHalfCourtKonva";
 import { AddStatsMatch } from "@/lib/actions/match.action";
 import BasketballCourt from "./BasketballCourt";
+import { Car } from "lucide-react";
+import { calculateTotalRebounds } from "@/utils/StatsByPlayer";
 
 export default function BasketballCourtSVG({
   videoId,
@@ -113,13 +116,15 @@ export default function BasketballCourtSVG({
   const isReadOnly = searchParams.get("view");
   console.log(matchDetails);
 
-  const sceneWidth = matchDetails.isHalfCourt ? 850 : 1010;
-  const sceneHeight = matchDetails.isHalfCourt ? 660 : 600;
-  const maxWidth = matchDetails.isHalfCourt ? 850 : 1010;
+  const isHalfCourt = false;
+
+  const sceneWidth = isHalfCourt ? 830 : 600;
+  const sceneHeight = isHalfCourt ? 550 : 900;
+  const maxWidth = isHalfCourt ? 850 : 1010;
   const { containerRef, stageSize } = useResponsiveCourt({
     sceneWidth,
     sceneHeight,
-    maxWidth: matchDetails.isHalfCourt ? 850 : 1010,
+    maxWidth: isHalfCourt ? 850 : 900,
   });
 
   const courtWidth = 500;
@@ -127,25 +132,25 @@ export default function BasketballCourtSVG({
   const svgWidth = 935 * stageSize.scale;
 
   const basketLeft = {
-    x: matchDetails.isHalfCourt ? 430 : 185,
-    y: matchDetails.isHalfCourt ? 850 / 2 : 508 / 2,
+    x: 300,
+    y: 212 / 2,
   };
-  const basketRight = { x: 832, y: 508 / 2 };
-  const threePointRadius = matchDetails.isHalfCourt
+  const basketRight = { x: 300, y: 1588 / 2 };
+  const threePointRadius = isHalfCourt
     ? (177 / courtWidth) * 875 * stageSize.scale
-    : (100 / courtWidth) * 875 * stageSize.scale;
+    : (130 / courtWidth) * 875 * stageSize.scale;
 
-  const cornerZoneHeight = matchDetails.isHalfCourt ? 200 : 50;
-  const cornerZoneWidth = matchDetails.isHalfCourt ? 120 : 90;
+  const cornerZoneHeight = isHalfCourt ? 200 : 50;
+  const cornerZoneWidth = isHalfCourt ? 120 : 90;
 
   // Zone gauche (haut et bas)
   const cornerLeftTop = {
-    x: matchDetails.isHalfCourt ? 120 : 50,
-    y: matchDetails.isHalfCourt ? 450 : 80,
+    x: isHalfCourt ? 120 : 50,
+    y: isHalfCourt ? 450 : 80,
   };
   const cornerLeftBottom = {
-    x: matchDetails.isHalfCourt ? 620 : 50,
-    y: matchDetails.isHalfCourt ? 450 : 360,
+    x: isHalfCourt ? 620 : 50,
+    y: isHalfCourt ? 450 : 360,
   };
 
   // Zone droite (haut et bas)
@@ -156,51 +161,50 @@ export default function BasketballCourtSVG({
   };
 
   const isThreePointShot = (x: number, y: number) => {
-    const isLeft = x < svgWidth / 2;
+    const isLeft = y < stageSize.height / 2; // maintenant l'axe vertical détermine la moitié
     const basket = isLeft ? basketLeft : basketRight;
 
-    const courtFull =
-      (isLeft &&
-        ((x >= cornerLeftTop.x &&
-          x <= cornerLeftTop.x + cornerZoneWidth &&
-          y >= cornerLeftTop.y &&
-          y <= cornerLeftTop.y + cornerZoneHeight) ||
-          (x >= cornerLeftBottom.x &&
-            x <= cornerLeftBottom.x + cornerZoneWidth &&
-            y >= cornerLeftBottom.y &&
-            y <= cornerLeftBottom.y + cornerZoneHeight))) ||
-      (!isLeft &&
-        ((x >= cornerRightTop.x &&
-          x <= cornerRightTop.x + cornerZoneWidth &&
-          y >= cornerRightTop.y &&
-          y <= cornerRightTop.y + cornerZoneHeight) ||
-          (x >= cornerRightBottom.x &&
-            x <= cornerRightBottom.x + cornerZoneWidth &&
-            y >= cornerRightBottom.y &&
-            y <= cornerRightBottom.y + cornerZoneHeight)));
+    // const courtFull =
+    //   (isLeft &&
+    //     ((x >= cornerLeftTop.x &&
+    //       x <= cornerLeftTop.x + cornerZoneWidth &&
+    //       y >= cornerLeftTop.y &&
+    //       y <= cornerLeftTop.y + cornerZoneHeight) ||
+    //       (x >= cornerLeftBottom.x &&
+    //         x <= cornerLeftBottom.x + cornerZoneWidth &&
+    //         y >= cornerLeftBottom.y &&
+    //         y <= cornerLeftBottom.y + cornerZoneHeight))) ||
+    //   (!isLeft &&
+    //     ((x >= cornerRightTop.x &&
+    //       x <= cornerRightTop.x + cornerZoneWidth &&
+    //       y >= cornerRightTop.y &&
+    //       y <= cornerRightTop.y + cornerZoneHeight) ||
+    //       (x >= cornerRightBottom.x &&
+    //         x <= cornerRightBottom.x + cornerZoneWidth &&
+    //         y >= cornerRightBottom.y &&
+    //         y <= cornerRightBottom.y + cornerZoneHeight)));
 
-    const courtHalf =
-      (x >= cornerLeftTop.x &&
-        x <= cornerLeftTop.x + cornerZoneWidth &&
-        y >= cornerLeftTop.y &&
-        y <= cornerLeftTop.y + cornerZoneHeight) ||
-      (x >= cornerLeftBottom.x &&
-        x <= cornerLeftBottom.x + cornerZoneWidth &&
-        y >= cornerLeftBottom.y &&
-        y <= cornerLeftBottom.y + cornerZoneHeight);
+    // const inCornerZone = isHalfCourt
+    //   ? (x >= cornerLeftTop.x &&
+    //       x <= cornerLeftTop.x + cornerZoneWidth &&
+    //       y >= cornerLeftTop.y &&
+    //       y <= cornerLeftTop.y + cornerZoneHeight) ||
+    //     (x >= cornerLeftBottom.x &&
+    //       x <= cornerLeftBottom.x + cornerZoneWidth &&
+    //       y >= cornerLeftBottom.y &&
+    //       y <= cornerLeftBottom.y + cornerZoneHeight)
+    //   : courtFull;
 
-    // Vérifie si le tir est dans l'une des zones de corner
-    const inCornerZone = matchDetails.isHalfCourt ? courtHalf : courtFull;
+    // if (inCornerZone) return false; // 2 points
 
-    if (inCornerZone) return false; // 2 points
-
-    // Sinon, distance au panier
-    const dx = matchDetails.isHalfCourt ? x - basketLeft.x : x - basket.x;
-    const dy = matchDetails.isHalfCourt ? y - basketLeft.y : y - basket.y;
+    // ✅ distance calculée par rapport au panier correct
+    const dx = y - basket.y; // axe vertical du canvas devient horizontal pour le panier
+    const dy = x - basket.x; // axe horizontal du canvas devient vertical
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    return distance * stageSize.scale > threePointRadius; // true = 3 points
+    return distance * stageSize.scale > threePointRadius;
   };
+
   const {
     player,
     currentTime,
@@ -234,10 +238,17 @@ export default function BasketballCourtSVG({
     getCurrentTime,
   });
 
+  const diplayPopupY =
+    pendingEvent?.y > 450 ? pendingEvent?.y - 500 : pendingEvent?.y - 160;
+
+  const diplayPopupX =
+    pendingEvent?.x > 218 ? pendingEvent?.x - 580 : pendingEvent?.x - 160;
+
   const originalSvgWidth = 930;
 
   // Actions filtrées selon le joueur sélectionné
   const filteredActionsForDisplay = React.useMemo(() => {
+    console.log("ACTIONS", actions);
     let filtered = actions;
 
     // Filtrer par joueur si nécessaire
@@ -260,27 +271,139 @@ export default function BasketballCourtSVG({
 
   const centerX = stageSize.width / 2;
 
-  const leftShots = filteredActionsForDisplay.filter(
-    (shot) => shot.typeItem === "shot" && shot.x <= centerX
-  );
+  function rotateAroundPoint(
+    x: number,
+    y: number,
+    cx: number,
+    cy: number,
+    angleDeg: number
+  ) {
+    const angleRad = (angleDeg * Math.PI) / 180;
+    const dx = x - cx;
+    const dy = y - cy;
+    const rotatedX = cx + dx * Math.cos(angleRad) - dy * Math.sin(angleRad);
+    const rotatedY = cy + dx * Math.sin(angleRad) + dy * Math.cos(angleRad);
+    return { x: rotatedX, y: rotatedY };
+  }
 
-  const mirroredRightShots = filteredActionsForDisplay
-    .filter((shot) => shot.typeItem === "shot" && shot.x > centerX)
-    .map((shot) => {
-      // vecteur du panier droit vers le tir
-      const dx = shot.x - basketRightX;
-      const dy = shot.y - basketRightY;
+  const midX = stageSize.width / 2; // limite entre les deux moitiés du terrain
+  const allShotsForDisplay = React.useMemo(() => {
+    function rotateAroundPoint(
+      x: number,
+      y: number,
+      cx: number,
+      cy: number,
+      angleDeg: number
+    ) {
+      const angleRad = (angleDeg * Math.PI) / 180;
+      const dx = x - cx;
+      const dy = y - cy;
+      const rotatedX = cx + dx * Math.cos(angleRad) - dy * Math.sin(angleRad);
+      const rotatedY = cy + dx * Math.sin(angleRad) + dy * Math.cos(angleRad);
+      return { x: rotatedX, y: rotatedY };
+    }
 
-      // rotation de 180° autour du panier gauche = on inverse le vecteur
-      return {
-        ...shot,
-        x: basketLeftX - dx,
-        y: basketLeftY - dy,
-        mirrored: true,
-      };
-    });
+    const midY = 475; // limite entre le haut et le bas du terrain
+    if (!isHalfCourt) {
+      // tirs déjà en haut → inchangés
+      const topShots = filteredActionsForDisplay.filter(
+        (s) => s.typeItem === "shot" && s.y <= midY
+      );
 
-  const allShotsForDisplay = [...leftShots, ...mirroredRightShots];
+      // tirs en bas → miroir vers le haut
+      const bottomShotsMirroredToTop = filteredActionsForDisplay
+        .filter((s) => s.typeItem === "shot" && s.y > midY)
+        .map((s) => {
+          const dx = s.x - basketRightX;
+          const dy = s.y - basketRightY;
+          return {
+            ...s,
+            x: basketLeftX - dx,
+            y: basketLeftY - dy,
+            hidden: false, // on veut qu'ils s'affichent sur le terrain du haut
+          };
+        });
+
+      return [...topShots, ...bottomShotsMirroredToTop];
+    } else {
+      // Valeurs par défaut pour transformations (rotation, déplacement, spread)
+      const defaultOffsetX = -126;
+      const defaultOffsetY = 130;
+      const defaultAngleDeg = -89;
+      const spreadFactorX = 1.8;
+      const spreadFactorY = 1.5;
+
+      // tirs déjà en haut → transformation
+      const topShots = filteredActionsForDisplay
+        .filter((s) => s.typeItem === "shot" && s.y <= midY)
+        .map((s) => {
+          let newX = s.x;
+          let newY = s.y;
+
+          // Déplacement
+          newX += defaultOffsetX;
+          newY += defaultOffsetY;
+
+          // Rotation autour du panier du haut
+          const rotated = rotateAroundPoint(
+            newX,
+            newY,
+            basketLeftX,
+            basketLeftY,
+            defaultAngleDeg
+          );
+          newX = rotated.x;
+          newY = rotated.y;
+
+          // Écartement
+          newX = basketLeftX + (newX - basketLeftX) * spreadFactorX;
+          newY = basketLeftY + (newY - basketLeftY) * spreadFactorY;
+
+          return { ...s, x: newX, y: newY, rotated: true };
+        });
+
+      // tirs en bas → miroir + transformation
+      const bottomShotsMirroredToTop = filteredActionsForDisplay
+        .filter((s) => s.typeItem === "shot" && s.y > midY)
+        .map((s) => {
+          const dx = s.x - basketRightX;
+          const dy = s.y - basketRightY;
+          let newX = basketLeftX - dx;
+          let newY = basketLeftY - dy;
+
+          // Déplacement
+          newX += defaultOffsetX;
+          newY += defaultOffsetY;
+
+          // Rotation
+          const rotated = rotateAroundPoint(
+            newX,
+            newY,
+            basketLeftX,
+            basketLeftY,
+            defaultAngleDeg
+          );
+          newX = rotated.x;
+          newY = rotated.y;
+
+          // Écartement
+          newX = basketLeftX + (newX - basketLeftX) * spreadFactorX;
+          newY = basketLeftY + (newY - basketLeftY) * spreadFactorY;
+
+          return { ...s, x: newX, y: newY, rotated: true, hidden: false };
+        });
+
+      return [...topShots, ...bottomShotsMirroredToTop];
+    }
+  }, [
+    filteredActionsForDisplay,
+    isHalfCourt,
+    basketLeftX,
+    basketLeftY,
+    basketRightX,
+    basketRightY,
+    stageSize.height,
+  ]);
 
   const eventOptions = [
     { value: "tir", label: "Tir", initial: "T" },
@@ -314,6 +437,7 @@ export default function BasketballCourtSVG({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [pendingEvent]);
+
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-5">
       {/* <div className="mb-2">
@@ -349,8 +473,10 @@ export default function BasketballCourtSVG({
 
       {/* Player YouTube */}
       {videoId ? (
-        <Card className="col-span-6">
-          <div ref={playerRef} className="mt-4 relative pb-[56.25%] h-0">
+        <Card className="col-span-7">
+          <Button onClick={onClickSave}>Save</Button>
+
+          <div className="relative w-full pb-[56.25%]">
             <YouTube
               videoId={videoId}
               onReady={handleReady}
@@ -369,9 +495,95 @@ export default function BasketballCourtSVG({
           </div>
         </Card>
       ) : null}
-      <Button onClick={onClickSave}>Save</Button>
 
-      <Card className="col-span-6 w-full">
+      <Card className="col-span-2">
+        <div className="rounded-xl shadow-lg overflow-y-auto p-1 flex flex-col h-[500px] bg-[#2A2D3F]">
+          {playersStats.map((item, idx) => {
+            return (
+              <div
+                key={idx}
+                onClick={() =>
+                  handlePlayerClick(item.player.nom, item.player.id)
+                }
+                className={`group flex flex-col items-start w-full rounded-lg p-2 mb-2 cursor-pointer transition
+                  ${
+                    selectedPlayer?.name === item?.player?.nom
+                      ? "bg-[#4F5BD5]/30 ring-1 ring-[#4F5BD5]"
+                      : "bg-[#2F3148] hover:bg-[#3B3E5C]"
+                  }`}
+              >
+                <div className="flex items-center w-full mb-1">
+                  {/* Avatar ou numéro */}
+                  <div className="bg-[#4F5BD5] text-white rounded-full w-5 h-5 flex items-center justify-center font-bold text-[10px]">
+                    0
+                  </div>
+
+                  {/* Nom & Prénom */}
+                  <div className="ml-2 flex items-center w-full">
+                    <span className="font-semibold text-white text-xs truncate">
+                      {item.player.prenom}
+                    </span>
+
+                    {/* ✅ 5 petits cercles à droite */}
+                    <div className="flex gap-1 ml-auto">
+                      {Array.from({ length: item.stats.fautes }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-3 h-3 rounded-full border border-gray-400 bg-red-600"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="w-full overflow-x-auto">
+                  <div className="grid grid-flow-col auto-cols-[20px] gap-3 text-center text-[13px] text-white min-w-max">
+                    <div>
+                      <span className="text-gray-400">PTS</span>
+                      <span className="block font-bold">
+                        {item.stats.points}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">REB</span>
+                      <span className="block font-bold">
+                        {calculateTotalRebounds(item.stats)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">AST</span>
+                      <span className="block font-bold">
+                        {item.stats.assists}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">STL</span>
+                      <span className="block font-bold">
+                        {item.stats.steals}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">BLK</span>
+                      <span className="block font-bold">
+                        {item.stats.blocks}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">TO</span>
+                      <span className="block font-bold">
+                        {item.stats.turnovers}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      <Card className="col-span-3 w-full ">
         <div
           className="col-span-6 w-full flex items-center p-0"
           ref={containerRef}
@@ -390,9 +602,11 @@ export default function BasketballCourtSVG({
             isReadOnly={isReadOnly}
             stageSize={stageSize}
             actions={actions}
+            width={sceneWidth}
+            height={sceneHeight}
           />
           {/* Affichage des tirs */}
-          {allShotsForDisplay
+          {filteredActionsForDisplay
             .filter((a) => a.typeItem === "shot" || a.typeItem === "event")
             .map((shot, i) => (
               <ShotMarker
@@ -407,10 +621,11 @@ export default function BasketballCourtSVG({
               />
             ))}
 
-          <svg
+          {/* <svg
             width={stageSize.width}
             height={stageSize.height}
             stroke="red"
+            fill="red"
             style={{
               position: "absolute",
               top: 0,
@@ -418,14 +633,28 @@ export default function BasketballCourtSVG({
               pointerEvents: "none",
             }}
           >
+            <rect
+              x={0}
+              y={0}
+              width={stageSize.width / 2}
+              height={stageSize.height}
+              fill="rgba(0, 0, 255, 0.1)" // bleu clair = côté gauche
+            />
+            <rect
+              x={stageSize.width / 2}
+              y={0}
+              width={stageSize.width / 2}
+              height={stageSize.height}
+              fill="rgba(255, 0, 0, 0.1)" // rouge clair = côté droit
+            />
             <line
-              x1={stageSize.width / 2}
-              y1={0}
-              x2={stageSize.width / 2}
-              y2={stageSize.height}
-              stroke="blue" // couleur de la ligne
-              strokeWidth={2} // épaisseur
-              strokeDasharray="6 4" // optionnel : pointillés
+              x1={0} // début à gauche
+              y1={stageSize.height / 2} // milieu vertical
+              x2={stageSize.width} // fin à droite
+              y2={stageSize.height / 2} // même y pour horizontal
+              stroke="blue"
+              strokeWidth={2}
+              strokeDasharray="6 4" // optionnel pour pointillé
             />
             <circle
               cx={basketLeft.x * stageSize.scale}
@@ -435,6 +664,7 @@ export default function BasketballCourtSVG({
               strokeWidth={1 * stageSize.scale}
               fill="none"
             />
+
             <circle
               cx={basketRight.x * stageSize.scale}
               cy={basketRight.y * stageSize.scale}
@@ -444,19 +674,11 @@ export default function BasketballCourtSVG({
               fill="none"
             />
             <rect
-              x={
-                matchDetails.isHalfCourt
-                  ? 24 * stageSize.scale
-                  : 0 * stageSize.scale
-              }
-              y={
-                matchDetails.isHalfCourt
-                  ? 20 * stageSize.scale
-                  : 0 * stageSize.scale
-              }
+              x={isHalfCourt ? 24 * stageSize.scale : 0 * stageSize.scale}
+              y={isHalfCourt ? 20 * stageSize.scale : 0 * stageSize.scale}
               width={stageSize.width}
               height={stageSize.height}
-              stroke="purple"
+              // stroke="purple"
               strokeWidth={2 * stageSize.scale}
               fill="none"
             />
@@ -493,7 +715,7 @@ export default function BasketballCourtSVG({
               fill="red"
               opacity={0.5}
             />
-          </svg>
+          </svg> */}
 
           {/* Affichage des événements */}
           {/* {actions
@@ -521,115 +743,107 @@ export default function BasketballCourtSVG({
           ))} */}
 
           {/* Pop-up ajout événement */}
-          {pendingEvent && (
-            <Card
-              ref={popupRef}
-              className="absolute z-50 border p-3 rounded shadow-md gap-0"
-              style={{
-                top: pendingEvent.y - 160,
-                left: pendingEvent.x,
-                transform: "translateX(-50%)",
-                minWidth: 260,
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <TooltipProvider>
-                <div className="grid grid-cols-7 gap-1.5">
-                  {eventOptions.map((option) => {
-                    return (
-                      <div key={option.value} className="flex justify-center">
-                        <Tooltip>
+          <AnimatePresence>
+            {pendingEvent && (
+              <motion.div
+                key="event-popup"
+                ref={popupRef}
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                transition={{ duration: 0.12, ease: "easeOut" }}
+                style={{
+                  position: "absolute",
+                  top: diplayPopupY,
+                  left: diplayPopupX,
+                  transform: "translateX(-50%)",
+                  minWidth: 280,
+                  zIndex: 50,
+                }}
+              >
+                <Card
+                  className="rounded-xl shadow-2xl p-3 gap-3 bg-[#1B1E2B]/95"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <TooltipProvider>
+                    <div className="grid grid-cols-7 gap-1.5">
+                      {eventOptions.map((option) => (
+                        <Tooltip key={option.value}>
                           <TooltipTrigger asChild>
                             <Button
                               variant={
-                                eventType === option.value
-                                  ? "default"
-                                  : "outline"
+                                eventType === option.value ? "default" : "ghost"
                               }
                               size="icon"
                               onClick={() => setEventType(option.value)}
                               onDoubleClick={() => confirmEvent(true)}
-                              onMouseDown={
-                                option.initial === "T"
-                                  ? () => {
-                                      console.log("ICI");
-                                      pressTimer.current = setTimeout(
-                                        () => confirmEvent(false),
-                                        600
-                                      );
-                                    }
-                                  : undefined
-                              }
-                              onMouseUp={
-                                option.initial === "T"
-                                  ? () => {
-                                      if (pressTimer.current) {
-                                        clearTimeout(pressTimer.current);
-                                        pressTimer.current = null; // on reset proprement
-                                      }
-                                    }
-                                  : undefined
-                              }
-                              className="px-3 h-8 w-11 border border-white/10"
+                              className="h-9 w-9 rounded-full transition-transform hover:scale-105"
                             >
                               {option.initial}
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent
                             side="bottom"
-                            className="bg-[#05051F] text-white text-xs px-2 py-1 rounded-md shadow-lg"
+                            className="bg-[#05051F] text-white text-xs rounded-md px-2 py-1 shadow-lg"
                           >
                             {option.label}
                           </TooltipContent>
                         </Tooltip>
-                      </div>
-                    );
-                  })}
-                </div>
-              </TooltipProvider>
+                      ))}
+                    </div>
+                  </TooltipProvider>
 
-              <Textarea
-                placeholder="Ajouter un commentaire..."
-                value={commentaire}
-                onChange={(e) => setCommentaire(e.target.value)}
-                className="h-16 text-sm"
-              />
+                  <Textarea
+                    placeholder="Ajouter un commentaire..."
+                    value={commentaire}
+                    onChange={(e) => setCommentaire(e.target.value)}
+                    className="h-14 text-sm rounded-md bg-[#2A2D3F] px-2 py-1 resize-none mt-2"
+                  />
 
-              {/* <Input
-              type="text"
-              value={pendingTimestamp ?? ""}
-              onChange={(e) => setPendingTimestamp(e.target.value)}
-              placeholder="00:00:00"
-              className="mb-2"
-            /> */}
-
-              <div className="flex gap-2 justify-end">
-                {eventType === "tir" ? (
-                  <>
-                    <Button onClick={() => confirmEvent(true)}>
-                      ✅ Réussi
-                    </Button>
+                  <div className="flex gap-1.5 justify-end mt-2">
+                    {eventType === "tir" ? (
+                      <>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => confirmEvent(true)}
+                        >
+                          ✅ Réussi
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => confirmEvent(false)}
+                        >
+                          ❌ Manqué
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => confirmEvent()}
+                      >
+                        Ajouter
+                      </Button>
+                    )}
                     <Button
-                      variant="destructive"
-                      onClick={() => confirmEvent(false)}
+                      variant="secondary"
+                      size="sm"
+                      onClick={resetPending}
                     >
-                      ❌ Manqué
+                      Annuler
                     </Button>
-                  </>
-                ) : (
-                  <Button onClick={() => confirmEvent()}>Ajouter</Button>
-                )}
-                <Button variant="secondary" onClick={resetPending}>
-                  Annuler
-                </Button>
-              </div>
-            </Card>
-          )}
+                  </div>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </Card>
       <div className="col-span-12">
-        <Tabs defaultValue="account" className="w-full bg-[#1B1E2B]">
-          <TabsList>
+        <Tabs defaultValue="stats" className="w-full bg-[#1B1E2B] rounded-lg">
+          <TabsList className="bg-[#2A2D3F] rounded-t-lg">
             <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="password">Password</TabsTrigger>
           </TabsList>

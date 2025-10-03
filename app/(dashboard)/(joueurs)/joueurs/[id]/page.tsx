@@ -43,8 +43,6 @@ export default async function PlayerDetailPage({
     pm.match.tirs.filter((tir) => tir.playerId === playerDetail.id)
   );
 
-  console.log(playerTirs);
-
   const { averages, matchesPlayed } = getAverageStatsAndCount(
     playerDetail?.playerMatches
   );

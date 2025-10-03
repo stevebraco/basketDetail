@@ -48,6 +48,8 @@ export function useBasketballCourt({
     if (pendingEvent || !selectedPlayer.name) return;
     const realX = x / scale;
     const realY = y / scale;
+    console.log("realX", realX);
+    console.log("realY", realY);
     // setPendingEvent({ x, y });
     setPendingEvent({ x: realX, y: realY, zone });
     setPendingTimestamp(secondsToHHMMSS(Math.floor(currentTime)));

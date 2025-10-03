@@ -25,9 +25,15 @@ const ZoneWithStats: React.FC<ZoneWithStatsProps> = ({
     centerX += 85;
     centerY += s.height / 2;
   } else if (zone.type === "concave") {
-    centerX = zone.id === "three_left_inverted" ? 380 : 380; // approximation du centre pour toutes les zones concaves
-    centerY =
-      zone.id === "three_left_inverted" ? s.centerY + 300 : s.centerY - 280;
+    if (zone.id === "three45_left_right") {
+      centerX = 380;
+      centerY = 380;
+    }
+    // centerX = zone.id === "three_left_inverted_right" ? 380 : 380; // approximation du centre pour toutes les zones concaves
+    // centerY =
+    //   zone.id === "three_left_inverted_right"
+    //     ? s.centerY + 330
+    //     : s.centerY - 280;
   } else if (zone.type === "arc") {
     centerX = s.x + 390;
     centerY = s.y + 200;

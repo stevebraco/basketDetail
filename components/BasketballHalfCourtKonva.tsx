@@ -269,7 +269,7 @@ const BasketBallHalfCourtKonva = ({
             y={326}
             width={229}
             height={310}
-            stroke={lineColor}
+            stroke={"purple"}
             strokeWidth={2}
           />
           <Group>

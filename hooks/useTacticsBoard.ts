@@ -124,7 +124,7 @@ export function useTacticsBoard() {
   };
 
   const handleDragStart = (index: number) => {
-    setDragPath((prev) => ({ ...prev, [index]: [] }));
+    // setDragPath((prev) => ({ ...prev, [index]: [] }));
   };
 
   const handleDragMove = (index: number, e: any) => {
@@ -188,9 +188,17 @@ export function useTacticsBoard() {
     ]);
   };
 
-  const handleDragEnd = (index: number) => {
-    console.log("Chemin complet du joueur", index, dragPath[index]);
-    // Ne rien ajouter au recording ici
+  const handleDragEnd = (index: number, e?: any) => {
+    let finalX = players[index].x;
+    let finalY = players[index].y;
+    if (e && e.target && typeof e.target.x === "function") {
+      finalX = e.target.x();
+      finalY = e.target.y();
+    }
+    setDragPath((prev) => ({
+      ...prev,
+      [index]: [...(prev[index] || []), { x: finalX, y: finalY }],
+    }));
   };
 
   const handleBallDrag = (e: any) => {
@@ -235,16 +243,21 @@ export function useTacticsBoard() {
       })
     );
 
+    // On récupère les ids de tous les commentaires actuels
+    const commentIds = drawings
+      .filter((d) => d.type === "comment")
+      .map((d) => d.id);
+
     const newStep = {
       time: Date.now(),
       players: [...players],
       ball: { ...ball },
       playerWithBall,
       ballOffset,
-      comment: currentComment,
-      drawings: [...drawings],
+      commentIds, // ✅ Stocke juste les ids
+      drawings: [...drawings], // on garde tous les dessins pour replay
       dragPaths: dragPathsWithBall,
-      arrowPaths, // <-- on stocke les flèches ici
+      arrowPaths,
     };
 
     let newRecording = [...currentSystem.recording];
@@ -266,10 +279,11 @@ export function useTacticsBoard() {
       )
     );
 
-    setDragPath({});
-    setCurrentComment("");
-    setDrawMode("");
-    setDrawings([]);
+    setDragPath({}); // ✅ réinitialise les chemins de drag
+    setDrawMode(""); // ✅ réinitialise le mode de dessin
+    // ❌ on ne vide plus les dessins pour garder les commentaires
+    // ❌ setDrawings([]);
+    // ❌ setCurrentComment(""); // le texte reste modifiable
   };
 
   // 🔄 Fonction de transition lissée
@@ -329,22 +343,21 @@ export function useTacticsBoard() {
   ) => {
     const keys = Object.keys(paths);
     const startTime = performance.now();
-    const duration = replaySpeed; // durée totale de l'animation
+    const duration = replaySpeed;
 
     const animate = (time: number) => {
       const t = Math.min((time - startTime) / duration, 1);
 
       setPlayers((prevPlayers) => {
         const updated = [...prevPlayers];
-        let newBall = ballRef.current;
+        let newBall = ballRef.current; // garde la balle où elle est
 
         keys.forEach((key) => {
           const path = paths[key];
           if (!path || path.length === 0) return;
 
           if (path.length === 1) {
-            if (key === "ball") newBall = path[0];
-            else updated[parseInt(key)] = path[0];
+            if (key !== "ball") updated[parseInt(key)] = path[0];
             return;
           }
 
@@ -353,6 +366,8 @@ export function useTacticsBoard() {
           const nextIndex = Math.min(i + 1, path.length - 1);
           const p0 = path[i];
           const p1 = path[nextIndex];
+
+          // 🔹 Sécurité stricte : ignorer si p0 ou p1 est undefined
           if (!p0 || !p1) return;
 
           const frac = pos - i;
@@ -361,34 +376,32 @@ export function useTacticsBoard() {
             y: p0.y + (p1.y - p0.y) * frac,
           };
 
-          if (key === "ball") newBall = interpolated;
-          else updated[parseInt(key)] = interpolated;
+          if (key !== "ball") {
+            updated[parseInt(key)] = interpolated;
+          } else {
+            newBall = interpolated;
+          }
         });
 
-        // 🔹 Animation fluide de la balle vers le joueur avec la balle
-        if (
-          playerWithBallInStep !== null &&
-          ballOffsetInStep &&
-          updated[playerWithBallInStep]
-        ) {
-          const targetBallPos = {
-            x: updated[playerWithBallInStep].x + ballOffsetInStep.x,
-            y: updated[playerWithBallInStep].y + ballOffsetInStep.y,
-          };
-
-          // interpolation entre la position actuelle et la position cible
-          newBall = {
-            x: newBall.x + (targetBallPos.x - newBall.x) * t,
-            y: newBall.y + (targetBallPos.y - newBall.y) * t,
-          };
-        }
-
+        // NE PAS attirer la balle vers le joueur pendant l'anim
         setBall(newBall);
         return updated;
       });
 
       if (t < 1) requestAnimationFrame(animate);
-      else onFinish();
+      else {
+        // Quand l'animation est terminée, coller la balle sur le joueur si nécessaire
+        if (playerWithBallInStep !== null && ballOffsetInStep) {
+          const p = playersRef.current[playerWithBallInStep];
+          if (p) {
+            setBall({
+              x: p.x + ballOffsetInStep.x,
+              y: p.y + ballOffsetInStep.y,
+            });
+          }
+        }
+        onFinish();
+      }
     };
 
     requestAnimationFrame(animate);
@@ -531,6 +544,23 @@ export function useTacticsBoard() {
     if (isReplaying || isRecording) return;
     const pos = e.target.getStage().getPointerPosition();
 
+    if (drawMode === "comment") {
+      setDrawings((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          type: "comment",
+          x: pos.x,
+          y: pos.y,
+          text: "Double-cliquez pour éditer",
+          fontSize: 16,
+          draggable: true,
+        },
+      ]);
+      setDrawMode("");
+      return;
+    }
+
     if (drawMode === "T") {
       setDrawings((prev) => [
         ...prev,
@@ -577,6 +607,61 @@ export function useTacticsBoard() {
     setCurrentComment(e.target.value);
   };
 
+  const updateCommentText = (id: number, text: string) => {
+    setDrawings((prev) => prev.map((d) => (d.id === id ? { ...d, text } : d)));
+  };
+
+  // Crée un commentaire à une position x/y avec texte initial (vide)
+  // si `attachTo` est 'player' et index fourni, on place le commentaire à côté du joueur
+  function addCommentAt({
+    x,
+    y,
+    text = "",
+    attachTo = null,
+    playerIndex = null,
+  }: {
+    x?: number;
+    y?: number;
+    text?: string;
+    attachTo?: "player" | "ball" | null;
+    playerIndex?: number | null;
+  }) {
+    // calculer position si on attache au joueur ou à la balle
+    let cx = x ?? 100;
+    let cy = y ?? 100;
+    if (attachTo === "player" && typeof playerIndex === "number") {
+      const p = players[playerIndex];
+      if (p) {
+        cx = p.x + 50; // offset à droite du joueur (ajuste selon taille)
+        cy = p.y - 10;
+      }
+    } else if (attachTo === "ball") {
+      cx = ball.x + 30;
+      cy = ball.y - 10;
+    }
+
+    const newComment = {
+      id: Date.now(),
+      type: "comment",
+      x: cx,
+      y: cy,
+      text: text || "Commentaire...",
+      fontSize: 14,
+      width: 140,
+      draggable: true,
+      visibleDuringReplay: true, // flag pour contrôle
+      attachedTo: attachTo, // sauvegarde si on veut ré-attacher plus tard
+      attachedIndex: playerIndex,
+    };
+
+    setDrawings((prev: any[]) => [...prev, newComment]);
+    return newComment.id;
+  }
+
+  const removeDrawing = (id: number) => {
+    setDrawings((prev) => prev.filter((d) => d.id !== id));
+  };
+
   return {
     players,
     ball,
@@ -621,5 +706,8 @@ export function useTacticsBoard() {
     setSelectedId,
     previewArrows,
     playerWithBall,
+    addCommentAt,
+    removeDrawing,
+    updateCommentText,
   };
 }

@@ -118,7 +118,7 @@ export function useBasketballStats(
     const g = Math.round(255 + (base.g - 255) * t);
     const b = Math.round(255 + (base.b - 255) * t);
     const alpha = 0.1 + t * (0.5 - 0.1);
-    return `rgba(${r},${g},${b},${1})`;
+    return `rgba(${r},${g},${b},${alpha})`;
   };
 
   return { refs, stats, drawZone, getColorFromPercentage, containsPoint };

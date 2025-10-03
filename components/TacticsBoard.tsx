@@ -12,6 +12,7 @@ import {
   Group,
   Rect,
 } from "react-konva";
+import { Html } from "react-konva-utils";
 
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -23,6 +24,7 @@ import { useTacticsBoard } from "@/hooks/useTacticsBoard";
 import TShape from "./TShape";
 import useImage from "@/hooks/useImage";
 import { Separator } from "./ui/separator";
+import { CommentKonva } from "./CommentKonva";
 
 export default function TacticBoard() {
   const image = useImage("/ball.png");
@@ -114,6 +116,8 @@ export default function TacticBoard() {
     setSelectedId,
     previewArrows,
     playerWithBall,
+    removeDrawing,
+    updateCommentText,
   } = useTacticsBoard();
 
   const startRecording = () => {
@@ -340,38 +344,28 @@ export default function TacticBoard() {
               ✏️ Outils
             </h2>
             <div className="flex flex-wrap gap-1 justify-center">
-              {["arrow", "screen", "T", "line", "erase"].map((mode) => (
-                <Button
-                  key={mode}
-                  size="sm"
-                  variant={drawMode === mode ? "secondary" : "default"}
-                  onClick={() => setDrawMode(mode)}
-                  className="w-[45%]"
-                >
-                  {mode === "arrow" && "🏹"}
-                  {mode === "screen" && "🟦"}
-                  {mode === "T" && "🟨"}
-                  {mode === "line" && "➖"}
-                  {mode === "erase" && "🗑️"}
-                </Button>
-              ))}
+              {["arrow", "screen", "T", "comment", "line", "erase"].map(
+                (mode) => (
+                  <Button
+                    key={mode}
+                    size="sm"
+                    variant={drawMode === mode ? "secondary" : "default"}
+                    onClick={() => setDrawMode(mode)}
+                    className="w-[45%]"
+                  >
+                    {mode === "arrow" && "🏹"}
+                    {mode === "screen" && "🟦"}
+                    {mode === "T" && "🟨"}
+                    {mode === "comment" && "💬"}
+                    {mode === "line" && "➖"}
+                    {mode === "erase" && "🗑️"}
+                  </Button>
+                )
+              )}
             </div>
           </div>
 
           <Separator />
-
-          {/* 💬 Commentaire */}
-          <div>
-            <h2 className="text-base font-semibold mb-1 text-center">
-              💬 Commentaire
-            </h2>
-            <Textarea
-              placeholder="Commentaire"
-              value={currentComment}
-              onChange={setCurrentComment}
-              className="border px-2 py-1 w-full text-sm h-20"
-            />
-          </div>
         </div>
       </Card>
       <Card className="col-span-8 h-full">
@@ -606,9 +600,112 @@ export default function TacticBoard() {
                 );
               })}
 
+              {drawings
+                .filter((shape) => shape.type === "comment")
+                .map((shape) => (
+                  <CommentKonva
+                    key={shape.id}
+                    comment={shape}
+                    updateText={updateCommentText}
+                    removeComment={removeDrawing}
+                    isRecordingOrReplay={isRecording || isReplaying} // <-- important
+                  />
+                ))}
+
               {/* Dessins existants */}
               {drawings.map((shape) => {
                 switch (shape.type) {
+                  // case "comment":
+                  //   return (
+                  //     <Group
+                  //       key={shape.id}
+                  //       x={shape.x}
+                  //       y={shape.y}
+                  //       draggable
+                  //       onDragMove={(e) => {
+                  //         const { x, y } = e.target.position();
+                  //         setDrawings((prev) =>
+                  //           prev.map((s) =>
+                  //             s.id === shape.id ? { ...s, x, y } : s
+                  //           )
+                  //         );
+                  //       }}
+                  //     >
+                  //       {/* Bandeau de drag visible */}
+                  //       <Rect
+                  //         width={shape.width || 180}
+                  //         height={20}
+                  //         fill="#444"
+                  //         cornerRadius={4}
+                  //         onMouseDown={(e) => (e.cancelBubble = true)} // capture le drag ici
+                  //       />
+
+                  //       {/* Poignée de redimensionnement */}
+                  //       <Rect
+                  //         x={(shape.width || 180) - 10}
+                  //         y={(shape.height || 100) - 10}
+                  //         width={10}
+                  //         height={10}
+                  //         fill="white"
+                  //         cornerRadius={2}
+                  //         draggable
+                  //         onDragMove={(e) => {
+                  //           const newWidth = Math.max(50, e.target.x());
+                  //           const newHeight = Math.max(50, e.target.y());
+                  //           setDrawings((prev) =>
+                  //             prev.map((s) =>
+                  //               s.id === shape.id
+                  //                 ? { ...s, width: newWidth, height: newHeight }
+                  //                 : s
+                  //             )
+                  //           );
+                  //         }}
+                  //       />
+
+                  //       {/* Contenu HTML du commentaire */}
+                  //       <Html>
+                  //         <div
+                  //           style={{
+                  //             width: shape.width || 180,
+                  //             height: (shape.height || 100) - 20, // laisse la place pour le bandeau
+                  //             marginTop: 20,
+                  //             position: "relative",
+                  //             pointerEvents: "auto", // autorise les clics sur textarea
+                  //           }}
+                  //         >
+                  //           <button
+                  //             onClick={() => removeDrawing(shape.id)}
+                  //             style={{
+                  //               position: "absolute",
+                  //               top: 2,
+                  //               right: 2,
+                  //               fontSize: 12,
+                  //             }}
+                  //           >
+                  //             ✕
+                  //           </button>
+                  //           <textarea
+                  //             value={shape.text || ""}
+                  //             style={{
+                  //               width: "100%",
+                  //               height: "100%",
+                  //               padding: 5,
+                  //               boxSizing: "border-box",
+                  //               background: "#2A2D3F",
+                  //               color: "white",
+                  //               border: "1px solid #4F5BD5",
+                  //               borderRadius: 4,
+                  //               resize: "none",
+                  //             }}
+                  //             placeholder="Votre commentaire…"
+                  //             onChange={(e) =>
+                  //               updateCommentText(shape.id, e.target.value)
+                  //             }
+                  //           />
+                  //         </div>
+                  //       </Html>
+                  //     </Group>
+                  //   );
                   case "arrow":
                     return (
                       <Arrow
