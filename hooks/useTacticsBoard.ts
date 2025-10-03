@@ -184,6 +184,7 @@ export function useTacticsBoard() {
         x: player.x,
         y: player.y,
         id: Date.now(),
+        temporary: true, // ✅ marquage temporaire
       },
     ]);
   };
@@ -248,14 +249,20 @@ export function useTacticsBoard() {
       .filter((d) => d.type === "comment")
       .map((d) => d.id);
 
+    const filteredDrawings = drawings.filter(
+      (d) => !(d.type === "T" && d.temporary)
+    );
+
     const newStep = {
       time: Date.now(),
       players: [...players],
       ball: { ...ball },
       playerWithBall,
       ballOffset,
-      commentIds, // ✅ Stocke juste les ids
-      drawings: [...drawings], // on garde tous les dessins pour replay
+      commentIds: filteredDrawings
+        .filter((d) => d.type === "comment")
+        .map((d) => d.id),
+      drawings: filteredDrawings, // ✅ on enregistre les dessins sans les T temporaires
       dragPaths: dragPathsWithBall,
       arrowPaths,
     };
@@ -278,6 +285,8 @@ export function useTacticsBoard() {
         s.id === currentSystemId ? { ...s, recording: newRecording } : s
       )
     );
+
+    setDrawings(filteredDrawings);
 
     setDragPath({}); // ✅ réinitialise les chemins de drag
     setDrawMode(""); // ✅ réinitialise le mode de dessin
@@ -350,16 +359,10 @@ export function useTacticsBoard() {
 
       setPlayers((prevPlayers) => {
         const updated = [...prevPlayers];
-        let newBall = ballRef.current; // garde la balle où elle est
 
         keys.forEach((key) => {
           const path = paths[key];
           if (!path || path.length === 0) return;
-
-          if (path.length === 1) {
-            if (key !== "ball") updated[parseInt(key)] = path[0];
-            return;
-          }
 
           const pos = t * (path.length - 1);
           const i = Math.floor(pos);
@@ -367,7 +370,6 @@ export function useTacticsBoard() {
           const p0 = path[i];
           const p1 = path[nextIndex];
 
-          // 🔹 Sécurité stricte : ignorer si p0 ou p1 est undefined
           if (!p0 || !p1) return;
 
           const frac = pos - i;
@@ -378,13 +380,34 @@ export function useTacticsBoard() {
 
           if (key !== "ball") {
             updated[parseInt(key)] = interpolated;
-          } else {
-            newBall = interpolated;
           }
         });
 
-        // NE PAS attirer la balle vers le joueur pendant l'anim
-        setBall(newBall);
+        // ✅ Si un joueur possède la balle, on colle la balle sur lui
+        if (playerWithBallInStep !== null && ballOffsetInStep) {
+          const p = updated[playerWithBallInStep];
+          setBall({
+            x: p.x + ballOffsetInStep.x,
+            y: p.y + ballOffsetInStep.y,
+          });
+        } else if (paths.ball) {
+          // Sinon, si c'est un déplacement direct de la balle (ex : passe)
+          const path = paths.ball;
+          const pos = t * (path.length - 1);
+          const i = Math.floor(pos);
+          const nextIndex = Math.min(i + 1, path.length - 1);
+          const p0 = path[i];
+          const p1 = path[nextIndex];
+          if (p0 && p1) {
+            const frac = pos - i;
+            const interpolated = {
+              x: p0.x + (p1.x - p0.x) * frac,
+              y: p0.y + (p1.y - p0.y) * frac,
+            };
+            setBall(interpolated);
+          }
+        }
+
         return updated;
       });
 
@@ -540,6 +563,16 @@ export function useTacticsBoard() {
     setTimeout(run, 300);
   };
 
+  const handleCommentDragMove = (id: number, e: any) => {
+    const node = e.target;
+    const newX = node.x();
+    const newY = node.y();
+
+    setDrawings((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, x: newX, y: newY } : d))
+    );
+  };
+
   const handleMouseDown = (e: any) => {
     if (isReplaying || isRecording) return;
     const pos = e.target.getStage().getPointerPosition();
@@ -570,6 +603,7 @@ export function useTacticsBoard() {
           x: pos.x,
           y: pos.y,
           rotation: 0,
+          temporary: true, // ✅
         },
       ]);
       setDrawMode(""); // ❌ Désactive le mode T après placement
@@ -709,5 +743,6 @@ export function useTacticsBoard() {
     addCommentAt,
     removeDrawing,
     updateCommentText,
+    handleCommentDragMove,
   };
 }

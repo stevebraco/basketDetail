@@ -1,17 +1,20 @@
 import { Group, Rect, Text } from "react-konva";
 import { Html } from "react-konva-utils";
 import { useState, useEffect } from "react";
+import { Textarea } from "./ui/textarea";
 
 export function CommentKonva({
   comment,
   updateText,
   removeComment,
   isRecordingOrReplay,
+  handleCommentDragMove,
 }: {
   comment: any;
   updateText: (id: number, text: string) => void;
   removeComment: (id: number) => void;
   isRecordingOrReplay: boolean;
+  handleCommentDragMove: (id: number, e: any) => void;
 }) {
   const [draftText, setDraftText] = useState(comment.text);
   const [isEditing, setIsEditing] = useState(false);
@@ -36,6 +39,7 @@ export function CommentKonva({
       width={totalWidth}
       height={totalHeight}
       draggable={!isRecordingOrReplay}
+      onDragMove={(e) => handleCommentDragMove(comment.id, e)} // ✅ mise à jour position
     >
       {/* fond du bloc */}
       <Rect
@@ -102,31 +106,21 @@ export function CommentKonva({
           divProps={{
             style: {
               position: "absolute",
-              left: "8px",
-              top: "25px",
+              left: "3px",
+              top: "15px",
               width: contentWidth,
               height: contentHeight,
               pointerEvents: "auto",
             },
           }}
         >
-          <textarea
-            style={{
-              width: "100%",
-              height: "100%",
-              padding: 5,
-              background: "#2A2D3F",
-              color: "white",
-              border: "1px solid #4F5BD5",
-              borderRadius: 4,
-              resize: "none",
-              fontSize: 14,
-              boxSizing: "border-box",
-            }}
+          <Textarea
+            className="w-[180px] h-full resize-none overflow-auto bg-[#2A2D3F] text-white border border-transparent rounded-md p-1.5 text-sm focus-visible:ring-0 focus-visible:outline-none"
             value={draftText}
             onChange={(e) => setDraftText(e.target.value)}
             onFocus={() => setIsEditing(true)}
             onBlur={handleBlur}
+            style={{ height: 70 }} // 👈 hauteur fixe en px
           />
         </Html>
       )}

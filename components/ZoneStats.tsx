@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
 interface Shot {
   x: number;
   y: number;
@@ -86,7 +87,7 @@ export default function ZoneStats({ playerTirs }: ZoneStatsProps) {
             <TableHead className="border px-2 py-1">PTS</TableHead>
             <TableHead className="border px-2 py-1">SA</TableHead>
             <TableHead className="border px-2 py-1">Freq</TableHead>
-            {/* <TableHead className="border px-2 py-1">TS%</TableHead> */}
+            <TableHead className="border px-2 py-1">% Réussite</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -96,7 +97,7 @@ export default function ZoneStats({ playerTirs }: ZoneStatsProps) {
               <TableCell className="border px-2 py-1">{z.pts}</TableCell>
               <TableCell className="border px-2 py-1">{z.sa}</TableCell>
               <TableCell className="border px-2 py-1">{z.freq}</TableCell>
-              {/* <TableCell className="border px-2 py-1">{z.ts}</TableCell> */}
+              <TableCell className="border px-2 py-1">{z.ts}</TableCell>
             </TableRow>
           ))}
           <TableRow className="font-bold border-t border-gray-700">
@@ -104,7 +105,7 @@ export default function ZoneStats({ playerTirs }: ZoneStatsProps) {
             <TableCell className="border px-2 py-1">{totals.pts}</TableCell>
             <TableCell className="border px-2 py-1">{totals.sa}</TableCell>
             <TableCell className="border px-2 py-1">{totals.freq}</TableCell>
-            {/* <TableCell className="border px-2 py-1">{totals.ts}</TableCell> */}
+            <TableCell className="border px-2 py-1">{totals.ts}</TableCell>
           </TableRow>
         </TableBody>
       </Table>

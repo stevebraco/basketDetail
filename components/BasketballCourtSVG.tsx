@@ -29,6 +29,15 @@ import { AddStatsMatch } from "@/lib/actions/match.action";
 import BasketballCourt from "./BasketballCourt";
 import { Car } from "lucide-react";
 import { calculateTotalRebounds } from "@/utils/StatsByPlayer";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export default function BasketballCourtSVG({
   videoId,
@@ -44,6 +53,8 @@ export default function BasketballCourtSVG({
     string | "all"
   >("all");
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+  const [passer, setPasser] = useState<string | null>(null);
+
   const [shots, setShots] = useState([]);
   const [playersStats, setPlayersStats] = useState(matchDetails?.playerMatches);
 
@@ -60,6 +71,7 @@ export default function BasketballCourtSVG({
 
     setPlayersStats((prevStats) =>
       prevStats.map((p) => {
+        // Joueur qui a tiré
         if (p.player.nom === update.name) {
           return {
             ...p,
@@ -101,6 +113,18 @@ export default function BasketballCourtSVG({
             },
           };
         }
+
+        // Joueur qui a passé (si différent du tireur)
+        if (newShot.passer && p.player.nom === newShot.passer) {
+          return {
+            ...p,
+            stats: {
+              ...p.stats,
+              assists: p.stats.assists + 1, // incrémenter la passe
+            },
+          };
+        }
+
         return p;
       })
     );
@@ -233,6 +257,8 @@ export default function BasketballCourtSVG({
   } = useBasketballCourt({
     initialShots: matchDetails?.tirs,
     selectedPlayer,
+    passer,
+    setPasser,
     onUpdateStats: handleUpdateStats,
     isThreePointShot,
     getCurrentTime,
@@ -419,14 +445,19 @@ export default function BasketballCourtSVG({
     { value: "LF1/1", label: "Lancer franc réussi", initial: "LF1/1" },
   ];
 
+  const selectDropdownRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        popupRef.current &&
-        !popupRef.current.contains(event.target as Node)
-      ) {
-        resetPending(); // ferme la popup
-      }
+      const target = event.target as HTMLElement;
+
+      // Si le clic est dans la popup, on ne ferme pas
+      if (popupRef.current?.contains(target)) return;
+
+      // Si le clic est dans le dropdown du Select, on ne ferme pas
+      if (selectDropdownRef.current?.contains(target)) return;
+
+      resetPending(); // ferme uniquement si clic à l'extérieur
     }
 
     if (pendingEvent) {
@@ -792,6 +823,56 @@ export default function BasketballCourtSVG({
                       ))}
                     </div>
                   </TooltipProvider>
+
+                  {eventType === "tir" && (
+                    <>
+                      <Select
+                        value={passer ?? "none"}
+                        onValueChange={setPasser}
+                      >
+                        <SelectTrigger className="w-[180px] border border-gray-700 rounded-md bg-[#1B1E2B] text-white hover:border-gray-500 focus:ring-1 focus:ring-[#4F5BD5] focus:outline-none">
+                          <SelectValue placeholder="Passeur" />
+                        </SelectTrigger>
+                        <SelectContent
+                          ref={selectDropdownRef}
+                          className="bg-[#1B1E2B] text-white border border-gray-700 rounded-md shadow-lg"
+                        >
+                          <SelectGroup>
+                            <SelectLabel className="text-gray-400">
+                              Joueurs
+                            </SelectLabel>
+                            <SelectItem
+                              value="none"
+                              className="hover:bg-[#4F5BD5]/50 hover:text-white"
+                            >
+                              Aucun
+                            </SelectItem>
+                            {playersStats.map((item, idx) => {
+                              const isSelectedPlayer =
+                                selectedPlayer?.name === item.player.nom;
+
+                              return (
+                                <SelectItem
+                                  key={idx}
+                                  value={item.player.nom}
+                                  disabled={isSelectedPlayer}
+                                  className={`
+                                    ${
+                                      isSelectedPlayer
+                                        ? "text-gray-500 cursor-not-allowed"
+                                        : "hover:bg-[#4F5BD5]/50 hover:text-white"
+                                    }
+                                  `}
+                                >
+                                  {item.player.nom}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </>
+                  )}
 
                   <Textarea
                     placeholder="Ajouter un commentaire..."

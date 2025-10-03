@@ -118,6 +118,7 @@ export default function TacticBoard() {
     playerWithBall,
     removeDrawing,
     updateCommentText,
+    handleCommentDragMove,
   } = useTacticsBoard();
 
   const startRecording = () => {
@@ -609,6 +610,7 @@ export default function TacticBoard() {
                     updateText={updateCommentText}
                     removeComment={removeDrawing}
                     isRecordingOrReplay={isRecording || isReplaying} // <-- important
+                    handleCommentDragMove={handleCommentDragMove}
                   />
                 ))}
 

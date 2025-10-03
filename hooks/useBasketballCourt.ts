@@ -13,6 +13,8 @@ type PendingEvent = { x: number; y: number; zone: string } | null;
 export function useBasketballCourt({
   initialShots,
   selectedPlayer,
+  passer,
+  setPasser,
   onUpdateStats,
   isThreePointShot,
   getCurrentTime,
@@ -25,6 +27,8 @@ export function useBasketballCourt({
   ) => void;
   isThreePointShot: (x: number, y: number) => boolean;
   getCurrentTime: any;
+  passer: string;
+  setPasser: any;
 }) {
   const [actions, setActions] = useState<ActionItem[]>(initialShots);
   const [pendingEvent, setPendingEvent] = useState<PendingEvent>(null);
@@ -48,8 +52,6 @@ export function useBasketballCourt({
     if (pendingEvent || !selectedPlayer.name) return;
     const realX = x / scale;
     const realY = y / scale;
-    console.log("realX", realX);
-    console.log("realY", realY);
     // setPendingEvent({ x, y });
     setPendingEvent({ x: realX, y: realY, zone });
     setPendingTimestamp(secondsToHHMMSS(Math.floor(currentTime)));
@@ -81,6 +83,7 @@ export function useBasketballCourt({
         timestamp: videoSeconds, // ✅ On utilise le temps vidéo
         made,
         commentaire,
+        passer: passer === "none" ? null : passer,
         typeItem: "shot",
       };
 
@@ -92,6 +95,7 @@ export function useBasketballCourt({
         points3PT: made && type === "3PT" ? 3 : 0,
         shotsMade: made ? 1 : 0,
         shotsAttempted: 1,
+        passer: passer === "none" ? null : passer,
       };
 
       onUpdateStats(update, newShot);
@@ -147,6 +151,7 @@ export function useBasketballCourt({
     setPendingEvent(null);
     setPendingTimestamp(null);
     setCommentaire("");
+    setPasser(null);
   };
 
   return {
