@@ -1,17 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 
+interface UseResponsiveCourtProps {
+  sceneWidth: number;
+  sceneHeight: number;
+}
+
 export function useResponsiveCourt({
   sceneWidth,
   sceneHeight,
-  maxWidth,
-  scale = 1,
-}: {
-  sceneWidth: number;
-  sceneHeight: number;
-  maxWidth?: number;
-  scale?: number;
-}) {
+}: UseResponsiveCourtProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+
   const [stageSize, setStageSize] = useState({
     width: sceneWidth,
     height: sceneHeight,
@@ -21,23 +20,13 @@ export function useResponsiveCourt({
   const updateSize = () => {
     if (!containerRef.current) return;
 
-    let containerWidth = containerRef.current.offsetWidth;
-    let containerHeight = containerRef.current.offsetHeight;
-
-    if (maxWidth && containerWidth > maxWidth) {
-      containerWidth = maxWidth;
-    }
-
-    const scaleX = containerWidth / sceneWidth;
-    const scaleY = containerHeight / sceneHeight;
-
-    // Responsive, mais jamais > 1
-    const computedScale = Math.min(1, Math.min(scaleX, scaleY) * 1);
+    const containerWidth = containerRef.current.offsetWidth;
+    const scale = containerWidth / sceneWidth;
 
     setStageSize({
-      width: sceneWidth * computedScale,
-      height: sceneHeight * computedScale,
-      scale: computedScale,
+      width: sceneWidth * scale,
+      height: sceneHeight * scale,
+      scale,
     });
   };
 

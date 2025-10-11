@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Card } from "./ui/card";
 
 interface Shot {
   x: number;
@@ -79,36 +80,54 @@ export default function ZoneStats({ playerTirs }: ZoneStatsProps) {
   }, [playerTirs]);
 
   return (
-    <div className="col-span-full mt-4 overflow-x-auto">
-      <Table className="min-w-full border border-gray-700 text-white">
+    <Card className="w-full bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl col-span-2">
+      <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="border px-2 py-1">Zone</TableHead>
-            <TableHead className="border px-2 py-1">PTS</TableHead>
-            <TableHead className="border px-2 py-1">SA</TableHead>
-            <TableHead className="border px-2 py-1">Freq</TableHead>
-            <TableHead className="border px-2 py-1">% Réussite</TableHead>
+          <TableRow className="border-b border-white/5 bg-[#161927]">
+            <TableHead className="px-5 py-1 text-left text-xs font-semibold text-white uppercase tracking-wider">
+              Zone
+            </TableHead>
+            <TableHead className="px-5 py-1 text-left text-xs font-semibold text-white uppercase tracking-wider">
+              PTS
+            </TableHead>
+            <TableHead className="px-5 py-1 text-left text-xs font-semibold text-white uppercase tracking-wider">
+              SA
+            </TableHead>
+            <TableHead className="px-5 py-1 text-left text-xs font-semibold text-white uppercase tracking-wider">
+              Freq
+            </TableHead>
+            <TableHead className="px-5 py-1 text-left text-xs font-semibold text-white uppercase tracking-wider">
+              % Réussite
+            </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+
+        <TableBody className="divide-y divide-white/5">
           {statsParZone.map((z: any) => (
-            <TableRow key={z.zone}>
-              <TableCell className="border px-2 py-1">{z.zone}</TableCell>
-              <TableCell className="border px-2 py-1">{z.pts}</TableCell>
-              <TableCell className="border px-2 py-1">{z.sa}</TableCell>
-              <TableCell className="border px-2 py-1">{z.freq}</TableCell>
-              <TableCell className="border px-2 py-1">{z.ts}</TableCell>
+            <TableRow
+              key={z.zone}
+              className="text-sm text-white/90 transition-colors hover:bg-blue-500/10"
+            >
+              <TableCell className="px-5 py-1.5 font-medium">
+                {z.zone}
+              </TableCell>
+              <TableCell className="px-5 py-1.5">{z.pts}</TableCell>
+              <TableCell className="px-5 py-1.5">{z.sa}</TableCell>
+              <TableCell className="px-5 py-1.5">{z.freq}</TableCell>
+              <TableCell className="px-5 py-1.5">{z.ts}</TableCell>
             </TableRow>
           ))}
-          <TableRow className="font-bold border-t border-gray-700">
-            <TableCell className="border px-2 py-1">Total</TableCell>
-            <TableCell className="border px-2 py-1">{totals.pts}</TableCell>
-            <TableCell className="border px-2 py-1">{totals.sa}</TableCell>
-            <TableCell className="border px-2 py-1">{totals.freq}</TableCell>
-            <TableCell className="border px-2 py-1">{totals.ts}</TableCell>
+
+          {/* Ligne Total */}
+          <TableRow className="font-semibold bg-white/5">
+            <TableCell className="px-5 py-1.5">Total</TableCell>
+            <TableCell className="px-5 py-1.5">{totals.pts}</TableCell>
+            <TableCell className="px-5 py-1.5">{totals.sa}</TableCell>
+            <TableCell className="px-5 py-1.5">{totals.freq}</TableCell>
+            <TableCell className="px-5 py-1.5">{totals.ts}</TableCell>
           </TableRow>
         </TableBody>
       </Table>
-    </div>
+    </Card>
   );
 }

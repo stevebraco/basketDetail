@@ -29,7 +29,7 @@ type TirEvenement {
   typeItem   String  // "shot" ou "event"
   playerId   String    @db.ObjectId // lien direct vers Player.id
   zone  String?
-
+  passer  String?
 }
 
 

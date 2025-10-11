@@ -43,7 +43,7 @@ export default function TacticBoard() {
   const [showGreyPlayers, setShowGreyPlayers] = useState(true);
 
   const { containerRef, stageSize } = useResponsiveCourt({
-    sceneWidth: 950,
+    sceneWidth: 800,
     sceneHeight: 700,
     maxWidth: 1010,
   });
@@ -119,6 +119,8 @@ export default function TacticBoard() {
     removeDrawing,
     updateCommentText,
     handleCommentDragMove,
+    showArrows,
+    setShowArrows,
   } = useTacticsBoard();
 
   const startRecording = () => {
@@ -316,6 +318,14 @@ export default function TacticBoard() {
             <div className="flex flex-col gap-1">
               <Button
                 size="sm"
+                onClick={() => setShowArrows((prev) => !prev)}
+                className="w-full"
+              >
+                {showArrows ? "🧭 Masquer flèches" : "🧭 Afficher flèches"}
+              </Button>
+
+              <Button
+                size="sm"
                 variant={showBlackPlayers ? "secondary" : "default"}
                 onClick={() => setShowBlackPlayers(!showBlackPlayers)}
                 className="w-full"
@@ -369,12 +379,12 @@ export default function TacticBoard() {
           <Separator />
         </div>
       </Card>
-      <Card className="col-span-8 h-full">
+      <Card className="col-span-6 h-full">
         <div
           ref={containerRef}
           style={{
             width: "100%",
-            height: "80vh",
+            height: "100%",
             background: "purple",
           }}
         >
@@ -453,7 +463,7 @@ export default function TacticBoard() {
                     key={`text-${i}`}
                     x={pos.x - 5}
                     y={pos.y - 7}
-                    text={`${i + 1}`}
+                    text={i < 5 ? `${i + 1}` : `${i - 4}`} // i = 0..9
                     fontSize={15}
                     fill="white"
                     listening={false}
@@ -469,8 +479,8 @@ export default function TacticBoard() {
                   radius={BALL_RADIUS}
                   draggable={!isReplaying}
                   onDragMove={handleBallDrag}
-                  width={30}
-                  height={30}
+                  width={25}
+                  height={25}
                 />
               )}
 
@@ -505,101 +515,102 @@ export default function TacticBoard() {
                 );
               })} */}
 
-              {Object.entries(previewArrows).map(([key, path]) => {
-                if (!path || path.length < 2) return null;
+              {showArrows &&
+                Object.entries(previewArrows).map(([key, path]) => {
+                  if (!path || path.length < 2) return null;
 
-                // 👉 ne filtre que si ce n’est PAS la balle
-                if (key !== "ball") {
-                  const playerIndex = parseInt(key);
-                  const color = getPlayerColor(playerIndex);
+                  // 👉 ne filtre que si ce n’est PAS la balle
+                  if (key !== "ball") {
+                    const playerIndex = parseInt(key);
+                    const color = getPlayerColor(playerIndex);
 
-                  if (
-                    (color === "#212121" && !showBlackPlayers) ||
-                    (color === "grey" && !showGreyPlayers)
-                  ) {
-                    return null; // flèche du joueur masquée
-                  }
-                }
-
-                // Lissage
-                const smoothPath = (
-                  pts: { x: number; y: number }[],
-                  windowSize = 5
-                ) => {
-                  if (pts.length <= windowSize) return pts;
-                  return pts.map((p, i, arr) => {
-                    const slice = arr.slice(
-                      Math.max(0, i - windowSize),
-                      Math.min(arr.length, i + windowSize)
-                    );
-                    const avgX =
-                      slice.reduce((a, b) => a + b.x, 0) / slice.length;
-                    const avgY =
-                      slice.reduce((a, b) => a + b.y, 0) / slice.length;
-                    return { x: avgX, y: avgY };
-                  });
-                };
-
-                const smooth = smoothPath(path);
-
-                // Portion déjà parcourue / restante
-                let traveledPoints: number[] = [];
-                let remainingPoints: number[] = [];
-
-                if (key === "ball") {
-                  remainingPoints = smooth.flatMap((p) => [p.x, p.y]);
-                } else {
-                  const playerIndex = parseInt(key);
-                  const playerPos = players[playerIndex];
-                  let traveledIndex = 0;
-
-                  for (let i = 1; i < smooth.length; i++) {
                     if (
-                      distance(smooth[i], playerPos) <
-                      distance(smooth[i - 1], playerPos)
+                      (color === "#212121" && !showBlackPlayers) ||
+                      (color === "grey" && !showGreyPlayers)
                     ) {
-                      traveledIndex = i;
-                    } else break;
+                      return null; // flèche du joueur masquée
+                    }
                   }
 
-                  traveledPoints = smooth
-                    .slice(0, traveledIndex + 1)
-                    .flatMap((p) => [p.x, p.y]);
-                  remainingPoints = smooth
-                    .slice(traveledIndex)
-                    .flatMap((p) => [p.x, p.y]);
-                }
+                  // Lissage
+                  const smoothPath = (
+                    pts: { x: number; y: number }[],
+                    windowSize = 5
+                  ) => {
+                    if (pts.length <= windowSize) return pts;
+                    return pts.map((p, i, arr) => {
+                      const slice = arr.slice(
+                        Math.max(0, i - windowSize),
+                        Math.min(arr.length, i + windowSize)
+                      );
+                      const avgX =
+                        slice.reduce((a, b) => a + b.x, 0) / slice.length;
+                      const avgY =
+                        slice.reduce((a, b) => a + b.y, 0) / slice.length;
+                      return { x: avgX, y: avgY };
+                    });
+                  };
 
-                return (
-                  <Group key={`preview-${key}`}>
-                    {traveledPoints.length >= 4 && key !== "ball" && (
-                      <Line
-                        points={traveledPoints}
-                        stroke="black"
-                        strokeWidth={5}
-                        opacity={0.2}
-                        tension={0.5}
-                        lineCap="round"
-                        lineJoin="round"
-                      />
-                    )}
-                    {remainingPoints.length >= 4 && (
-                      <Arrow
-                        points={remainingPoints}
-                        pointerLength={10}
-                        pointerWidth={5}
-                        stroke={key === "ball" ? "orange" : "black"}
-                        fill={key === "ball" ? "orange" : "black"}
-                        strokeWidth={5}
-                        tension={0.5}
-                        lineCap="round"
-                        lineJoin="round"
-                        dash={key === "ball" ? [15, 10] : []} // pointillé si balle
-                      />
-                    )}
-                  </Group>
-                );
-              })}
+                  const smooth = smoothPath(path);
+
+                  // Portion déjà parcourue / restante
+                  let traveledPoints: number[] = [];
+                  let remainingPoints: number[] = [];
+
+                  if (key === "ball") {
+                    remainingPoints = smooth.flatMap((p) => [p.x, p.y]);
+                  } else {
+                    const playerIndex = parseInt(key);
+                    const playerPos = players[playerIndex];
+                    let traveledIndex = 0;
+
+                    for (let i = 1; i < smooth.length; i++) {
+                      if (
+                        distance(smooth[i], playerPos) <
+                        distance(smooth[i - 1], playerPos)
+                      ) {
+                        traveledIndex = i;
+                      } else break;
+                    }
+
+                    traveledPoints = smooth
+                      .slice(0, traveledIndex + 1)
+                      .flatMap((p) => [p.x, p.y]);
+                    remainingPoints = smooth
+                      .slice(traveledIndex)
+                      .flatMap((p) => [p.x, p.y]);
+                  }
+
+                  return (
+                    <Group key={`preview-${key}`}>
+                      {traveledPoints.length >= 4 && key !== "ball" && (
+                        <Line
+                          points={traveledPoints}
+                          stroke="black"
+                          strokeWidth={5}
+                          opacity={0.2}
+                          tension={0.5}
+                          lineCap="round"
+                          lineJoin="round"
+                        />
+                      )}
+                      {remainingPoints.length >= 4 && (
+                        <Arrow
+                          points={remainingPoints}
+                          pointerLength={10}
+                          pointerWidth={5}
+                          stroke={key === "ball" ? "orange" : "black"}
+                          fill={key === "ball" ? "orange" : "black"}
+                          strokeWidth={5}
+                          tension={0.5}
+                          lineCap="round"
+                          lineJoin="round"
+                          dash={key === "ball" ? [15, 10] : []} // pointillé si balle
+                        />
+                      )}
+                    </Group>
+                  );
+                })}
 
               {drawings
                 .filter((shape) => shape.type === "comment")

@@ -53,7 +53,7 @@ const BasketBallCourtKonva2 = ({
   return (
     <>
       <Group
-        rotationDeg={0}
+        // rotationDeg={0}
         x={0}
         y={0}
         // opacity={isHovered ? 1 : 0.3}

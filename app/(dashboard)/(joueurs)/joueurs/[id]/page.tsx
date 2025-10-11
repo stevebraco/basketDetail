@@ -1,19 +1,21 @@
+import AllShots from "@/components/AllShots";
 import AverageStats from "@/components/AverageStats";
 import PlayerDetail from "@/components/PlayerDetail";
-import PlayerStatsDetails from "@/components/PlayerStatsDetails";
+import PointsAreaChart from "@/components/PointsAreaChart";
 import RadarChart from "@/components/RadarChart";
 import StatsMatch from "@/components/StatsMatch";
 import ZoneStats from "@/components/ZoneStats";
 import { prisma } from "@/lib/prisma";
 import { getAverageStatsAndCount } from "@/utils/AveragesStats";
 import React from "react";
+import dynamic from "next/dynamic";
 
 export default async function PlayerDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params; // ✅ on attend params
+  const { id } = await params;
 
   const playerDetail = await prisma.player.findUnique({
     where: { id },
@@ -28,7 +30,7 @@ export default async function PlayerDetailPage({
             select: {
               id: true,
               nom: true,
-              tirs: true, // récupère tous les tirs du match
+              tirs: true,
             },
           },
         },
@@ -36,7 +38,13 @@ export default async function PlayerDetailPage({
     },
   });
 
-  console.log("playerDetail", playerDetail);
+  if (!playerDetail) {
+    return (
+      <div className="min-h-screen bg-[#0F111C] text-white p-6">
+        <p>Joueur non trouvé.</p>
+      </div>
+    );
+  }
 
   // Filtrer les tirs pour ne garder que ceux du joueur
   const playerTirs = playerDetail.playerMatches.flatMap((pm) =>
@@ -47,34 +55,34 @@ export default async function PlayerDetailPage({
     playerDetail?.playerMatches
   );
 
-  if (!playerDetail) {
-    return (
-      <div className="min-h-screen bg-[#0F111C] text-white p-6">
-        <p>Joueur non trouvé.</p>
-      </div>
-    );
-  }
+  console.log(playerDetail?.playerMatches);
 
   return (
-    <div className="min-h-screen bg-[#0F111C] text-white p-6">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* LEFT - PLAYER CARD */}
-        <PlayerDetail player={playerDetail} />
+    <div className="p-4 md:p-6 2xl:p-10">
+      {/* GRID PRINCIPALE */}
+      <div className="grid grid-cols-12 gap-4 md:gap-6 2xl:gap-7.5">
+        {/* === COLONNE GAUCHE === */}
+        <div className="col-span-12 xl:col-span-8 space-y-6">
+          {/* 🧍‍♂️ Profil joueur + Stats moyennes */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
+            <PlayerDetail player={playerDetail} />
+            <AverageStats averages={averages} matchesPlayed={matchesPlayed} />
+          </div>
 
-        {/* RIGHT - GRID SECTIONS */}
-        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* PERFORMANCE */}
+          {/* 📈 Stats par match */}
           <StatsMatch matchPlayed={playerDetail.playerMatches} />
 
-          {/* PROFIL TECHNIQUE */}
-          {/* <RadarChart competences={playerDetail.competences} /> */}
-          <PlayerStatsDetails
-            playerDetail={playerDetail}
-            playerTirs={playerTirs}
-          />
+          {/* 📊 Détail par zones */}
 
-          {/* STATISTICS */}
-          <AverageStats averages={averages} matchesPlayed={matchesPlayed} />
+          <ZoneStats playerTirs={playerTirs} />
+          <PointsAreaChart playerStats={playerDetail?.playerMatches} />
+        </div>
+
+        {/* === COLONNE DROITE === */}
+        <div className="col-span-12 xl:col-span-4 space-y-6">
+          {/* 🧠 Radar de compétences */}
+          <RadarChart competences={playerDetail.competences} />
+          <AllShots playerTirs={playerTirs} />
         </div>
       </div>
     </div>

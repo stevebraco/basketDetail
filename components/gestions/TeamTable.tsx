@@ -52,7 +52,7 @@ export const TeamTable = ({ matchs }: any) => {
                     )}
                   </TableCell>
                   <TableCell className="flex justify-end gap-2">
-                    <Link href={`/matchList/${match.id}?view=true`}>
+                    <Link href={`/matchList/resume/${match.id}`}>
                       <Button size="icon" variant="outline">
                         <Eye className="h-4 w-4" />
                       </Button>

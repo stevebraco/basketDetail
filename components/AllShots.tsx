@@ -6,21 +6,20 @@ import { Stage, Layer, Rect, Image as KonvaImage } from "react-konva";
 import ShotMarker from "./ui/ShotMaker";
 import useImage from "@/hooks/useImage";
 import BasketBallCourtKonva2 from "./BasketBallCourtKonva2";
+import { Card } from "./ui/card";
 
 export default function AllShots({ playerTirs }: any) {
   const image = useImage("/lilcourt.png");
 
-  const sceneWidth = 400;
-  const sceneHeight = 470;
-  const maxWidth = 800;
+  const sceneWidth = 350;
+  const sceneHeight = 390;
+  const maxWidth = 350;
 
   const { containerRef, stageSize } = useResponsiveCourt({
     sceneWidth,
     sceneHeight,
     maxWidth,
   });
-
-  console.log("stageSize", stageSize);
 
   const allShotsForDisplay = React.useMemo(() => {
     function rotateAroundPoint(
@@ -119,31 +118,32 @@ export default function AllShots({ playerTirs }: any) {
   }, [playerTirs]);
 
   return (
-    <div
-      className="col-span-6 w-full flex items-center p-0"
-      ref={containerRef}
-      style={{
-        width: "100%",
-        height: "100%",
-        position: "relative",
-      }}
-    >
-      <Stage
-        width={stageSize.width}
-        height={stageSize.height}
-        opacity={1}
+    <Card className="w-full max-w-4xl bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl">
+      <div
+        ref={containerRef}
         style={{
-          position: "relative",
-          top: 0,
-          left: 0,
-          zIndex: 0,
           width: "100%",
           height: "100%",
-          background: "#1C1E2B",
+          position: "relative",
+          background: "red",
         }}
       >
-        <Layer listening={false}>
-          {/* {image && (
+        <Stage
+          width={stageSize.width}
+          height={stageSize.height}
+          opacity={1}
+          style={{
+            position: "relative",
+            top: 0,
+            left: 0,
+            zIndex: 0,
+            width: "100%",
+            height: "100%",
+            background: "#1C1E2B",
+          }}
+        >
+          <Layer listening={false}>
+            {/* {image && (
             <KonvaImage image={image} width={370} height={500} y={-65} />
           )}
           <Rect
@@ -155,24 +155,25 @@ export default function AllShots({ playerTirs }: any) {
             stroke={"white"}
             fill="transparent"
           /> */}
-          <BasketBallCourtKonva2 />
-        </Layer>
-      </Stage>
-      {allShotsForDisplay
-        .filter((a) => a.typeItem === "shot" || a.typeItem === "event")
-        .map((shot, i) => (
-          <ShotMarker
-            key={`shot-${i}`}
-            shot={shot as any}
-            sizeIcon={18}
-            // isTooltipVisible={tooltipIndex === i}
-            // onShowTooltip={() => setTooltipIndex(i)}
-            // onHideTooltip={() => setTooltipIndex(null)}
-            // onClick={() => seekTo(Math.max(shot.timestamp - 5, 0))}
-            scale={stageSize.scale}
-            // getCurrentTime={getCurrentTime}
-          />
-        ))}
-    </div>
+            <BasketBallCourtKonva2 />
+          </Layer>
+        </Stage>
+        {allShotsForDisplay
+          .filter((a) => a.typeItem === "shot" || a.typeItem === "event")
+          .map((shot, i) => (
+            <ShotMarker
+              key={`shot-${i}`}
+              shot={shot as any}
+              sizeIcon={18}
+              // isTooltipVisible={tooltipIndex === i}
+              // onShowTooltip={() => setTooltipIndex(i)}
+              // onHideTooltip={() => setTooltipIndex(null)}
+              // onClick={() => seekTo(Math.max(shot.timestamp - 5, 0))}
+              scale={stageSize.scale}
+              // getCurrentTime={getCurrentTime}
+            />
+          ))}
+      </div>
+    </Card>
   );
 }

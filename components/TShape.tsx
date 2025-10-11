@@ -36,8 +36,8 @@ const TShape: React.FC<TShapeProps> = ({
     <>
       <Group
         ref={shapeRef}
-        x={shapeProps.x}
-        y={shapeProps.y}
+        x={shapeProps.x + 35}
+        y={shapeProps.y + 60}
         rotation={shapeProps.rotation}
         draggable
         onClick={() => {

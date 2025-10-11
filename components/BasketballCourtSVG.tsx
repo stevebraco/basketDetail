@@ -443,6 +443,7 @@ export default function BasketballCourtSVG({
     // Lancers francs
     { value: "LF0/1", label: "Lancer franc raté", initial: "LF0" },
     { value: "LF1/1", label: "Lancer franc réussi", initial: "LF1/1" },
+    { value: "event", label: "Evenement", initial: "E" },
   ];
 
   const selectDropdownRef = useRef<HTMLDivElement | null>(null);
@@ -941,11 +942,7 @@ export default function BasketballCourtSVG({
               onDelete={(index) => {
                 setActions((prev) => prev.filter((_, i) => i !== index));
               }}
-              onSeekVideo={(time) => {
-                if (videoRef.current) {
-                  videoRef.current.seekTo(time, "seconds");
-                }
-              }}
+              onSeekVideo={(time) => seekTo(Math.max(time - 5, 0))}
             />
           </TabsContent>
         </Tabs>

@@ -16,46 +16,77 @@ export default function StatsMatch({
   handlePlayerClick,
   selectedPlayer,
 }: any) {
-  console.log(matchPlayed);
   return (
-    <Card className="w-full  bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl col-span-2">
+    <Card className="w-full bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl">
       <CardHeader>
         <CardTitle>Derniers matchs</CardTitle>
       </CardHeader>
       <CardContent className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="text-white/60">
-              {/* <TableHead className="whitespace-nowrap">Match</TableHead> */}
-              <TableHead className="whitespace-nowrap">Joueur</TableHead>
-              <TableHead className="whitespace-nowrap">Points</TableHead>
-              <TableHead className="whitespace-nowrap">Passes</TableHead>
-              <TableHead className="whitespace-nowrap">Rebonds</TableHead>
-              <TableHead className="whitespace-nowrap">Interceptions</TableHead>
-              <TableHead className="whitespace-nowrap">Tirs réussis</TableHead>
-              <TableHead className="whitespace-nowrap">Tirs tentés</TableHead>
-              <TableHead className="whitespace-nowrap">3 pts réussis</TableHead>
-              <TableHead className="whitespace-nowrap">3 pts tentés</TableHead>
-              <TableHead className="whitespace-nowrap">
-                Lancers francs réussis
+            <TableRow className="border-b border-white/5 bg-[#161927]">
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Joueur
               </TableHead>
-              <TableHead className="whitespace-nowrap">
-                Lancers francs tentés
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Points
               </TableHead>
-              <TableHead className="whitespace-nowrap">Fautes</TableHead>
-              <TableHead className="whitespace-nowrap">Minutes</TableHead>
-              <TableHead className="whitespace-nowrap">+/-</TableHead>
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Passes
+              </TableHead>
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Rebonds
+              </TableHead>
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Interceptions
+              </TableHead>
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Tirs réussis
+              </TableHead>
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Tirs tentés
+              </TableHead>
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                3 pts réussis
+              </TableHead>
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                3 pts tentés
+              </TableHead>
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                LF réussis
+              </TableHead>
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                LF tentés
+              </TableHead>
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Fautes
+              </TableHead>
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Minutes
+              </TableHead>
+              <TableHead className="px-5 py-1.5text-left text-xs font-semibold text-white uppercase tracking-wider">
+                +/-
+              </TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+
+          <TableBody className="divide-y divide-white/5">
             {matchPlayed?.map((item, idx) => {
-              if (!item.stats) return;
+              if (!item.stats) return null;
+
+              const isSelected = selectedPlayer === item?.player?.nom;
+
               return (
-                <TableRow key={idx} className="text-sm text-white/90">
+                <TableRow
+                  key={idx}
+                  className={`text-sm text-white/90 transition-colors hover:bg-blue-500/10 ${
+                    isSelected
+                      ? "bg-white/5" // ligne sélectionnée = fond clair
+                      : "hover:bg-blue-500/10" // hover = bleu foncé léger
+                  }`}
+                >
                   <TableCell
-                    className={`${
-                      selectedPlayer === item?.player?.nom ? "bg-blue-100" : ""
-                    }`}
+                    className="px-5 py-1.5 cursor-pointer whitespace-nowrap font-medium"
                     onClick={() =>
                       handlePlayerClick(item.player.nom, item.player.id)
                     }
@@ -64,19 +95,45 @@ export default function StatsMatch({
                       ? `${item.player.prenom} ${item.player.nom}`
                       : `${item.match?.nom}`}
                   </TableCell>
-                  <TableCell>{item.stats.points}</TableCell>
-                  <TableCell>{item.stats.assists}</TableCell>
-                  <TableCell>{calculateTotalRebounds(item.stats)}</TableCell>
-                  <TableCell>{item.stats.steals}</TableCell>
-                  <TableCell>{item.stats.fgm}</TableCell>
-                  <TableCell>{item.stats.fga}</TableCell>
-                  <TableCell>{item.stats.threePM}</TableCell>
-                  <TableCell>{item.stats.threePA}</TableCell>
-                  <TableCell>{item.stats.ftm}</TableCell>
-                  <TableCell>{item.stats.fta}</TableCell>
-                  <TableCell>{item.stats.fautes}</TableCell>
-                  <TableCell>{item.stats.minutes}</TableCell>
-                  <TableCell>{item.stats.plusMinus}</TableCell>
+                  <TableCell className="px-5 py-1.5">
+                    {item.stats.points}
+                  </TableCell>
+                  <TableCell className="px-5 py-1.5">
+                    {item.stats.assists}
+                  </TableCell>
+                  <TableCell className="px-5 py-1.5">
+                    {calculateTotalRebounds(item.stats)}
+                  </TableCell>
+                  <TableCell className="px-5 py-1.5">
+                    {item.stats.steals}
+                  </TableCell>
+                  <TableCell className="px-5 py-1.5">
+                    {item.stats.fgm}
+                  </TableCell>
+                  <TableCell className="px-5 py-1.5">
+                    {item.stats.fga}
+                  </TableCell>
+                  <TableCell className="px-5 py-1.5">
+                    {item.stats.threePM}
+                  </TableCell>
+                  <TableCell className="px-5 py-1.5">
+                    {item.stats.threePA}
+                  </TableCell>
+                  <TableCell className="px-5 py-1.5">
+                    {item.stats.ftm}
+                  </TableCell>
+                  <TableCell className="px-5 py-1.5">
+                    {item.stats.fta}
+                  </TableCell>
+                  <TableCell className="px-5 py-1.5">
+                    {item.stats.fautes}
+                  </TableCell>
+                  <TableCell className="px-5 py-1.5">
+                    {item.stats.minutes}
+                  </TableCell>
+                  <TableCell className="px-5 py-1.5">
+                    {item.stats.plusMinus}
+                  </TableCell>
                 </TableRow>
               );
             })}

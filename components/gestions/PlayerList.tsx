@@ -128,17 +128,24 @@ export function PlayerList({ players }: { players: JoueurType[] }) {
   });
 
   return (
-    <Card>
+    <Card className="w-full bg-[#1B1E2B] border border-white/10 text-[#CFCFE0] shadow-xl rounded-xl col-span-2">
       <CardHeader>
         <CardTitle className="text-white text-xl">Liste des joueurs</CardTitle>
       </CardHeader>
+
       <CardContent className="p-0">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow
+                key={headerGroup.id}
+                className="border-b border-white/5 bg-[#161927]"
+              >
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    className="px-5 py-1 text-left text-xs font-semibold text-white uppercase tracking-wider"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -150,12 +157,16 @@ export function PlayerList({ players }: { players: JoueurType[] }) {
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+
+          <TableBody className="divide-y divide-white/5">
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow
+                  key={row.id}
+                  className="text-sm text-white/90 transition-colors hover:bg-blue-500/10"
+                >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="px-5 py-1.5">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -165,11 +176,8 @@ export function PlayerList({ players }: { players: JoueurType[] }) {
                 </TableRow>
               ))
             ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
+              <TableRow className="text-sm text-white/70 text-center">
+                <TableCell colSpan={columns.length} className="h-24">
                   Aucun joueur trouvé
                 </TableCell>
               </TableRow>
