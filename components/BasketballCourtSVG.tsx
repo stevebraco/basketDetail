@@ -54,6 +54,7 @@ export default function BasketballCourtSVG({
   >("all");
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
   const [passer, setPasser] = useState<string | null>(null);
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
 
   const [shots, setShots] = useState([]);
   const [playersStats, setPlayersStats] = useState(matchDetails?.playerMatches);
@@ -447,28 +448,33 @@ export default function BasketballCourtSVG({
   ];
 
   const selectDropdownRef = useRef<HTMLDivElement | null>(null);
+  // const selectTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
 
-      // Si le clic est dans la popup, on ne ferme pas
+      // Si le clic est dans la popup → ne rien faire
       if (popupRef.current?.contains(target)) return;
 
-      // Si le clic est dans le dropdown du Select, on ne ferme pas
-      if (selectDropdownRef.current?.contains(target)) return;
+      // Ignorer les clics quand le Select est ouvert
+      if (isSelectOpen) return;
 
-      resetPending(); // ferme uniquement si clic à l'extérieur
+      resetPending();
     }
 
     if (pendingEvent) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
+      // ✅ Ajout d'un léger délai pour éviter la fermeture au clic sur le trigger
+      const timeout = setTimeout(() => {
+        document.addEventListener("mousedown", handleClickOutside);
+      }, 50);
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [pendingEvent]);
+      return () => {
+        clearTimeout(timeout);
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [pendingEvent, isSelectOpen]);
 
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-5">
@@ -794,10 +800,11 @@ export default function BasketballCourtSVG({
                 }}
               >
                 <Card
-                  className="rounded-xl shadow-2xl p-3 gap-3 bg-[#1B1E2B]/95"
+                  className="rounded-xl shadow-2xl p-3 gap-1 bg-[#1B1E2B]/95"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <TooltipProvider>
+                    <p>{selectedPlayer.name}</p>
                     <div className="grid grid-cols-7 gap-1.5">
                       {eventOptions.map((option) => (
                         <Tooltip key={option.value}>
@@ -827,15 +834,24 @@ export default function BasketballCourtSVG({
 
                   {eventType === "tir" && (
                     <>
+                      <p className="mt-2 mb-1 text-sm text-gray-300 font-medium">
+                        Passeur
+                      </p>
+
                       <Select
                         value={passer ?? "none"}
                         onValueChange={setPasser}
+                        onOpenChange={setIsSelectOpen} // ✅
                       >
-                        <SelectTrigger className="w-[180px] border border-gray-700 rounded-md bg-[#1B1E2B] text-white hover:border-gray-500 focus:ring-1 focus:ring-[#4F5BD5] focus:outline-none">
+                        <SelectTrigger
+                          onClick={(e) => e.stopPropagation()}
+                          // ref={selectTriggerRef} // ✅
+                          className="w-[180px] border border-gray-700 rounded-md bg-[#1B1E2B] text-white hover:border-gray-500 focus:ring-1 focus:ring-[#4F5BD5] focus:outline-none"
+                        >
                           <SelectValue placeholder="Passeur" />
                         </SelectTrigger>
                         <SelectContent
-                          ref={selectDropdownRef}
+                          // ref={selectDropdownRef}
                           className="bg-[#1B1E2B] text-white border border-gray-700 rounded-md shadow-lg"
                         >
                           <SelectGroup>
@@ -848,27 +864,20 @@ export default function BasketballCourtSVG({
                             >
                               Aucun
                             </SelectItem>
-                            {playersStats.map((item, idx) => {
-                              const isSelectedPlayer =
-                                selectedPlayer?.name === item.player.nom;
-
-                              return (
+                            {playersStats
+                              .filter(
+                                (item) =>
+                                  item.player.nom !== selectedPlayer?.name
+                              ) // ⬅️ Filtre ici
+                              .map((item, idx) => (
                                 <SelectItem
                                   key={idx}
                                   value={item.player.nom}
-                                  disabled={isSelectedPlayer}
-                                  className={`
-                                    ${
-                                      isSelectedPlayer
-                                        ? "text-gray-500 cursor-not-allowed"
-                                        : "hover:bg-[#4F5BD5]/50 hover:text-white"
-                                    }
-                                  `}
+                                  className="hover:bg-[#4F5BD5]/50 hover:text-white"
                                 >
                                   {item.player.nom}
                                 </SelectItem>
-                              );
-                            })}
+                              ))}
                           </SelectGroup>
                         </SelectContent>
                       </Select>
